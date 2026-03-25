@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  DISPATCHER
+  ADMIN
+  TECHNICIAN
+}
+
+enum TechStatus {
+  ACTIVE
+  OFF
+  VACATION
+  SICK
+}
+
+enum JobType {
+  SERVICE
+  INSTALL
+  MAINTENANCE
+  CALLBACK
+  EMERGENCY
+  INSPECTION
+  ESTIMATE
+}
+
+enum Trade {
+  HVAC
+  REFRIGERATION
+  PLUMBING
+  ELECTRICAL
+  MULTI
+  UNKNOWN
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  EMERGENCY
+}
+
+enum JobStatus {
+  NEW
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  ON_HOLD
+  CANCELLED
+}
+
+enum ScheduleStatus {
+  SCHEDULED
+  EN_ROUTE
+  ON_SITE
+  COMPLETED
+  SKIPPED
+}
+
+enum SmsDirection {
+  OUTBOUND
+  INBOUND
+}
+
+// ── USERS & AUTH ──
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  passwordHash  String
+  role          Role      @default(TECHNICIAN)
+  phone         String?
+  active        Boolean   @default(true)
+  passwordResetToken  String?   @unique
+  passwordResetExpiry DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  technician     Technician?
+  chatMessages   ChatMessage[]
+  notes          Note[]
+  aiInteractions AIInteraction[]
+}
+
+// ── TECHNICIANS ──
+
+model Technician {
+  id        String     @id @default(cuid())
+  userId    String?    @unique
+  user      User?      @relation(fields: [userId], references: [id])
+  name      String
+  phone     String
+  status    TechStatus @default(ACTIVE)
+  tradeType String?
+  skillTags String[]
+  notes     String?
+  active    Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  scheduleEntries ScheduleEntry[]
+  jobs            Job[]
+  smsMessages     SmsMessage[]
+  boardEntries    BoardEntry[]
+}
+
+// ── JOBS ──
+
+model Job {
+  id               String    @id @default(cuid())
+  customerName     String
+  customerPhone    String?
+  address          String
+  city             String?
+  state            String?
+  zip              String?
+  issueDescription String
+  jobType          JobType   @default(SERVICE)
+  tradeClassification Trade?
+  priority         Priority  @default(NORMAL)
+  status           JobStatus @default(NEW)
+  scheduledDate    DateTime?
+  timeWindow       String?
+  assignedTechId   String?
+  assignedTech     Technician? @relation(fields: [assignedTechId], references: [id])
+  dispatcherNotes  String?
+  internalNotes    String?
+  tags             String[]
+
+  aiSummary           String?
+  aiUrgency           String?
+  aiTradeGuess        Trade?
+  aiFollowUpQuestions String[]
+  aiRiskFlags         String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  scheduleEntry  ScheduleEntry?
+  smsMessages    SmsMessage[]
+  notes          Note[]
+  aiInteractions AIInteraction[]
+}
+
+// ── SCHEDULE ──
+
+model ScheduleEntry {
+  id           String         @id @default(cuid())
+  technicianId String
+  technician   Technician     @relation(fields: [technicianId], references: [id])
+  jobId        String         @unique
+  job          Job            @relation(fields: [jobId], references: [id])
+  date         DateTime
+  orderIndex   Int
+  arrivalWindow String?
+  notes        String?
+  status       ScheduleStatus @default(SCHEDULED)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([technicianId, date, orderIndex])
+}
+
+// ── SMS ──
+
+model SmsMessage {
+  id           String       @id @default(cuid())
+  technicianId String?
+  technician   Technician?  @relation(fields: [technicianId], references: [id])
+  jobId        String?
+  job          Job?         @relation(fields: [jobId], references: [id])
+  direction    SmsDirection
+  body         String
+  aiDrafted    Boolean      @default(false)
+  twilioSid    String?
+  status       String?
+  sentAt       DateTime?
+  createdAt    DateTime     @default(now())
+}
+
+// ── CHAT ──
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  channel   String   @default("general")
+  body      String
+  createdAt DateTime @default(now())
+}
+
+// ── NOTES ──
+
+model Note {
+  id          String   @id @default(cuid())
+  entityType  String
+  entityId    String
+  body        String
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  job         Job?     @relation(fields: [entityId], references: [id], map: "note_job_fk")
+  createdAt   DateTime @default(now())
+
+  @@index([entityType, entityId])
+}
+
+// ── BOARD ──
+
+enum BoardStatus {
+  ASSIGNED
+  EN_ROUTE
+  ON_SITE
+  WAITING
+  PARTS
+  DONE
+  OUT
+}
+
+model BoardEntry {
+  id           String       @id @default(cuid())
+  technicianId String
+  technician   Technician   @relation(fields: [technicianId], references: [id])
+  date         DateTime     @db.Date
+  assignment   String
+  note         String?
+  status       BoardStatus?
+  orderIndex   Int          @default(0)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([technicianId, date])
+}
+
+// ── AI LOG ──
+
+model AIInteraction {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  jobId      String?
+  job        Job?     @relation(fields: [jobId], references: [id])
+  actionType String
+  prompt     String
+  response   String
+  createdAt  DateTime @default(now())
+}

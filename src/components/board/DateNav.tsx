@@ -1,0 +1,86 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
+
+interface DateNavProps {
+  date: string
+}
+
+function addDays(dateStr: string, n: number): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  date.setDate(date.getDate() + n)
+  const ny = date.getFullYear()
+  const nm = String(date.getMonth() + 1).padStart(2, '0')
+  const nd = String(date.getDate()).padStart(2, '0')
+  return `${ny}-${nm}-${nd}`
+}
+
+function getLocalTodayStr(): string {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
+
+function formatShort(dateStr: string): string {
+  const today = getLocalTodayStr()
+  const tomorrow = addDays(today, 1)
+  if (dateStr === today) return 'Today'
+  if (dateStr === tomorrow) return 'Tomorrow'
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+}
+
+export function DateNav({ date }: DateNavProps) {
+  const router = useRouter()
+  const today = getLocalTodayStr()
+  const tomorrow = addDays(today, 1)
+
+  function go(d: string) { router.push(`/?date=${d}`) }
+
+  return (
+    <div className="flex items-center gap-1">
+      <button
+        onClick={() => go(addDays(date, -1))}
+        className="p-1.5 text-gray-300 hover:text-gray-600 transition-colors"
+        aria-label="Previous day"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <div className="flex items-center rounded-lg overflow-hidden border border-gray-200">
+        <button
+          onClick={() => go(today)}
+          className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+            date === today ? 'bg-gray-900 text-white' : 'text-gray-500 hover:bg-gray-50'
+          }`}
+        >
+          Today
+        </button>
+        <button
+          onClick={() => go(tomorrow)}
+          className={`px-3 py-1.5 text-sm font-medium transition-colors border-l border-gray-200 ${
+            date === tomorrow ? 'bg-gray-900 text-white' : 'text-gray-500 hover:bg-gray-50'
+          }`}
+        >
+          Tomorrow
+        </button>
+      </div>
+
+      <button
+        onClick={() => go(addDays(date, 1))}
+        className="p-1.5 text-gray-300 hover:text-gray-600 transition-colors"
+        aria-label="Next day"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      {date !== today && date !== tomorrow && (
+        <span className="ml-2 text-sm text-gray-400">{formatShort(date)}</span>
+      )}
+    </div>
+  )
+}
