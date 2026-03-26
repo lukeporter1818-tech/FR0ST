@@ -13,7 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const primaryNavItems = [
-  { label: "Board", href: "/", icon: LayoutList },
+  { label: "Schedule", href: "/", icon: LayoutList },
   { label: "Team Chat", href: "/chat", icon: MessageSquare },
   { label: "Frost", href: "/ai", icon: Bot },
 ] as const;
