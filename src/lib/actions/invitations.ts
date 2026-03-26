@@ -238,6 +238,18 @@ export async function resendInviteSms(
 ): Promise<{ status: 'sent' | 'simulated' | 'failed'; message: string }> {
   await requireRole('ADMIN')
 
+  // Validate server-side — inputs come from client state even though they
+  // originated from a previous server response.
+  if (!technicianId || technicianId.length > 128) {
+    return { status: 'failed', message: 'Invalid technician ID' }
+  }
+  if (!loginEmail || loginEmail.length > 200) {
+    return { status: 'failed', message: 'Invalid login email' }
+  }
+  if (!tempPassword || tempPassword.length > 100) {
+    return { status: 'failed', message: 'Invalid password' }
+  }
+
   try {
     const appUrl =
       process.env.NEXT_PUBLIC_APP_URL ??

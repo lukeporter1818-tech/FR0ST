@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { X, Copy, CheckCircle2, AlertCircle, Mail, Phone, MessageSquare } from 'lucide-react'
+import { X, Copy, AlertCircle, Mail, Phone, MessageSquare } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { inviteTechnician, resendInviteSms } from '@/lib/actions/invitations'
@@ -272,7 +272,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
 
                 {/* Card footer */}
                 <div className="px-4 py-2.5 bg-white/5 border-t border-white/10">
-                  <p className="text-xs text-gray-400">Change password on first login · {typeof window !== 'undefined' ? window.location.hostname : 'fieldcommand'}</p>
+                  <p className="text-xs text-gray-400">Change password on first login · {window.location.hostname}</p>
                 </div>
               </div>
 
