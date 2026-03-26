@@ -228,3 +228,41 @@ export async function inviteTechnician(
     }
   }
 }
+
+// ─── Resend invite SMS (from success screen) ─────────────────────────────────
+
+export async function resendInviteSms(
+  technicianId: string,
+  loginEmail: string,
+  tempPassword: string
+): Promise<{ status: 'sent' | 'simulated' | 'failed'; message: string }> {
+  await requireRole('ADMIN')
+
+  try {
+    const appUrl =
+      process.env.NEXT_PUBLIC_APP_URL ??
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
+
+    const smsBody =
+      `FieldCommand Login\n` +
+      `Login: ${loginEmail}\n` +
+      `Password: ${tempPassword}` +
+      (appUrl ? `\n\nSign in: ${appUrl}/login` : '')
+
+    const redactedBody =
+      `FieldCommand Login\n` +
+      `Login: ${loginEmail}\n` +
+      `Password: [redacted]` +
+      (appUrl ? `\n\nSign in: ${appUrl}/login` : '')
+
+    const result = await sendSms(technicianId, smsBody, undefined, false, redactedBody)
+
+    const SENT = new Set(['accepted', 'queued', 'sending', 'sent', 'delivered'])
+    if (result.status === 'simulated') return { status: 'simulated', message: 'SMS not configured; share manually' }
+    if (SENT.has(result.status)) return { status: 'sent', message: 'SMS sent' }
+    return { status: 'failed', message: `SMS status: ${result.status}` }
+  } catch (err) {
+    console.error('[resendInviteSms] Error:', err)
+    return { status: 'failed', message: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}

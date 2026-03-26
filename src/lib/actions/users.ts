@@ -250,6 +250,60 @@ export async function adminSetPassword(userId: string, newPassword: string) {
   revalidatePath(`/settings/users/${userId}`)
 }
 
+// ─── Delete User + Technician ────────────────────────────────────────────────
+// Full hard delete. FK resolution order:
+//   1. Nullify optional Technician FKs (Job.assignedTechId, SmsMessage.technicianId)
+//   2. Delete required-FK Technician children (BoardEntry, ScheduleEntry)
+//   3. Delete Technician
+//   4. Delete required-FK User children (ChatMessage, Note, AIInteraction)
+//   5. Delete User
+
+export async function deleteUser(id: string): Promise<{ success: boolean; error?: string }> {
+  const session = await requireRole('ADMIN')
+
+  if (id === session.user.id) {
+    return { success: false, error: 'You cannot delete your own account' }
+  }
+
+  const existing = await prisma.user.findUnique({
+    where: { id },
+    include: { technician: { select: { id: true } } },
+  })
+  if (!existing) return { success: false, error: 'User not found' }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      if (existing.technician) {
+        const techId = existing.technician.id
+        await tx.job.updateMany({ where: { assignedTechId: techId }, data: { assignedTechId: null } })
+        await tx.smsMessage.updateMany({ where: { technicianId: techId }, data: { technicianId: null } })
+        await tx.boardEntry.deleteMany({ where: { technicianId: techId } })
+        await tx.scheduleEntry.deleteMany({ where: { technicianId: techId } })
+        await tx.technician.delete({ where: { id: techId } })
+      }
+      await tx.chatMessage.deleteMany({ where: { userId: id } })
+      await tx.note.deleteMany({ where: { createdById: id } })
+      await tx.aIInteraction.deleteMany({ where: { userId: id } })
+      await tx.user.delete({ where: { id } })
+    })
+
+    auditLog({
+      action: 'tech.delete',
+      userId: session.user.id,
+      userRole: session.user.role,
+      targetId: id,
+      targetType: 'User',
+      meta: { name: existing.name, email: existing.email },
+    })
+
+    revalidatePath('/settings/users')
+    return { success: true }
+  } catch (err) {
+    console.error('[deleteUser] Error:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Delete failed' }
+  }
+}
+
 // ─── Check if current user is admin (for page-level guards) ──────────────────
 
 export async function requireAdminSession() {

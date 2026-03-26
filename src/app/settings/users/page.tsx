@@ -3,6 +3,7 @@ import { Plus, UserX, Shield, Truck, Headphones, Mail } from 'lucide-react'
 import { prisma } from '@/lib/db'
 import { requireAdminSession } from '@/lib/actions/users'
 import { InviteModalWrapper, InviteModalTriggerButton } from '@/components/invite-modal/InviteModalWrapper'
+import { DeleteUserButton } from '@/components/users/DeleteUserButton'
 
 const ROLE_STYLES: Record<string, { label: string; className: string; icon: React.ElementType }> = {
   ADMIN: { label: 'Admin', className: 'bg-red-50 text-red-700 border-red-200', icon: Shield },
@@ -11,7 +12,8 @@ const ROLE_STYLES: Record<string, { label: string; className: string; icon: Reac
 }
 
 export default async function UsersPage() {
-  await requireAdminSession()
+  const session = await requireAdminSession()
+  const currentUserId = session.user.id
 
   const users = await prisma.user.findMany({
     orderBy: [{ active: 'desc' }, { name: 'asc' }],
@@ -47,12 +49,12 @@ export default async function UsersPage() {
         </div>
       </InviteModalWrapper>
 
-      <UserTable users={active} />
+      <UserTable users={active} currentUserId={currentUserId} />
 
       {inactive.length > 0 && (
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Inactive</p>
-          <UserTable users={inactive} dimmed />
+          <UserTable users={inactive} currentUserId={currentUserId} dimmed />
         </div>
       )}
     </div>
@@ -61,6 +63,7 @@ export default async function UsersPage() {
 
 function UserTable({
   users,
+  currentUserId,
   dimmed = false,
 }: {
   users: Array<{
@@ -73,6 +76,7 @@ function UserTable({
     createdAt: Date
     technician: { id: string; name: string; tradeType: string | null } | null
   }>
+  currentUserId: string
   dimmed?: boolean
 }) {
   if (users.length === 0) return null
@@ -118,12 +122,17 @@ function UserTable({
                   )}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <Link
-                    href={`/settings/users/${user.id}`}
-                    className="text-xs text-gray-500 hover:text-gray-900 font-medium"
-                  >
-                    Edit
-                  </Link>
+                  <div className="flex items-center justify-end gap-2">
+                    <Link
+                      href={`/settings/users/${user.id}`}
+                      className="text-xs text-gray-500 hover:text-gray-900 font-medium"
+                    >
+                      Edit
+                    </Link>
+                    {user.id !== currentUserId && (
+                      <DeleteUserButton userId={user.id} userName={user.name} />
+                    )}
+                  </div>
                 </td>
               </tr>
             )
