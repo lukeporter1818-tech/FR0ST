@@ -12,12 +12,7 @@ interface Message {
   timestamp: Date
 }
 
-const EXAMPLE_PROMPTS = [
-  'Walk-in freezer at 28°F, fans running, what should I check?',
-  'RTU no heat, board not sending 24v to gas valve',
-  'Water heater not lighting, standing pilot keeps going out',
-  'Panel buzzing and lights flickering on one circuit',
-]
+// Removed example prompts for mobile-first focus - users get started immediately
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -26,21 +21,40 @@ function formatTime(date: Date): string {
 function AssistantContent({ content }: { content: string }) {
   const lines = content.split('\n')
   return (
-    <div className="space-y-1 text-sm leading-relaxed text-gray-900">
+    <div className="space-y-2 text-sm leading-relaxed text-gray-900">
       {lines.map((line, i) => {
+        // Handle list items (- or •)
         if (line.startsWith('- ') || line.startsWith('• ')) {
           const text = line.slice(2)
           return (
-            <div key={i} className="flex gap-2">
-              <span className="mt-0.5 shrink-0 text-gray-400">•</span>
-              <span>{renderInline(text)}</span>
+            <div key={i} className="flex gap-2.5 items-start">
+              <span className="mt-1.5 shrink-0 text-gray-400 text-xs">▸</span>
+              <span className="flex-1">{renderInline(text)}</span>
             </div>
           )
         }
-        if (line === '') {
-          return <div key={i} className="h-1" />
+        // Handle numbered lists
+        if (line.match(/^\d+\.\s/)) {
+          const text = line.replace(/^\d+\.\s/, '')
+          return (
+            <div key={i} className="flex gap-2.5 items-start">
+              <span className="mt-1.5 shrink-0 text-gray-400 text-xs font-medium">
+                {line.match(/^\d+/)?.[0]}
+              </span>
+              <span className="flex-1">{renderInline(text)}</span>
+            </div>
+          )
         }
-        return <p key={i}>{renderInline(line)}</p>
+        // Empty line = spacing
+        if (line === '') {
+          return <div key={i} className="h-0.5" />
+        }
+        // Regular paragraph
+        return (
+          <p key={i} className="text-sm">
+            {renderInline(line)}
+          </p>
+        )
       })}
     </div>
   )
@@ -184,11 +198,6 @@ export function AIAssistant() {
     [sendMessage],
   )
 
-  const handlePromptChip = useCallback((prompt: string) => {
-    setInput(prompt)
-    inputRef.current?.focus()
-  }, [])
-
   const canSend = (input.trim().length > 0 || imageFile !== null) && !loading
 
   return (
@@ -196,9 +205,9 @@ export function AIAssistant() {
     <div className="flex flex-col h-[calc(100vh-4rem)] -m-6">
       {/* Header */}
       <div className="shrink-0 border-b border-gray-200 bg-white px-4 py-3 sm:px-6">
-        <h1 className="text-base font-semibold text-gray-900">Frost</h1>
+        <h1 className="text-base font-semibold text-gray-900">Frost Field Helper</h1>
         <p className="text-xs text-gray-500 mt-0.5">
-          Ask about HVAC, refrigeration, electrical, or plumbing
+          Get answers about HVAC, refrigeration, electrical, plumbing
         </p>
       </div>
 
@@ -208,31 +217,18 @@ export function AIAssistant() {
         className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 sm:px-6"
       >
         {messages.length === 0 ? (
-          // Empty state
-          <div className="flex flex-col items-center justify-center h-full gap-6 pb-8">
-            <div className="flex flex-col items-center gap-3 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-900 text-white">
-                <Bot size={28} />
+          // Empty state — minimal and action-focused for field use
+          <div className="flex flex-col items-center justify-center h-full gap-4 pb-8 px-2">
+            <div className="flex flex-col items-center gap-2 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-900 text-white">
+                <Bot size={24} />
               </div>
               <div>
-                <p className="text-base font-semibold text-gray-900">Frost</p>
-                <p className="mt-1 max-w-xs text-sm text-gray-500 leading-relaxed">
-                  Ask anything about HVAC, refrigeration, electrical, or plumbing. Describe
-                  symptoms, upload photos, get practical help.
+                <p className="text-sm font-semibold text-gray-900">Frost Field Helper</p>
+                <p className="mt-0.5 max-w-sm text-xs text-gray-500 leading-relaxed">
+                  Describe a problem. Upload a photo. Get answers fast.
                 </p>
               </div>
-            </div>
-
-            <div className="flex flex-col gap-2 w-full max-w-sm">
-              {EXAMPLE_PROMPTS.map((prompt) => (
-                <button
-                  key={prompt}
-                  onClick={() => handlePromptChip(prompt)}
-                  className="w-full text-left rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-colors active:bg-gray-100"
-                >
-                  {prompt}
-                </button>
-              ))}
             </div>
           </div>
         ) : (
@@ -309,7 +305,8 @@ export function AIAssistant() {
           <button
             onClick={() => fileInputRef.current?.click()}
             className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors active:bg-gray-100"
-            aria-label="Attach photo"
+            title="Add photo"
+            aria-label="Add photo"
           >
             <Camera size={18} />
           </button>
@@ -328,7 +325,7 @@ export function AIAssistant() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about any trade issue..."
+            placeholder="Describe the problem..."
             rows={1}
             className={cn(
               'flex-1 resize-none rounded-xl bg-gray-100 px-4 py-3 text-sm text-gray-900',
