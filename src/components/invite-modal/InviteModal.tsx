@@ -1,36 +1,85 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Copy, CheckCircle2, AlertCircle } from 'lucide-react'
+import { X, Copy, CheckCircle2, AlertCircle, Mail, Phone } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { inviteTechnician } from '@/lib/actions/invitations'
+import type { InviteResult } from '@/lib/actions/invitations'
 
 interface InviteModalProps {
   isOpen: boolean
   onClose: () => void
 }
 
-interface SuccessState {
-  email: string
-  tempPassword: string
-  smsStatus: 'sent' | 'simulated' | 'failed'
-  smsStatusMessage: string
+type InviteMethod = 'email' | 'phone' | 'both'
+
+type SuccessState = Extract<InviteResult, { success: true }>
+
+const METHOD_OPTIONS: { value: InviteMethod; label: string }[] = [
+  { value: 'email', label: 'Email' },
+  { value: 'phone', label: 'Phone' },
+  { value: 'both',  label: 'Both' },
+]
+
+function DeliveryBadge({
+  status,
+  message,
+  label,
+}: {
+  status: 'sent' | 'simulated' | 'failed'
+  message: string
+  label: string
+}) {
+  const styles = {
+    sent:      'bg-blue-50 border-blue-200 text-blue-800',
+    simulated: 'bg-amber-50 border-amber-200 text-amber-800',
+    failed:    'bg-red-50 border-red-200 text-red-800',
+  }
+  return (
+    <div className={cn('rounded-lg border px-3 py-2 text-sm', styles[status])}>
+      <span className="font-medium">{label}: </span>{message}
+    </div>
+  )
+}
+
+function CopyField({ label, value }: { label: string; value: string }) {
+  const copy = () => {
+    navigator.clipboard.writeText(value)
+    toast.success(`${label} copied`)
+  }
+  return (
+    <div>
+      <p className="text-xs text-gray-500 font-medium mb-1">{label}</p>
+      <div className="flex gap-2 items-center">
+        <code className="flex-1 text-sm font-mono bg-white border border-gray-200 rounded px-2 py-1.5 overflow-x-auto">
+          {value}
+        </code>
+        <button onClick={copy} className="text-gray-400 hover:text-gray-600 p-1 shrink-0" aria-label={`Copy ${label}`}>
+          <Copy className="size-4" />
+        </button>
+      </div>
+    </div>
+  )
 }
 
 export function InviteModal({ isOpen, onClose }: InviteModalProps) {
-  const [step, setStep] = useState<'form' | 'success'>('form')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<SuccessState | null>(null)
-
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '' })
+  const [step, setStep]             = useState<'form' | 'success'>('form')
+  const [loading, setLoading]       = useState(false)
+  const [error, setError]           = useState<string | null>(null)
+  const [success, setSuccess]       = useState<SuccessState | null>(null)
+  const [inviteMethod, setInviteMethod] = useState<InviteMethod>('email')
+  const [formData, setFormData]     = useState({ name: '', email: '', phone: '' })
 
   if (!isOpen) return null
+
+  const showEmail = inviteMethod === 'email' || inviteMethod === 'both'
+  const showPhone = inviteMethod === 'phone' || inviteMethod === 'both'
 
   const handleClose = () => {
     setStep('form')
     setFormData({ name: '', email: '', phone: '' })
+    setInviteMethod('email')
     setError(null)
     setSuccess(null)
     onClose()
@@ -42,7 +91,12 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
     setLoading(true)
 
     try {
-      const result = await inviteTechnician(formData.name, formData.email, formData.phone)
+      const result = await inviteTechnician(
+        formData.name,
+        showEmail ? formData.email || undefined : undefined,
+        showPhone ? formData.phone || undefined : undefined,
+        inviteMethod
+      )
 
       if (!result.success) {
         const message = result.error ?? 'Failed to invite technician'
@@ -51,16 +105,10 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
         return
       }
 
-      setSuccess({
-        email: result.email,
-        tempPassword: result.tempPassword,
-        smsStatus: result.smsStatus,
-        smsStatusMessage: result.smsStatusMessage,
-      })
+      setSuccess(result)
       setStep('success')
       toast.success('Technician invited successfully')
     } catch (err) {
-      // Catches network-level failures — server action errors are returned, not thrown
       const message = err instanceof Error ? err.message : 'Failed to invite technician'
       setError(message)
       toast.error(message)
@@ -69,30 +117,24 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
     }
   }
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text)
-    toast.success(`${label} copied to clipboard`)
-  }
-
   return (
     <>
-      {/* Backdrop — disabled during loading so an accidental click cannot
-          close the modal while the invite is in-flight and lose the temp
-          password before the admin has a chance to copy it. */}
+      {/* Backdrop — locked during in-flight invite to preserve the temp password */}
       <div
         className="fixed inset-0 bg-black/50 z-40"
         onClick={loading ? undefined : handleClose}
       />
 
-      {/* Modal */}
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 max-h-[90vh] overflow-y-auto">
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-2xl shadow-xl p-6">
+
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-semibold text-gray-900">
               {step === 'form' ? 'Invite Technician' : 'Invitation Sent'}
             </h2>
             <button
+              type="button"
               onClick={loading ? undefined : handleClose}
               disabled={loading}
               className="text-gray-400 hover:text-gray-600 transition-colors p-1 disabled:opacity-30 disabled:cursor-not-allowed"
@@ -103,7 +145,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
           </div>
 
           {step === 'form' ? (
-            // ─── Form Step ───────────────────────────────────────────────
+            // ── Form ──────────────────────────────────────────────────────────
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <div className="flex gap-2 rounded-lg bg-red-50 border border-red-200 p-3">
@@ -112,6 +154,33 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
                 </div>
               )}
 
+              {/* Invite method selector */}
+              <div>
+                <p className="text-xs font-medium text-gray-600 mb-2">Send invite by</p>
+                <div className="flex rounded-lg border border-gray-200 p-0.5 bg-gray-50 gap-0.5">
+                  {METHOD_OPTIONS.map(({ value, label }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => { setInviteMethod(value); setError(null) }}
+                      disabled={loading}
+                      className={cn(
+                        'flex-1 flex items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium transition-colors',
+                        inviteMethod === value
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-700'
+                      )}
+                    >
+                      {value === 'email' && <Mail className="size-3" />}
+                      {value === 'phone' && <Phone className="size-3" />}
+                      {value === 'both'  && <><Mail className="size-3" /><Phone className="size-3" /></>}
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Name — always required */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1.5">Full Name</label>
                 <input
@@ -126,35 +195,41 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1.5">Email</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData((d) => ({ ...d, email: e.target.value }))}
-                  placeholder="jane@company.com"
-                  required
-                  maxLength={200}
-                  disabled={loading}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50"
-                />
-              </div>
+              {/* Email — shown for 'email' and 'both' */}
+              {showEmail && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Email</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData((d) => ({ ...d, email: e.target.value }))}
+                    placeholder="jane@company.com"
+                    required
+                    maxLength={200}
+                    disabled={loading}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50"
+                  />
+                </div>
+              )}
 
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1.5">Phone</label>
-                <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData((d) => ({ ...d, phone: e.target.value }))}
-                  placeholder="(555) 123-4567"
-                  required
-                  maxLength={20}
-                  disabled={loading}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50"
-                />
-              </div>
+              {/* Phone — shown for 'phone' and 'both' */}
+              {showPhone && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Phone</label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData((d) => ({ ...d, phone: e.target.value }))}
+                    placeholder="(555) 123-4567"
+                    required
+                    maxLength={20}
+                    disabled={loading}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50"
+                  />
+                </div>
+              )}
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3 pt-1">
                 <button
                   type="submit"
                   disabled={loading}
@@ -178,73 +253,58 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
               </div>
             </form>
           ) : success ? (
-            // ─── Success Step ────────────────────────────────────────────
+            // ── Success ───────────────────────────────────────────────────────
             <div className="space-y-4">
-              <div className="flex justify-center mb-4">
+              <div className="flex justify-center mb-2">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50 border border-green-200">
                   <CheckCircle2 className="size-6 text-green-600" />
                 </div>
               </div>
 
               <p className="text-sm text-gray-600 text-center">
-                Account created and invitation sent to{' '}
-                <span className="font-medium text-gray-900">{success.email}</span>
+                Account created for{' '}
+                <span className="font-medium text-gray-900">{formData.name}</span>
               </p>
 
-              {/* SMS Status */}
-              <div
-                className={cn(
-                  'rounded-lg border p-3 text-sm',
-                  success.smsStatus === 'sent'
-                    ? 'bg-blue-50 border-blue-200'
-                    : success.smsStatus === 'simulated'
-                      ? 'bg-amber-50 border-amber-200'
-                      : 'bg-red-50 border-red-200'
+              {/* Delivery status badges */}
+              <div className="space-y-2">
+                {success.emailStatus && success.emailStatusMessage && (
+                  <DeliveryBadge
+                    status={success.emailStatus}
+                    message={success.emailStatusMessage}
+                    label="Email"
+                  />
                 )}
-              >
-                <p className="font-medium text-gray-900">{success.smsStatusMessage}</p>
+                {success.smsStatus && success.smsStatusMessage && (
+                  <DeliveryBadge
+                    status={success.smsStatus}
+                    message={success.smsStatusMessage}
+                    label="SMS"
+                  />
+                )}
               </div>
 
               {/* Credentials */}
               <div className="space-y-3 bg-gray-50 rounded-lg p-4">
-                <div>
-                  <p className="text-xs text-gray-500 font-medium mb-1">Email</p>
-                  <div className="flex gap-2 items-center">
-                    <code className="flex-1 text-sm font-mono bg-white border border-gray-200 rounded px-2 py-1.5">
-                      {success.email}
-                    </code>
-                    <button
-                      onClick={() => copyToClipboard(success.email, 'Email')}
-                      className="text-gray-400 hover:text-gray-600 p-1"
-                      aria-label="Copy email"
-                    >
-                      <Copy className="size-4" />
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-xs text-gray-500 font-medium mb-1">Temporary Password</p>
-                  <div className="flex gap-2 items-center">
-                    <code className="flex-1 text-sm font-mono bg-white border border-gray-200 rounded px-2 py-1.5">
-                      {success.tempPassword}
-                    </code>
-                    <button
-                      onClick={() => copyToClipboard(success.tempPassword, 'Password')}
-                      className="text-gray-400 hover:text-gray-600 p-1"
-                      aria-label="Copy password"
-                    >
-                      <Copy className="size-4" />
-                    </button>
-                  </div>
-                </div>
+                <CopyField
+                  label={success.isPlaceholderEmail ? 'Login Email (generated from phone)' : 'Login Email'}
+                  value={success.loginEmail}
+                />
+                <CopyField label="Temporary Password" value={success.tempPassword} />
               </div>
 
+              {/* Contextual note */}
+              {success.isPlaceholderEmail && (
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                  Phone-only invite: a login email was generated from the phone number and included in the SMS. The technician uses it to log in.
+                </p>
+              )}
               <p className="text-xs text-gray-500">
                 ⓘ The technician must change their password on first login.
               </p>
 
               <button
+                type="button"
                 onClick={handleClose}
                 className="w-full bg-gray-900 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-gray-700 transition-colors"
               >

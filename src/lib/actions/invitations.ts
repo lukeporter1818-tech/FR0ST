@@ -8,69 +8,103 @@ import { auditLog } from '@/lib/audit'
 import { technicianInviteSchema } from '@/lib/validations'
 import { generateTempPassword } from '@/lib/utils'
 import { sendSms } from './sms'
+import { sendInviteEmail } from './email'
 
 export type InviteResult =
   | {
       success: true
-      email: string
+      /** The email address used to log in (may be a generated placeholder for phone-only invites) */
+      loginEmail: string
+      /**
+       * True when the loginEmail was generated from the phone number rather than
+       * supplied by the admin. The tech uses this placeholder email to log in;
+       * it is communicated to them via SMS.
+       */
+      isPlaceholderEmail: boolean
       tempPassword: string
       technicianId: string
       userId: string
-      smsStatus: 'sent' | 'simulated' | 'failed'
-      smsStatusMessage: string
+      inviteMethod: 'email' | 'phone' | 'both'
+      emailStatus?: 'sent' | 'simulated' | 'failed'
+      emailStatusMessage?: string
+      smsStatus?: 'sent' | 'simulated' | 'failed'
+      smsStatusMessage?: string
     }
-  | {
-      success: false
-      error: string
-    }
+  | { success: false; error: string }
 
 /**
- * Invite a technician: creates user account + technician profile + sends SMS welcome
- * Requires ADMIN role (dispatchers cannot create accounts)
- * Generates temporary password (must change on first login)
- * Sends SMS with email and temp password
+ * Invite a technician: creates user account + technician profile, then
+ * delivers credentials via the chosen method (email, SMS, or both).
+ *
+ * Phone-only invites: because the auth system requires an email to log in,
+ * a deterministic placeholder is generated: tech.{digits}@invite.local.
+ * The technician receives this placeholder + temp password in the SMS so
+ * they can log in immediately.
+ *
+ * Requires ADMIN role.
  */
 export async function inviteTechnician(
   name: string,
-  email: string,
-  phone: string
+  email: string | undefined,
+  phone: string | undefined,
+  inviteMethod: 'email' | 'phone' | 'both'
 ): Promise<InviteResult> {
-  // Auth must run outside the try/catch — Next.js redirect() throws a special
-  // internal signal that must NOT be swallowed by a generic catch block.
+  // Auth runs outside the try/catch — Next.js redirect() signals must propagate.
   const session = await requireRole('ADMIN')
 
   try {
-    // Validate inputs — safeParse never throws; errors returned structurally.
-    const parsed = technicianInviteSchema.safeParse({ name, email, phone })
+    // Validate all inputs server-side
+    const parsed = technicianInviteSchema.safeParse({ name, email, phone, inviteMethod })
     if (!parsed.success) {
       const issue = parsed.error.issues[0]
-      return { success: false, error: `${issue.path.join('.') || 'input'}: ${issue.message}` }
+      return {
+        success: false,
+        error: `${issue.path.join('.') || 'input'}: ${issue.message}`,
+      }
     }
 
-    // Normalize email to lowercase — PostgreSQL UNIQUE constraints are
-    // case-sensitive; Jane@co.com and jane@co.com would otherwise create two accounts.
-    const { name: validName, phone: validPhone } = parsed.data
-    const validEmail = parsed.data.email.toLowerCase()
+    const validName = parsed.data.name
+    const validMethod = parsed.data.inviteMethod
+    const validPhone = parsed.data.phone
 
-    // Duplicate-email guard
-    const existing = await prisma.user.findUnique({ where: { email: validEmail } })
+    // Determine login email identity
+    let loginEmail: string
+    let isPlaceholderEmail: boolean
+
+    if (validMethod === 'email' || validMethod === 'both') {
+      loginEmail = parsed.data.email!.toLowerCase()
+      isPlaceholderEmail = false
+    } else {
+      // Phone-only: generate a deterministic placeholder so the tech can still log in.
+      // Format: tech.{digits}@invite.local — communicated in the SMS.
+      const digits = validPhone!.replace(/\D/g, '')
+      loginEmail = `tech.${digits}@invite.local`
+      isPlaceholderEmail = true
+    }
+
+    // Duplicate check
+    const existing = await prisma.user.findUnique({ where: { email: loginEmail } })
     if (existing) {
-      return { success: false, error: `A user with email ${validEmail} already exists` }
+      const msg = isPlaceholderEmail
+        ? `A technician with phone ${validPhone} already has an account`
+        : `A user with email ${loginEmail} already exists`
+      return { success: false, error: msg }
     }
 
-    // Generate secure temporary password
     const tempPassword = generateTempPassword()
     const passwordHash = await hash(tempPassword, 12)
 
-    // Create user + technician atomically.
+    // Atomic transaction — rolls back both records if either fails
     const { user, technician } = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
           name: validName,
-          email: validEmail,
+          email: loginEmail,
           passwordHash,
           role: 'TECHNICIAN',
-          phone: validPhone,
+          // Phone stored on User when provided; empty string when email-only
+          // (Technician.phone is the authoritative field for SMS)
+          phone: validPhone ?? null,
           active: true,
         },
       })
@@ -79,7 +113,9 @@ export async function inviteTechnician(
         data: {
           userId: user.id,
           name: validName,
-          phone: validPhone,
+          // Technician.phone is required by the schema; empty string is a safe
+          // placeholder for email-only invites — the dispatcher can update it later.
+          phone: validPhone ?? '',
           status: 'ACTIVE',
           active: true,
         },
@@ -88,32 +124,68 @@ export async function inviteTechnician(
       return { user, technician }
     })
 
-    // Send SMS invitation with credentials — failure here must not abort the invite.
-    let smsStatus: 'sent' | 'simulated' | 'failed' = 'failed'
-    let smsStatusMessage = 'SMS could not be sent'
+    // ── Email delivery ────────────────────────────────────────────────────────
 
-    try {
-      const inviteMessage = `Welcome to FieldCommand! Your account has been created.\nEmail: ${validEmail}\nPassword: ${tempPassword}\n\nLog in at your site URL to get started.`
-      const redactedInviteMessage = `Welcome to FieldCommand! Your account has been created.\nEmail: ${validEmail}\nPassword: [redacted - delivered via SMS only]\n\nLog in at your site URL to get started.`
+    let emailStatus: 'sent' | 'simulated' | 'failed' | undefined
+    let emailStatusMessage: string | undefined
 
-      const smsResult = await sendSms(technician.id, inviteMessage, undefined, false, redactedInviteMessage)
+    if (validMethod === 'email' || validMethod === 'both') {
+      const redactedLog = `Login: ${loginEmail} / Password: [redacted - delivered via email only]`
+      const emailResult = await sendInviteEmail(
+        loginEmail,
+        validName,
+        loginEmail,
+        tempPassword,
+        redactedLog
+      )
+      emailStatus = emailResult.status
+      emailStatusMessage = emailResult.message
+    }
 
-      const TWILIO_SENT_STATUSES = new Set(['accepted', 'queued', 'sending', 'sent', 'delivered'])
+    // ── SMS delivery ──────────────────────────────────────────────────────────
 
-      if (smsResult.status === 'simulated') {
-        smsStatus = 'simulated'
-        smsStatusMessage = 'SMS not configured; share credentials manually'
-      } else if (TWILIO_SENT_STATUSES.has(smsResult.status)) {
-        smsStatus = 'sent'
-        smsStatusMessage = 'SMS sent successfully'
-      } else {
+    let smsStatus: 'sent' | 'simulated' | 'failed' | undefined
+    let smsStatusMessage: string | undefined
+
+    if (validMethod === 'phone' || validMethod === 'both') {
+      try {
+        const smsBody =
+          `Welcome to FieldCommand! Your account:\n` +
+          `Login: ${loginEmail}\n` +
+          `Password: ${tempPassword}\n\n` +
+          `Log in at your site URL to get started.`
+
+        const redactedSmsBody =
+          `Welcome to FieldCommand! Your account:\n` +
+          `Login: ${loginEmail}\n` +
+          `Password: [redacted - delivered via SMS only]\n\n` +
+          `Log in at your site URL to get started.`
+
+        const smsResult = await sendSms(
+          technician.id,
+          smsBody,
+          undefined,
+          false,
+          redactedSmsBody
+        )
+
+        const TWILIO_SENT = new Set(['accepted', 'queued', 'sending', 'sent', 'delivered'])
+
+        if (smsResult.status === 'simulated') {
+          smsStatus = 'simulated'
+          smsStatusMessage = 'SMS not configured; share credentials manually'
+        } else if (TWILIO_SENT.has(smsResult.status)) {
+          smsStatus = 'sent'
+          smsStatusMessage = 'SMS sent successfully'
+        } else {
+          smsStatus = 'failed'
+          smsStatusMessage = `SMS status: ${smsResult.status}`
+        }
+      } catch (smsErr) {
         smsStatus = 'failed'
-        smsStatusMessage = `SMS status: ${smsResult.status}`
+        smsStatusMessage = `SMS error: ${smsErr instanceof Error ? smsErr.message : 'Unknown error'}`
+        console.error('[inviteTechnician] SMS error (invite still succeeded):', smsErr)
       }
-    } catch (smsErr) {
-      smsStatus = 'failed'
-      smsStatusMessage = `SMS error: ${smsErr instanceof Error ? smsErr.message : 'Unknown error'}`
-      console.error('[inviteTechnician] SMS error (invite still succeeded):', smsErr)
     }
 
     auditLog({
@@ -123,11 +195,13 @@ export async function inviteTechnician(
       targetId: user.id,
       targetType: 'User',
       meta: {
-        inviteMethod: 'email',
+        inviteMethod: validMethod,
         technicianId: technician.id,
-        smsStatus,
+        emailStatus: emailStatus ?? 'skipped',
+        smsStatus: smsStatus ?? 'skipped',
         name: validName,
-        email: validEmail,
+        loginEmail,
+        isPlaceholderEmail,
       },
     })
 
@@ -135,10 +209,14 @@ export async function inviteTechnician(
 
     return {
       success: true,
-      email: validEmail,
+      loginEmail,
+      isPlaceholderEmail,
       tempPassword,
       technicianId: technician.id,
       userId: user.id,
+      inviteMethod: validMethod,
+      emailStatus,
+      emailStatusMessage,
       smsStatus,
       smsStatusMessage,
     }

@@ -197,13 +197,37 @@ export const passwordResetSchema = z.object({
 
 // ─── Technician Invitations ───────────────────────────────────────
 
-export const technicianInviteSchema = z.object({
-  name: text(100),
-  email: z.string().trim().email().max(200),
-  phone: z
-    .string()
-    .trim()
-    .min(7)
-    .max(20)
-    .regex(/^[\d\s\+\-\(\)\.]+$/, 'Invalid phone number'),
-})
+const phoneField = z
+  .string()
+  .trim()
+  .min(7)
+  .max(20)
+  .regex(/^[\d\s\+\-\(\)\.]+$/, 'Invalid phone number')
+
+export const technicianInviteSchema = z
+  .object({
+    name: text(100),
+    inviteMethod: z.enum(['email', 'phone', 'both']),
+    email: z.string().trim().email().max(200).optional(),
+    phone: phoneField.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.inviteMethod === 'email' || data.inviteMethod === 'both') {
+      if (!data.email) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['email'],
+          message: 'Email is required for this invite method',
+        })
+      }
+    }
+    if (data.inviteMethod === 'phone' || data.inviteMethod === 'both') {
+      if (!data.phone) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['phone'],
+          message: 'Phone is required for this invite method',
+        })
+      }
+    }
+  })
