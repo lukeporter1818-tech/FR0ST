@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Loader2, Send, Sparkles, X, MessageSquare } from 'lucide-react'
 import { ChatMessage, type ChatMessageData } from '@/components/chat/ChatMessage'
 import { toast } from 'sonner'
+import { supabase } from '@/lib/supabase'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
 type ChatRoomProps = {
   initialMessages: ChatMessageData[]
@@ -19,6 +21,15 @@ export function ChatRoom({ initialMessages, userId, userName }: ChatRoomProps) {
   const [summary, setSummary] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const channelRef = useRef<RealtimeChannel | null>(null)
+  const channelReadyRef = useRef(false)
+  // Stable ref for last-seen createdAt — used by fallback poll without
+  // needing messages in its dependency array (avoids re-creating interval).
+  const lastSeenAtRef = useRef<string | undefined>(
+    initialMessages.length > 0
+      ? initialMessages[initialMessages.length - 1].createdAt
+      : undefined
+  )
 
   // Scroll to bottom
   const scrollToBottom = useCallback(() => {
@@ -32,14 +43,46 @@ export function ChatRoom({ initialMessages, userId, userName }: ChatRoomProps) {
     scrollToBottom()
   }, [messages, scrollToBottom])
 
-  // Poll for new messages every 3 seconds
+  // ── Real-time: Supabase Broadcast ─────────────────────────────────────────
+  // When this client successfully saves a message it broadcasts the full
+  // ChatMessageData object to the 'chat:general' channel.  All *other*
+  // connected clients receive it immediately and append it to their list.
+  // Supabase does NOT echo broadcasts back to the sender, so there is no
+  // duplicate — the sender already has the message via optimistic update.
+  useEffect(() => {
+    const channel = supabase
+      .channel('chat:general')
+      .on(
+        'broadcast',
+        { event: 'new_message' },
+        ({ payload }: { payload: ChatMessageData }) => {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === payload.id)) return prev
+            lastSeenAtRef.current = payload.createdAt
+            return [...prev, payload]
+          })
+        }
+      )
+      .subscribe((status) => {
+        channelReadyRef.current = status === 'SUBSCRIBED'
+      })
+
+    channelRef.current = channel
+
+    return () => {
+      channelReadyRef.current = false
+      supabase.removeChannel(channel)
+    }
+  }, []) // stable – no deps
+
+  // ── Fallback poll (30 s) ───────────────────────────────────────────────────
+  // Catches any messages missed while the realtime connection was down
+  // (e.g. background tab, brief network blip).  Uses a ref for the last-seen
+  // timestamp so this interval never needs to be re-created.
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        const since =
-          messages.length > 0
-            ? messages[messages.length - 1].createdAt
-            : undefined
+        const since = lastSeenAtRef.current
         const url = since
           ? `/api/chat?since=${encodeURIComponent(since)}`
           : '/api/chat'
@@ -50,15 +93,17 @@ export function ChatRoom({ initialMessages, userId, userName }: ChatRoomProps) {
           setMessages((prev) => {
             const existingIds = new Set(prev.map((m) => m.id))
             const newOnes = data.filter((m) => !existingIds.has(m.id))
-            return newOnes.length > 0 ? [...prev, ...newOnes] : prev
+            if (newOnes.length === 0) return prev
+            lastSeenAtRef.current = newOnes[newOnes.length - 1].createdAt
+            return [...prev, ...newOnes]
           })
         }
       } catch {
-        // silently fail on poll
+        // silently ignore fallback poll failures
       }
-    }, 3000)
+    }, 30_000)
     return () => clearInterval(interval)
-  }, [messages])
+  }, []) // stable – uses ref, no messages dep
 
   async function handleSend() {
     const body = input.trim()
@@ -94,6 +139,17 @@ export function ChatRoom({ initialMessages, userId, userName }: ChatRoomProps) {
       setMessages((prev) =>
         prev.map((m) => (m.id === optimisticMsg.id ? saved : m))
       )
+      lastSeenAtRef.current = saved.createdAt
+
+      // Broadcast to all other connected clients in real-time.
+      // Supabase does not echo back to the sender, so no duplicate on our end.
+      if (channelRef.current && channelReadyRef.current) {
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'new_message',
+          payload: saved,
+        })
+      }
     } catch {
       // Remove optimistic message on failure
       setMessages((prev) => prev.filter((m) => m.id !== optimisticMsg.id))
