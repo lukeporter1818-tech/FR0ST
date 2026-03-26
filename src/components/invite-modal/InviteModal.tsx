@@ -43,6 +43,14 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
 
     try {
       const result = await inviteTechnician(formData.name, formData.email, formData.phone)
+
+      if (!result.success) {
+        const message = result.error ?? 'Failed to invite technician'
+        setError(message)
+        toast.error(message)
+        return
+      }
+
       setSuccess({
         email: result.email,
         tempPassword: result.tempPassword,
@@ -52,6 +60,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
       setStep('success')
       toast.success('Technician invited successfully')
     } catch (err) {
+      // Catches network-level failures — server action errors are returned, not thrown
       const message = err instanceof Error ? err.message : 'Failed to invite technician'
       setError(message)
       toast.error(message)
