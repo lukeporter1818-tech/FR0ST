@@ -97,7 +97,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
       'FieldCommand Login',
       '──────────────────',
       `Name:     ${formData.name}`,
-      `Login:    ${success.loginEmail}`,
+      `${success.inviteMethod === 'manual' ? 'Username' : 'Login'}:    ${success.loginEmail}`,
       `Password: ${success.tempPassword}`,
       `URL:      ${url}`,
       '──────────────────',

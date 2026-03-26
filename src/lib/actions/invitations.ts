@@ -43,11 +43,17 @@ export type InviteResult =
  * Duplicates get an incrementing suffix: john.smith2, john.smith3, …
  * The slug is stored as {slug}@users.local in User.email.
  */
-async function generateUniqueUsername(name: string): Promise<string> {
+/**
+ * Returns the slug string, or null if the name yields no usable ASCII characters.
+ */
+async function generateUniqueUsername(name: string): Promise<string | null> {
   const parts = name.trim().toLowerCase().split(/\s+/)
   const first = parts[0].replace(/[^a-z0-9]/g, '')
   const last = parts.length > 1 ? parts[parts.length - 1].replace(/[^a-z0-9]/g, '') : ''
   const base = last ? `${first}.${last}` : first
+
+  // Guard: name must produce at least one ASCII character
+  if (!base || base === '.') return null
 
   const taken = await prisma.user.findUnique({ where: { email: `${base}@users.local` } })
   if (!taken) return base
@@ -109,6 +115,12 @@ export async function inviteTechnician(
     } else if (validMethod === 'manual') {
       // Generate username slug; auth normalises slug → slug@users.local for DB lookup
       const slug = await generateUniqueUsername(validName)
+      if (!slug) {
+        return {
+          success: false,
+          error: 'Could not generate a username from this name. Please use letters and numbers.',
+        }
+      }
       loginEmail = slug                        // shown to admin: "john.smith"
       internalEmail = `${slug}@users.local`   // stored in DB
       isPlaceholderEmail = true
