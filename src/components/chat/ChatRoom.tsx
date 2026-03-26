@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Loader2, Send, Sparkles, X, MessageSquare } from 'lucide-react'
+import { Loader2, Send, MessageSquare } from 'lucide-react'
 import { ChatMessage, type ChatMessageData } from '@/components/chat/ChatMessage'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
@@ -17,8 +17,6 @@ export function ChatRoom({ initialMessages, userId, userName }: ChatRoomProps) {
   const [messages, setMessages] = useState<ChatMessageData[]>(initialMessages)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
-  const [summarizing, setSummarizing] = useState(false)
-  const [summary, setSummary] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const channelRef = useRef<RealtimeChannel | null>(null)
@@ -168,30 +166,6 @@ export function ChatRoom({ initialMessages, userId, userName }: ChatRoomProps) {
     }
   }
 
-  async function handleSummary() {
-    setSummarizing(true)
-    setSummary(null)
-    try {
-      const res = await fetch('/api/ai/chat-summary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: messages.slice(-50).map((m) => ({
-            name: m.userName,
-            body: m.body,
-            time: m.createdAt,
-          })),
-        }),
-      })
-      if (!res.ok) throw new Error('Summary failed')
-      const data = await res.json()
-      setSummary(data.summary ?? 'No summary available.')
-    } catch {
-      toast.error('Could not generate summary. Try again later.')
-    } finally {
-      setSummarizing(false)
-    }
-  }
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -206,38 +180,8 @@ export function ChatRoom({ initialMessages, userId, userName }: ChatRoomProps) {
             </p>
           </div>
         </div>
-        <button
-          onClick={handleSummary}
-          disabled={summarizing || messages.length === 0}
-          className="flex items-center gap-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {summarizing ? (
-            <Loader2 className="size-3.5 animate-spin" />
-          ) : (
-            <Sparkles className="size-3.5 text-violet-500" />
-          )}
-          {summarizing ? 'Summarizing...' : 'AI Summary'}
-        </button>
       </div>
 
-      {/* AI Summary banner */}
-      {summary && (
-        <div className="border-b border-violet-100 bg-violet-50 px-5 py-3">
-          <div className="flex items-start gap-2">
-            <Sparkles className="mt-0.5 size-3.5 shrink-0 text-violet-600" />
-            <div className="flex-1">
-              <p className="text-xs font-semibold text-violet-700 mb-0.5">AI Summary</p>
-              <p className="text-sm text-violet-900 leading-relaxed">{summary}</p>
-            </div>
-            <button
-              onClick={() => setSummary(null)}
-              className="text-violet-400 hover:text-violet-600 transition-colors ml-2 mt-0.5"
-            >
-              <X className="size-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Messages area */}
       <div

@@ -120,19 +120,6 @@ export const aiAssistantSchema = z.object({
   imageBase64: z.string().max(7_000_000).optional(), // ~5MB base64
 })
 
-export const aiChatSummarySchema = z.object({
-  messages: z
-    .array(
-      z.object({
-        userName: z.string().trim().max(100),
-        body: z.string().trim().max(2000),
-        timestamp: z.string().max(50),
-      })
-    )
-    .min(1)
-    .max(100),
-})
-
 export const aiCleanNotesSchema = z.object({
   rawNotes: text(5000),
   context: optionalText(500),
