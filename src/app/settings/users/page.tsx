@@ -1,7 +1,8 @@
 import Link from 'next/link'
-import { Plus, UserX, Shield, Truck, Headphones } from 'lucide-react'
+import { Plus, UserX, Shield, Truck, Headphones, Mail } from 'lucide-react'
 import { prisma } from '@/lib/db'
 import { requireAdminSession } from '@/lib/actions/users'
+import { InviteModalWrapper } from '@/components/invite-modal/InviteModalWrapper'
 
 const ROLE_STYLES: Record<string, { label: string; className: string; icon: React.ElementType }> = {
   ADMIN: { label: 'Admin', className: 'bg-red-50 text-red-700 border-red-200', icon: Shield },
@@ -24,19 +25,27 @@ export default async function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">User Management</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{active.length} active · {inactive.length} inactive</p>
+      <InviteModalWrapper>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900">User Management</h1>
+            <p className="text-sm text-gray-500 mt-0.5">{active.length} active · {inactive.length} inactive</p>
+          </div>
+          <div className="flex gap-2">
+            <InviteModalWrapper.TriggerButton>
+              <Mail className="size-4" />
+              Invite Technician
+            </InviteModalWrapper.TriggerButton>
+            <Link
+              href="/settings/users/new"
+              className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+            >
+              <Plus className="size-4" />
+              Add User
+            </Link>
+          </div>
         </div>
-        <Link
-          href="/settings/users/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
-        >
-          <Plus className="size-4" />
-          Add User
-        </Link>
-      </div>
+      </InviteModalWrapper>
 
       <UserTable users={active} />
 

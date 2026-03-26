@@ -120,6 +120,10 @@ export const aiAssistantSchema = z.object({
   imageBase64: z.string().max(7_000_000).optional(), // ~5MB base64
 })
 
+export const extractWorkOrderSchema = z.object({
+  imageBase64: z.string().min(1).max(7_000_000), // required — this endpoint is image-only
+})
+
 export const aiCleanNotesSchema = z.object({
   rawNotes: text(5000),
   context: optionalText(500),
@@ -189,4 +193,17 @@ export const userUpdateSchema = z.object({
 export const passwordResetSchema = z.object({
   token: z.string().min(1).max(200),
   password: z.string().min(8).max(100),
+})
+
+// ─── Technician Invitations ───────────────────────────────────────
+
+export const technicianInviteSchema = z.object({
+  name: text(100),
+  email: z.string().trim().email().max(200),
+  phone: z
+    .string()
+    .trim()
+    .min(7)
+    .max(20)
+    .regex(/^[\d\s\+\-\(\)\.]+$/, 'Invalid phone number'),
 })

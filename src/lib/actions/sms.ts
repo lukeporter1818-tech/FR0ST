@@ -9,7 +9,15 @@ export async function sendSms(
   technicianId: string,
   body: string,
   jobId?: string,
-  aiDrafted?: boolean
+  aiDrafted?: boolean,
+  /**
+   * When provided, this value is persisted to `smsMessages.body` instead of
+   * `body`. Use it to store a redacted version when the outbound message
+   * contains a credential (e.g. a temporary password). The actual SMS sent
+   * to the technician is always `body` — this only affects what lands in the
+   * database log.
+   */
+  bodyForLog?: string
 ) {
   const session = await requireRole('DISPATCHER')
 
@@ -50,7 +58,7 @@ export async function sendSms(
       status = 'failed'
     }
   } else {
-    console.log(`[SMS SIMULATED] To: ${technician.name} (${technician.phone})\n  Body: ${body}`)
+    console.log(`[SMS SIMULATED] To: ${technician.name} (${technician.phone})\n  Body: ${bodyForLog ?? body}`)
   }
 
   const smsMessage = await prisma.smsMessage.create({
@@ -58,7 +66,7 @@ export async function sendSms(
       technicianId,
       jobId: jobId || null,
       direction: 'OUTBOUND',
-      body,
+      body: bodyForLog ?? body, // bodyForLog lets callers persist a redacted version
       aiDrafted: aiDrafted ?? false,
       twilioSid,
       status,

@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Bot, Camera, Send, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { addWorkOrderToBoard } from '@/lib/actions/board'
+import type { WorkOrderExtraction } from '@/types/work-order'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Message {
   id: string
@@ -10,54 +14,18 @@ interface Message {
   content: string
   imageUrl?: string
   timestamp: Date
+  workOrder?: WorkOrderExtraction // present when this message displays a WO card
 }
 
-// Removed example prompts for mobile-first focus - users get started immediately
+interface TechMatch {
+  id: string
+  name: string
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-}
-
-function AssistantContent({ content }: { content: string }) {
-  const lines = content.split('\n')
-  return (
-    <div className="space-y-2 text-sm leading-relaxed text-gray-900">
-      {lines.map((line, i) => {
-        // Handle list items (- or •)
-        if (line.startsWith('- ') || line.startsWith('• ')) {
-          const text = line.slice(2)
-          return (
-            <div key={i} className="flex gap-2.5 items-start">
-              <span className="mt-1.5 shrink-0 text-gray-400 text-xs">▸</span>
-              <span className="flex-1">{renderInline(text)}</span>
-            </div>
-          )
-        }
-        // Handle numbered lists
-        if (line.match(/^\d+\.\s/)) {
-          const text = line.replace(/^\d+\.\s/, '')
-          return (
-            <div key={i} className="flex gap-2.5 items-start">
-              <span className="mt-1.5 shrink-0 text-gray-400 text-xs font-medium">
-                {line.match(/^\d+/)?.[0]}
-              </span>
-              <span className="flex-1">{renderInline(text)}</span>
-            </div>
-          )
-        }
-        // Empty line = spacing
-        if (line === '') {
-          return <div key={i} className="h-0.5" />
-        }
-        // Regular paragraph
-        return (
-          <p key={i} className="text-sm">
-            {renderInline(line)}
-          </p>
-        )
-      })}
-    </div>
-  )
 }
 
 function renderInline(text: string): React.ReactNode {
@@ -70,6 +38,91 @@ function renderInline(text: string): React.ReactNode {
   })
 }
 
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function AssistantContent({ content }: { content: string }) {
+  const lines = content.split('\n')
+  return (
+    <div className="space-y-2 text-sm leading-relaxed text-gray-900">
+      {lines.map((line, i) => {
+        if (line.startsWith('- ') || line.startsWith('• ')) {
+          return (
+            <div key={i} className="flex gap-2.5 items-start">
+              <span className="mt-1.5 shrink-0 text-gray-400 text-xs">▸</span>
+              <span className="flex-1">{renderInline(line.slice(2))}</span>
+            </div>
+          )
+        }
+        if (line.match(/^\d+\.\s/)) {
+          return (
+            <div key={i} className="flex gap-2.5 items-start">
+              <span className="mt-1.5 shrink-0 text-gray-400 text-xs font-medium">
+                {line.match(/^\d+/)?.[0]}
+              </span>
+              <span className="flex-1">{renderInline(line.replace(/^\d+\.\s/, ''))}</span>
+            </div>
+          )
+        }
+        if (line === '') return <div key={i} className="h-0.5" />
+        return <p key={i} className="text-sm">{renderInline(line)}</p>
+      })}
+    </div>
+  )
+}
+
+function ConfidenceBadge({ confidence }: { confidence: 'high' | 'medium' | 'low' }) {
+  const styles: Record<string, string> = {
+    high: 'bg-green-50 text-green-700 border-green-200',
+    medium: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+    low: 'bg-red-50 text-red-700 border-red-200',
+  }
+  return (
+    <span className={cn('text-xs px-2 py-0.5 rounded-full border font-medium', styles[confidence])}>
+      {confidence} confidence
+    </span>
+  )
+}
+
+function WorkOrderCard({ wo }: { wo: WorkOrderExtraction }) {
+  return (
+    <div className="mb-3 rounded-xl border border-gray-200 bg-gray-50 overflow-hidden">
+      {/* Card header */}
+      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 bg-white">
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Work Order</span>
+        <ConfidenceBadge confidence={wo.confidence} />
+      </div>
+
+      {/* Card body */}
+      <div className="px-3 py-2.5 space-y-1.5">
+        {wo.workOrderNumber && (
+          <p className="text-sm font-semibold text-gray-900">{wo.workOrderNumber}</p>
+        )}
+        {wo.shortDescription && (
+          <p className="text-sm text-gray-700">{wo.shortDescription}</p>
+        )}
+        {(wo.siteName || wo.callType || wo.priority) && (
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-600 pt-0.5">
+            {wo.siteName && (
+              <span><span className="font-medium">Site:</span> {wo.siteName}</span>
+            )}
+            {wo.callType && (
+              <span><span className="font-medium">Type:</span> {wo.callType}</span>
+            )}
+            {wo.priority && (
+              <span><span className="font-medium">Priority:</span> {wo.priority}</span>
+            )}
+          </div>
+        )}
+        {wo.confidence === 'low' && (
+          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-1">
+            ⚠ Low confidence — verify the details above before assigning.
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function LoadingDots() {
   return (
     <div className="flex items-center gap-1 px-1 py-0.5">
@@ -80,38 +133,59 @@ function LoadingDots() {
   )
 }
 
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export function AIAssistant() {
+  // Chat state
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  // Work order intake state machine
+  // null      → normal chat mode
+  // 'awaiting-tech' → WO extracted, waiting for dispatcher to name a tech
+  // 'confirming'    → tech matched, waiting for dispatcher to confirm schedule write
+  const [intakeStep, setIntakeStep] = useState<'awaiting-tech' | 'confirming' | null>(null)
+  const [pendingExtraction, setPendingExtraction] = useState<WorkOrderExtraction | null>(null)
+  const [pendingTechMatch, setPendingTechMatch] = useState<TechMatch | null>(null)
+  const [techList, setTechList] = useState<TechMatch[]>([])
+
+  // Upload source menu
+  const [showUploadMenu, setShowUploadMenu] = useState(false)
+
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  // Single file input — accept/capture are set dynamically before .click()
+  // so there is never a `capture` input sitting in the DOM near the camera button
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Scroll to bottom when messages update
   const scrollToBottom = useCallback(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }, [])
 
+  useEffect(() => { scrollToBottom() }, [messages, loading, scrollToBottom])
+
+  // Load technician list once on mount for name-matching
   useEffect(() => {
-    scrollToBottom()
-  }, [messages, loading, scrollToBottom])
+    fetch('/api/technicians')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((techs: TechMatch[]) => setTechList(techs))
+      .catch(() => {}) // silent — tech matching degrades gracefully
+  }, [])
+
+  // ── Image handling ──────────────────────────────────────────────────────────
 
   const handleImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     setImageFile(file)
     const reader = new FileReader()
-    reader.onload = (ev) => {
-      setImagePreview(ev.target?.result as string)
-    }
+    reader.onload = (ev) => setImagePreview(ev.target?.result as string)
     reader.readAsDataURL(file)
-    // Reset so the same file can be re-selected
-    e.target.value = ''
+    e.target.value = '' // allow re-selecting same file
   }, [])
 
   const removeImage = useCallback(() => {
@@ -119,10 +193,146 @@ export function AIAssistant() {
     setImagePreview(null)
   }, [])
 
+  // Programmatically open the hidden file input with the correct constraints for
+  // each menu option. Attributes are set synchronously within the user-gesture
+  // handler, then .click() fires — still inside the same gesture context so
+  // iOS Safari honours the capture intent. The `capture` attribute is removed
+  // when not needed so it never sits in the DOM near the camera button.
+  const triggerFileInput = useCallback((accept: string, capture?: 'environment') => {
+    setShowUploadMenu(false)
+    const input = fileInputRef.current
+    if (!input) return
+    input.accept = accept
+    if (capture) {
+      input.setAttribute('capture', capture)
+    } else {
+      input.removeAttribute('capture')
+    }
+    input.click()
+  }, [])
+
+  // ── Intake confirmation handlers ────────────────────────────────────────────
+
+  const resetIntake = useCallback(() => {
+    setIntakeStep(null)
+    setPendingExtraction(null)
+    setPendingTechMatch(null)
+  }, [])
+
+  const handleConfirmAssign = useCallback(async () => {
+    if (!pendingExtraction || !pendingTechMatch) return
+    setLoading(true)
+
+    try {
+      const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD in UTC
+      // assignment = WO number (preferred) or description as fallback
+      // note = description, but omit when it would duplicate assignment
+      const assignment = pendingExtraction.workOrderNumber ?? pendingExtraction.shortDescription ?? ''
+      const note =
+        pendingExtraction.workOrderNumber && pendingExtraction.shortDescription
+          ? pendingExtraction.shortDescription
+          : ''
+      await addWorkOrderToBoard(pendingTechMatch.id, assignment, note, today)
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: `Done ✓ **${pendingTechMatch.name}** — **${pendingExtraction.workOrderNumber ?? 'Work order'}** added to today's Schedule.`,
+          timestamp: new Date(),
+        },
+      ])
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: `Failed to add to Schedule: ${err instanceof Error ? err.message : 'Unknown error'}. Please try again.`,
+          timestamp: new Date(),
+        },
+      ])
+    } finally {
+      setLoading(false)
+      resetIntake()
+    }
+  }, [pendingExtraction, pendingTechMatch, resetIntake])
+
+  const handleCancelAssign = useCallback(() => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: 'Assignment cancelled.',
+        timestamp: new Date(),
+      },
+    ])
+    resetIntake()
+  }, [resetIntake])
+
+  // ── Main send handler ───────────────────────────────────────────────────────
+
   const sendMessage = useCallback(async () => {
     const text = input.trim()
     if (!text && !imageFile) return
     if (loading) return
+
+    // ── State: awaiting technician name ────────────────────────────────────
+    // Intercept text replies when we're in intake mode (no image — a new image
+    // restarts the extraction flow below instead)
+    if (intakeStep === 'awaiting-tech' && !imageFile && pendingExtraction) {
+      if (!text) return
+
+      setMessages((prev) => [
+        ...prev,
+        { id: crypto.randomUUID(), role: 'user', content: text, timestamp: new Date() },
+      ])
+      setInput('')
+
+      // Match tech by name — prioritized tiers to avoid false positives.
+      // Tier 1: exact full name. Tier 2: exact first name. Tier 3: first or
+      // last name starts with input (minimum 2 chars to reduce noise).
+      const lower = text.toLowerCase()
+      const match =
+        techList.find((t) => t.name.toLowerCase() === lower) ??
+        techList.find((t) => t.name.toLowerCase().split(' ')[0] === lower) ??
+        (lower.length >= 2
+          ? techList.find((t) => {
+              const parts = t.name.toLowerCase().split(' ')
+              return parts.some((p) => p.startsWith(lower))
+            })
+          : undefined) ??
+        null
+
+      if (match) {
+        setPendingTechMatch(match)
+        setIntakeStep('confirming')
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            content: `Got it — assign **${pendingExtraction.workOrderNumber ?? pendingExtraction.shortDescription ?? 'this work order'}** to **${match.name}** and add to today's Schedule?`,
+            timestamp: new Date(),
+          },
+        ])
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            content: `Couldn't find a technician matching "${text}". Try their first name or full name.`,
+            timestamp: new Date(),
+          },
+        ])
+      }
+      return
+    }
+
+    // ── New image upload resets any in-progress intake ──────────────────────
+    if (imageFile) resetIntake()
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -139,21 +349,46 @@ export function AIAssistant() {
     setLoading(true)
 
     try {
-      // Build conversation history for the API (exclude image data URLs — we send imageBase64 separately)
-      const history = messages.map((m) => ({
-        role: m.role,
-        content: m.content,
-      }))
-      // Add the current user message to history
+      // ── Work order extraction path ────────────────────────────────────────
+      // When an image is attached, try extraction first. If a work order is
+      // detected we enter intake mode and skip the general assistant call.
+      if (userMessage.imageUrl) {
+        const extractRes = await fetch('/api/ai/extract-work-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: userMessage.imageUrl }),
+        })
+
+        if (extractRes.ok) {
+          const extraction: WorkOrderExtraction = await extractRes.json()
+
+          if (extraction.detected) {
+            setPendingExtraction(extraction)
+            setIntakeStep('awaiting-tech')
+
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                content: 'Which tech should I assign this to?',
+                timestamp: new Date(),
+                workOrder: extraction,
+              },
+            ])
+            return // intake mode started — don't call assistant
+          }
+          // detected: false → fall through to normal assistant below
+        }
+        // extraction request failed → fall through gracefully
+      }
+
+      // ── General assistant path ────────────────────────────────────────────
+      const history = messages.map((m) => ({ role: m.role, content: m.content }))
       history.push({ role: 'user', content: text })
 
-      const body: { messages: typeof history; imageBase64?: string } = {
-        messages: history,
-      }
-
-      if (userMessage.imageUrl) {
-        body.imageBase64 = userMessage.imageUrl
-      }
+      const body: { messages: typeof history; imageBase64?: string } = { messages: history }
+      if (userMessage.imageUrl) body.imageBase64 = userMessage.imageUrl
 
       const res = await fetch('/api/ai/assistant', {
         method: 'POST',
@@ -161,32 +396,32 @@ export function AIAssistant() {
         body: JSON.stringify(body),
       })
 
-      if (!res.ok) {
-        throw new Error(`Request failed: ${res.status}`)
-      }
-
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`)
       const data = await res.json()
 
-      const assistantMessage: Message = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: data.response,
-        timestamp: new Date(),
-      }
-
-      setMessages((prev) => [...prev, assistantMessage])
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: data.response,
+          timestamp: new Date(),
+        },
+      ])
     } catch {
-      const errorMessage: Message = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: 'Something went wrong reaching the assistant. Check your connection and try again.',
-        timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, errorMessage])
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: 'Something went wrong reaching the assistant. Check your connection and try again.',
+          timestamp: new Date(),
+        },
+      ])
     } finally {
       setLoading(false)
     }
-  }, [input, imageFile, imagePreview, loading, messages])
+  }, [input, imageFile, imagePreview, loading, messages, intakeStep, pendingExtraction, techList, resetIntake])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -198,11 +433,29 @@ export function AIAssistant() {
     [sendMessage],
   )
 
-  const canSend = (input.trim().length > 0 || imageFile !== null) && !loading
+  // Disable send while confirming — the banner handles that step
+  const canSend =
+    (input.trim().length > 0 || imageFile !== null) &&
+    !loading &&
+    intakeStep !== 'confirming'
+
+  // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    // Break out of the parent <main>'s p-6 padding using -m-6, match full height
     <div className="flex flex-col h-[calc(100vh-4rem)] -m-6">
+      {/*
+        Hidden file input — lives at the component root, completely outside the
+        camera button and its wrapper. accept/capture are set dynamically by
+        triggerFileInput() so a `capture` element never sits dormant near the
+        button (which triggers iOS to activate the camera before JS can run).
+      */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={handleImageSelect}
+      />
+
       {/* Header */}
       <div className="shrink-0 border-b border-gray-200 bg-white px-4 py-3 sm:px-6">
         <h1 className="text-base font-semibold text-gray-900">Frost Field Helper</h1>
@@ -212,12 +465,8 @@ export function AIAssistant() {
       </div>
 
       {/* Messages area */}
-      <div
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 sm:px-6"
-      >
+      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 sm:px-6">
         {messages.length === 0 ? (
-          // Empty state — minimal and action-focused for field use
           <div className="flex flex-col items-center justify-center h-full gap-4 pb-8 px-2">
             <div className="flex flex-col items-center gap-2 text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-900 text-white">
@@ -251,19 +500,17 @@ export function AIAssistant() {
                       />
                     )}
                     {message.content && (
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                        {message.content}
-                      </p>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
                     )}
                   </div>
                 ) : (
                   <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-3 max-w-[85%]">
-                    <AssistantContent content={message.content} />
+                    {/* Work order card appears above the text when present */}
+                    {message.workOrder && <WorkOrderCard wo={message.workOrder} />}
+                    {message.content && <AssistantContent content={message.content} />}
                   </div>
                 )}
-                <span className="text-xs text-gray-400 px-1">
-                  {formatTime(message.timestamp)}
-                </span>
+                <span className="text-xs text-gray-400 px-1">{formatTime(message.timestamp)}</span>
               </div>
             ))}
 
@@ -278,7 +525,7 @@ export function AIAssistant() {
         )}
       </div>
 
-      {/* Image preview */}
+      {/* Image preview strip */}
       {imagePreview && (
         <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-2 sm:px-6">
           <div className="relative inline-block">
@@ -298,40 +545,140 @@ export function AIAssistant() {
         </div>
       )}
 
+      {/* Intake hint bar — shown when waiting for a tech name, with escape hatch */}
+      {intakeStep === 'awaiting-tech' && pendingExtraction && (
+        <div className="shrink-0 border-t border-blue-200 bg-blue-50 px-4 py-2 sm:px-6 flex items-center justify-between">
+          <p className="text-xs text-blue-700">
+            <span className="font-medium">Work order detected</span> — type a technician name to assign
+          </p>
+          <button
+            onClick={() => {
+              resetIntake()
+              setMessages((prev) => [
+                ...prev,
+                { id: crypto.randomUUID(), role: 'assistant', content: 'Work order intake cancelled.', timestamp: new Date() },
+              ])
+            }}
+            className="text-xs text-blue-600 hover:text-blue-800 font-medium ml-3 shrink-0"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {/* Schedule confirm banner — shown when tech is matched and awaiting confirmation */}
+      {intakeStep === 'confirming' && pendingExtraction && pendingTechMatch && (
+        <div className="shrink-0 border-t border-amber-200 bg-amber-50 px-4 py-3 sm:px-6">
+          <p className="text-sm font-medium text-gray-900 mb-2.5">
+            Assign{' '}
+            <strong>
+              {pendingExtraction.workOrderNumber ?? pendingExtraction.shortDescription ?? 'work order'}
+            </strong>{' '}
+            to <strong>{pendingTechMatch.name}</strong> today?
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={handleConfirmAssign}
+              disabled={loading}
+              className="flex-1 rounded-lg bg-gray-900 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-700 disabled:opacity-50"
+            >
+              {loading ? 'Saving…' : 'Confirm'}
+            </button>
+            <button
+              onClick={handleCancelAssign}
+              disabled={loading}
+              className="flex-1 rounded-lg border border-gray-300 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Input bar */}
       <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
         <div className="flex items-end gap-2">
-          {/* Camera button */}
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors active:bg-gray-100"
-            title="Add photo"
-            aria-label="Add photo"
-          >
-            <Camera size={18} />
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={handleImageSelect}
-          />
+          {/* Camera button — no file inputs anywhere in this subtree */}
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setShowUploadMenu((v) => !v) }}
+              disabled={intakeStep === 'confirming'}
+              className={cn(
+                'flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white transition-colors',
+                intakeStep === 'confirming'
+                  ? 'text-gray-300 cursor-not-allowed'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700 active:bg-gray-100',
+              )}
+              title="Add photo"
+              aria-label="Add photo"
+            >
+              <Camera size={18} />
+            </button>
 
-          {/* Text input */}
+            {/* Upload source menu — no inputs here, all picking done via triggerFileInput */}
+            {showUploadMenu && (
+              <>
+                {/* Backdrop — captures outside clicks to close the menu */}
+                <div className="fixed inset-0 z-10" onClick={() => setShowUploadMenu(false)} />
+
+                {/* Menu card — floats above the camera button */}
+                <div className="absolute bottom-full left-0 z-20 mb-2 w-44 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
+                  <button
+                    type="button"
+                    onClick={() => triggerFileInput('image/*', 'environment')}
+                    className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                  >
+                    Take Photo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => triggerFileInput('image/*')}
+                    className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                  >
+                    Photos
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => triggerFileInput('*/*')}
+                    className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                  >
+                    Files
+                  </button>
+                  <div className="border-t border-gray-100" />
+                  <button
+                    type="button"
+                    onClick={() => setShowUploadMenu(false)}
+                    className="w-full px-4 py-3 text-left text-sm font-medium text-gray-500 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Text input — locked during confirmation (banner takes over) */}
           <textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Describe the problem..."
+            placeholder={
+              intakeStep === 'awaiting-tech'
+                ? 'Type a technician name…'
+                : intakeStep === 'confirming'
+                  ? 'Use the buttons above to confirm or cancel…'
+                  : 'Describe the problem…'
+            }
             rows={1}
+            disabled={loading || intakeStep === 'confirming'}
             className={cn(
               'flex-1 resize-none rounded-xl bg-gray-100 px-4 py-3 text-sm text-gray-900',
               'placeholder:text-gray-400 outline-none',
               'focus:bg-white focus:ring-2 focus:ring-gray-900',
               'transition-colors max-h-32 leading-relaxed',
+              (loading || intakeStep === 'confirming') && 'opacity-50 cursor-not-allowed',
             )}
             style={{ overflowY: input.split('\n').length > 3 ? 'auto' : 'hidden' }}
             onInput={(e) => {

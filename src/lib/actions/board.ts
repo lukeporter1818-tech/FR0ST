@@ -61,6 +61,66 @@ export async function saveBoardEntries(
   revalidatePath('/')
 }
 
+/**
+ * Non-destructive single-entry upsert for the Schedule board.
+ * Used by the Frost work order intake flow after dispatcher confirmation.
+ *
+ * - On update: replaces assignment + note, preserves existing status and orderIndex
+ * - On create: sets status ASSIGNED, orderIndex = current row count for that date
+ *
+ * Unlike saveBoardEntries (which deletes and rewrites the whole day), this
+ * touches exactly one row so it is safe to call at any time.
+ */
+export async function addWorkOrderToBoard(
+  technicianId: string,
+  assignment: string,
+  note: string,
+  date: string // YYYY-MM-DD
+): Promise<void> {
+  const session = await requireRole('DISPATCHER')
+
+  if (!technicianId || typeof technicianId !== 'string' || technicianId.length > 100) {
+    throw new Error('Invalid technicianId')
+  }
+
+  const parsedDate = parseDate(date)
+
+  const sanitizedAssignment = String(assignment ?? '').trim().slice(0, 200)
+  const sanitizedNote = String(note ?? '').trim().slice(0, 500)
+
+  // Determine orderIndex for a new row: append after existing rows for this date
+  const rowCount = await prisma.boardEntry.count({ where: { date: parsedDate } })
+
+  await prisma.boardEntry.upsert({
+    where: { technicianId_date: { technicianId, date: parsedDate } },
+    update: {
+      assignment: sanitizedAssignment,
+      note: sanitizedNote,
+      // Intentionally not touching status or orderIndex on update —
+      // the tech may already be en-route; preserve their current state.
+    },
+    create: {
+      technicianId,
+      date: parsedDate,
+      assignment: sanitizedAssignment,
+      note: sanitizedNote,
+      status: 'ASSIGNED',
+      orderIndex: rowCount,
+    },
+  })
+
+  auditLog({
+    action: 'board.assign_from_screenshot',
+    userId: session.user.id,
+    userRole: session.user.role,
+    targetId: technicianId,
+    targetType: 'Technician',
+    meta: { date, assignment: sanitizedAssignment },
+  })
+
+  revalidatePath('/')
+}
+
 export async function updateMyRow(
   technicianId: string,
   date: string,
