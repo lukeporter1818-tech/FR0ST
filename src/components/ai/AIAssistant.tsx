@@ -152,8 +152,10 @@ export function AIAssistant() {
   const [pendingTechMatch, setPendingTechMatch] = useState<TechMatch | null>(null)
   const [techList, setTechList] = useState<TechMatch[]>([])
 
-  // Upload source menu
+  // Upload source menu + its fixed screen coordinates (computed on open)
   const [showUploadMenu, setShowUploadMenu] = useState(false)
+  const [menuPos, setMenuPos] = useState<{ bottom: number; left: number } | null>(null)
+  const cameraButtonRef = useRef<HTMLButtonElement>(null)
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -193,23 +195,46 @@ export function AIAssistant() {
     setImagePreview(null)
   }, [])
 
-  // Programmatically open the hidden file input with the correct constraints for
-  // each menu option. Attributes are set synchronously within the user-gesture
-  // handler, then .click() fires — still inside the same gesture context so
-  // iOS Safari honours the capture intent. The `capture` attribute is removed
-  // when not needed so it never sits in the DOM near the camera button.
+  // Open the upload menu: compute fixed screen position from the button's rect
+  // so the menu card uses position:fixed and is immune to ancestor overflow clipping.
+  const openUploadMenu = useCallback(() => {
+    const btn = cameraButtonRef.current
+    if (!btn) return
+    const rect = btn.getBoundingClientRect()
+    setMenuPos({
+      bottom: window.innerHeight - rect.top + 8, // 8px gap above the button
+      left: rect.left,
+    })
+    setShowUploadMenu(true)
+  }, [])
+
+  // Trigger the shared hidden file input. capture is only set on genuine touch
+  // devices (iOS / Android). On desktop, capture="environment" opens the Chrome
+  // webcam UI instead of a normal image picker — which is not the intended UX.
   const triggerFileInput = useCallback((accept: string, capture?: 'environment') => {
     setShowUploadMenu(false)
+    setMenuPos(null)
     const input = fileInputRef.current
     if (!input) return
     input.accept = accept
-    if (capture) {
+    const isTouchDevice = typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0
+    if (capture && isTouchDevice) {
       input.setAttribute('capture', capture)
     } else {
       input.removeAttribute('capture')
     }
     input.click()
   }, [])
+
+  // Close the menu on Escape key (desktop keyboard UX)
+  useEffect(() => {
+    if (!showUploadMenu) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setShowUploadMenu(false); setMenuPos(null) }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [showUploadMenu])
 
   // ── Intake confirmation handlers ────────────────────────────────────────────
 
@@ -599,10 +624,14 @@ export function AIAssistant() {
       <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
         <div className="flex items-end gap-2">
           {/* Camera button — no file inputs anywhere in this subtree */}
-          <div className="relative shrink-0">
+          <div className="shrink-0">
             <button
+              ref={cameraButtonRef}
               type="button"
-              onClick={(e) => { e.stopPropagation(); setShowUploadMenu((v) => !v) }}
+              onClick={(e) => {
+                e.stopPropagation()
+                showUploadMenu ? (setShowUploadMenu(false), setMenuPos(null)) : openUploadMenu()
+              }}
               disabled={intakeStep === 'confirming'}
               className={cn(
                 'flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white transition-colors',
@@ -615,48 +644,55 @@ export function AIAssistant() {
             >
               <Camera size={18} />
             </button>
-
-            {/* Upload source menu — no inputs here, all picking done via triggerFileInput */}
-            {showUploadMenu && (
-              <>
-                {/* Backdrop — captures outside clicks to close the menu */}
-                <div className="fixed inset-0 z-10" onClick={() => setShowUploadMenu(false)} />
-
-                {/* Menu card — floats above the camera button */}
-                <div className="absolute bottom-full left-0 z-20 mb-2 w-44 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
-                  <button
-                    type="button"
-                    onClick={() => triggerFileInput('image/*', 'environment')}
-                    className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                  >
-                    Take Photo
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => triggerFileInput('image/*')}
-                    className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                  >
-                    Photos
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => triggerFileInput('*/*')}
-                    className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                  >
-                    Files
-                  </button>
-                  <div className="border-t border-gray-100" />
-                  <button
-                    type="button"
-                    onClick={() => setShowUploadMenu(false)}
-                    className="w-full px-4 py-3 text-left text-sm font-medium text-gray-500 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            )}
           </div>
+
+          {/* Upload source menu — rendered as fixed so it escapes ancestor overflow:hidden.
+              Coordinates are computed from the button's getBoundingClientRect() on open. */}
+          {showUploadMenu && menuPos && (
+            <>
+              {/* Backdrop — captures outside clicks and keyboard Escape (handled by effect) */}
+              <div
+                className="fixed inset-0 z-[998]"
+                onClick={() => { setShowUploadMenu(false); setMenuPos(null) }}
+              />
+
+              {/* Menu card — fixed, positioned above the camera button */}
+              <div
+                className="fixed z-[999] w-48 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl"
+                style={{ bottom: menuPos.bottom, left: menuPos.left }}
+              >
+                <button
+                  type="button"
+                  onClick={() => triggerFileInput('image/*', 'environment')}
+                  className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                >
+                  Take Photo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => triggerFileInput('image/*')}
+                  className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                >
+                  Photos
+                </button>
+                <button
+                  type="button"
+                  onClick={() => triggerFileInput('*/*')}
+                  className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                >
+                  Files
+                </button>
+                <div className="border-t border-gray-100" />
+                <button
+                  type="button"
+                  onClick={() => { setShowUploadMenu(false); setMenuPos(null) }}
+                  className="w-full px-4 py-3 text-left text-sm font-medium text-gray-500 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
 
           {/* Text input — locked during confirmation (banner takes over) */}
           <textarea
