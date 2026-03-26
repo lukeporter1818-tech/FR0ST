@@ -52,7 +52,7 @@ export function AppShell({
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
-      <Sidebar userRole={userRole} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar userRole={userRole} userName={userName} userInitials={userInitials} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (

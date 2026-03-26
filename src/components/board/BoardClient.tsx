@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 import { DateNav } from './DateNav'
-import { saveBoardEntries } from '@/lib/actions/board'
+import { saveBoardEntries, updateMyRow } from '@/lib/actions/board'
 
 export interface BoardRow {
   technicianId: string
@@ -125,15 +126,28 @@ export function BoardClient({
 
   async function handleSave() {
     setSaving(true)
-    if (editingId) commitEdit(editingId)
     try {
-      await saveBoardEntries(date, rows.map((r) => ({
-        technicianId: r.technicianId,
-        assignment: r.assignment,
-        note: r.note,
-        status: r.status,
-      })))
+      if (isTechnician && currentTechnicianId) {
+        // Technicians update only their own row — saveBoardEntries requires DISPATCHER
+        const myRow = rows.find((r) => r.technicianId === currentTechnicianId)
+        if (!myRow) return
+        // Use live editDraft if their row is currently open in the editor
+        const note = editingId === currentTechnicianId ? editDraft.note : myRow.note
+        const status = editingId === currentTechnicianId ? editDraft.status : myRow.status
+        if (editingId) setEditingId(null)
+        await updateMyRow(currentTechnicianId, date, status, note)
+      } else {
+        if (editingId) commitEdit(editingId)
+        await saveBoardEntries(date, rows.map((r) => ({
+          technicianId: r.technicianId,
+          assignment: r.assignment,
+          note: r.note,
+          status: r.status,
+        })))
+      }
       setRows((prev) => prev.map((r) => ({ ...r, dirty: false })))
+    } catch {
+      toast.error('Save failed. Please try again.')
     } finally {
       setSaving(false)
     }

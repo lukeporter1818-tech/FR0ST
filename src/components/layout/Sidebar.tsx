@@ -26,11 +26,13 @@ const secondaryNavItems = [
 
 interface SidebarProps {
   userRole?: string;
+  userName?: string;
+  userInitials?: string;
   open?: boolean;
   onClose?: () => void;
 }
 
-export function Sidebar({ userRole, open, onClose }: SidebarProps) {
+export function Sidebar({ userRole, userName, userInitials, open, onClose }: SidebarProps) {
   const pathname = usePathname();
 
   function isActive(href: string) {
@@ -146,13 +148,15 @@ export function Sidebar({ userRole, open, onClose }: SidebarProps) {
       <div className="shrink-0 border-t border-white/10 px-4 py-3">
         <div className="flex items-center gap-2.5">
           <div className="flex size-7 items-center justify-center rounded-full bg-gray-700 text-xs font-semibold text-gray-200">
-            D
+            {userInitials ?? (userRole?.[0] ?? 'U')}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-medium text-gray-300">
-              Dispatcher
+              {userName ?? userRole ?? 'User'}
             </p>
-            <p className="text-xs text-gray-500">v0.1</p>
+            <p className="text-xs text-gray-500 capitalize">
+              {userRole?.toLowerCase() ?? 'field'}
+            </p>
           </div>
         </div>
       </div>
