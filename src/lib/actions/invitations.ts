@@ -16,14 +16,12 @@ export type InviteResult =
       /**
        * The login identifier shown to the admin/technician.
        * - email/both:  the real email address
-       * - phone:       the placeholder email (tech.{digits}@invite.local)
-       * - manual:      the username slug (e.g. "john.smith") — auth normalises to @users.local
+       * - phone/manual: the username slug (e.g. "john.smith") — auth normalises to @users.local
        */
       loginEmail: string
       /**
-       * True when the loginEmail was generated rather than supplied by the admin.
-       * phone-only: placeholder derived from phone digits
-       * manual:     username slug derived from name
+       * True when the loginEmail was generated from the name rather than supplied by the admin.
+       * phone and manual methods both generate a name-based username slug.
        */
       isPlaceholderEmail: boolean
       tempPassword: string
@@ -71,11 +69,10 @@ async function generateUniqueUsername(name: string): Promise<string | null> {
  * Invite a technician: creates user account + technician profile, then
  * delivers credentials via the chosen method.
  *
- * - email / both:  real email required; credentials sent via email
- * - phone / both:  phone required; placeholder email generated (tech.{digits}@invite.local);
+ * - email / both:  real email required; credentials sent via email; login = email
+ * - phone:         phone required; username slug from name (john.smith → stored as john.smith@users.local);
  *                  credentials sent via SMS
- * - manual:        no contact info required; username slug generated from name
- *                  (john.smith → stored as john.smith@users.local); admin shares manually
+ * - manual:        no contact info required; username slug from name; admin shares manually
  *
  * Requires ADMIN role.
  */
@@ -125,16 +122,23 @@ export async function inviteTechnician(
       internalEmail = `${slug}@users.local`   // stored in DB
       isPlaceholderEmail = true
     } else {
-      // Phone-only: generate a deterministic placeholder so the tech can still log in.
-      // Format: tech.{digits}@invite.local — communicated in the SMS.
-      const digits = validPhone!.replace(/\D/g, '')
-      loginEmail = `tech.${digits}@invite.local`
-      internalEmail = loginEmail
+      // Phone-only: phone is the delivery channel only — login identity is still
+      // name-based so the tech can type a clean username (e.g. "john.smith").
+      const slug = await generateUniqueUsername(validName)
+      if (!slug) {
+        return {
+          success: false,
+          error: 'Could not generate a username from this name. Please use letters and numbers.',
+        }
+      }
+      loginEmail = slug                        // shown on share card / in SMS: "john.smith"
+      internalEmail = `${slug}@users.local`   // stored in DB
       isPlaceholderEmail = true
     }
 
-    // Duplicate check (manual already guaranteed unique by generateUniqueUsername)
-    const existing = validMethod === 'manual'
+    // Duplicate check — manual and phone both use generateUniqueUsername which
+    // already guarantees uniqueness; only email-based identities need an explicit check.
+    const existing = (validMethod === 'manual' || validMethod === 'phone')
       ? null
       : await prisma.user.findUnique({ where: { email: internalEmail } })
     if (existing) {

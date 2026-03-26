@@ -97,7 +97,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
       'FieldCommand Login',
       '──────────────────',
       `Name:     ${formData.name}`,
-      `${success.inviteMethod === 'manual' ? 'Username' : 'Login'}:    ${success.loginEmail}`,
+      `${success.isPlaceholderEmail ? 'Username' : 'Login'}:    ${success.loginEmail}`,
       `Password: ${success.tempPassword}`,
       `URL:      ${url}`,
       '──────────────────',
@@ -269,7 +269,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
                     <span className="text-white text-right truncate">{formData.name}</span>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <span className="text-gray-400 shrink-0">{success.inviteMethod === 'manual' ? 'Username' : 'Login'}</span>
+                    <span className="text-gray-400 shrink-0">{success.isPlaceholderEmail ? 'Username' : 'Login'}</span>
                     <span className="text-white text-right break-all">{success.loginEmail}</span>
                   </div>
                   <div className="flex justify-between gap-4">
@@ -293,13 +293,6 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
                   <DeliveryBadge status={success.smsStatus} message={success.smsStatusMessage} label="SMS" />
                 )}
               </div>
-
-              {/* Phone-only note */}
-              {success.isPlaceholderEmail && success.inviteMethod !== 'manual' && (
-                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                  Login email was generated from the phone number and included in the SMS.
-                </p>
-              )}
 
               {/* Action buttons */}
               <div className="flex gap-2">
