@@ -169,20 +169,6 @@ export function ChatRoom({ initialMessages, userId, userName }: ChatRoomProps) {
 
   return (
     <div className="flex flex-col h-full bg-white">
-      {/* Header bar */}
-      <div className="flex items-center justify-between bg-white border-b border-gray-200 px-5 py-3">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="size-4 text-gray-400" />
-          <div>
-            <h2 className="text-sm font-semibold text-gray-900"># general</h2>
-            <p className="text-xs text-gray-500">
-              {messages.length} message{messages.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-        </div>
-      </div>
-
-
       {/* Messages area */}
       <div
         ref={scrollRef}
