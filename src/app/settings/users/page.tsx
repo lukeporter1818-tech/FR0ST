@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Plus, UserX, Shield, Truck, Headphones, Mail } from 'lucide-react'
 import { prisma } from '@/lib/db'
 import { requireAdminSession } from '@/lib/actions/users'
-import { InviteModalWrapper } from '@/components/invite-modal/InviteModalWrapper'
+import { InviteModalWrapper, InviteModalTriggerButton } from '@/components/invite-modal/InviteModalWrapper'
 
 const ROLE_STYLES: Record<string, { label: string; className: string; icon: React.ElementType }> = {
   ADMIN: { label: 'Admin', className: 'bg-red-50 text-red-700 border-red-200', icon: Shield },
@@ -32,10 +32,10 @@ export default async function UsersPage() {
             <p className="text-sm text-gray-500 mt-0.5">{active.length} active · {inactive.length} inactive</p>
           </div>
           <div className="flex gap-2">
-            <InviteModalWrapper.TriggerButton>
+            <InviteModalTriggerButton>
               <Mail className="size-4" />
               Invite Technician
-            </InviteModalWrapper.TriggerButton>
+            </InviteModalTriggerButton>
             <Link
               href="/settings/users/new"
               className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"

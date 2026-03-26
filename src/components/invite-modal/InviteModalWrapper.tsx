@@ -23,7 +23,11 @@ export function InviteModalWrapper({ children }: { children: ReactNode }) {
   )
 }
 
-function TriggerButton({
+// Named export — keeps the 'use client' proxy happy in Next.js App Router.
+// Compound-component property assignment (Wrapper.Button = ...) is a runtime
+// mutation that Next.js does NOT forward through its server-side module proxy,
+// causing "Element type is invalid: got undefined" in Server Components.
+export function InviteModalTriggerButton({
   children,
   className,
 }: {
@@ -32,7 +36,7 @@ function TriggerButton({
 }) {
   const ctx = useContext(InviteModalContext)
   if (!ctx) {
-    throw new Error('TriggerButton must be used within InviteModalWrapper')
+    throw new Error('InviteModalTriggerButton must be used within InviteModalWrapper')
   }
 
   return (
@@ -47,5 +51,3 @@ function TriggerButton({
     </button>
   )
 }
-
-InviteModalWrapper.TriggerButton = TriggerButton
