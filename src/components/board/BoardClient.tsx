@@ -56,7 +56,8 @@ const STATUS_LABELS: Record<string, string> = {
 function StatusText({ status }: { status: string | null }) {
   if (!status) return null
   return (
-    <span className={cn('text-xs font-medium shrink-0', STATUS_COLORS[status])}>
+    <span className={cn('flex items-center gap-1 text-xs font-semibold shrink-0', STATUS_COLORS[status])}>
+      <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
       {STATUS_LABELS[status]}
     </span>
   )
@@ -147,9 +148,9 @@ export function BoardClient({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors disabled:opacity-40"
+            className="px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-400 text-gray-900 hover:bg-amber-500 transition-colors disabled:opacity-40 shrink-0"
           >
-            {saving ? 'Saving…' : 'Save'}
+            {saving ? 'Saving…' : `Save${dirtyCount > 1 ? ` (${dirtyCount})` : ''}`}
           </button>
         )}
       </div>
@@ -176,8 +177,8 @@ export function BoardClient({
             >
               {/* Name */}
               <span className={cn(
-                'w-28 shrink-0 text-sm leading-none',
-                isOwnRow ? 'font-bold text-gray-900' : 'font-semibold text-gray-900'
+                'w-24 shrink-0 text-[15px] leading-none',
+                isOwnRow ? 'font-bold text-gray-900' : 'font-semibold text-gray-800'
               )}>
                 {row.name.split(' ')[0]}
               </span>
@@ -218,11 +219,11 @@ export function BoardClient({
                 </>
               ) : (
                 <>
-                  <span className={cn('text-base font-bold leading-none', row.assignment ? 'text-gray-900' : 'text-gray-200')}>
+                  <span className={cn('text-base font-bold leading-none tracking-wide', row.assignment ? 'text-gray-900' : 'text-gray-300')}>
                     {row.assignment || '—'}
                   </span>
                   {row.note && (
-                    <span className="flex-1 text-sm text-gray-400 leading-none truncate">
+                    <span className="flex-1 text-sm text-gray-400 leading-none truncate italic">
                       {row.note}
                     </span>
                   )}
