@@ -52,7 +52,7 @@ export function AppShell({
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
-      <Sidebar userRole={userRole} />
+      <Sidebar userRole={userRole} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
@@ -64,7 +64,7 @@ export function AppShell({
       )}
 
       {/* Main content area */}
-      <div className="flex flex-1 flex-col overflow-hidden pl-60">
+      <div className="flex flex-1 flex-col overflow-hidden pl-0 lg:pl-60">
         <TopBar
           title={title}
           onToggleSidebar={toggleSidebar}
