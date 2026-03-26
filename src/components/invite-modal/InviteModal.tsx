@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { X, Copy, AlertCircle, Mail, Phone, MessageSquare } from 'lucide-react'
+import { X, Copy, AlertCircle, Mail, Phone, MessageSquare, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { inviteTechnician, resendInviteSms } from '@/lib/actions/invitations'
@@ -12,13 +12,14 @@ interface InviteModalProps {
   onClose: () => void
 }
 
-type InviteMethod = 'email' | 'phone' | 'both'
+type InviteMethod = 'email' | 'phone' | 'both' | 'manual'
 type SuccessState = Extract<InviteResult, { success: true }>
 
 const METHOD_OPTIONS: { value: InviteMethod; label: string }[] = [
-  { value: 'email', label: 'Email' },
-  { value: 'phone', label: 'Phone' },
-  { value: 'both',  label: 'Both'  },
+  { value: 'manual', label: 'Manual' },
+  { value: 'email',  label: 'Email'  },
+  { value: 'phone',  label: 'Phone'  },
+  { value: 'both',   label: 'Both'   },
 ]
 
 function DeliveryBadge({ status, message, label }: {
@@ -43,7 +44,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
   const [loading, setLoading]           = useState(false)
   const [error, setError]               = useState<string | null>(null)
   const [success, setSuccess]           = useState<SuccessState | null>(null)
-  const [inviteMethod, setInviteMethod] = useState<InviteMethod>('email')
+  const [inviteMethod, setInviteMethod] = useState<InviteMethod>('manual')
   const [formData, setFormData]         = useState({ name: '', email: '', phone: '' })
   const [smsPending, startSmsTransition] = useTransition()
 
@@ -51,11 +52,12 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
 
   const showEmail = inviteMethod === 'email' || inviteMethod === 'both'
   const showPhone = inviteMethod === 'phone' || inviteMethod === 'both'
+  const isManual  = inviteMethod === 'manual'
 
   const handleClose = () => {
     setStep('form')
     setFormData({ name: '', email: '', phone: '' })
-    setInviteMethod('email')
+    setInviteMethod('manual')
     setError(null)
     setSuccess(null)
     onClose()
@@ -172,9 +174,10 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
                           : 'text-gray-500 hover:text-gray-700',
                       )}
                     >
-                      {value === 'email' && <Mail className="size-3" />}
-                      {value === 'phone' && <Phone className="size-3" />}
-                      {value === 'both'  && <><Mail className="size-3" /><Phone className="size-3" /></>}
+                      {value === 'manual' && <UserRound className="size-3" />}
+                      {value === 'email'  && <Mail className="size-3" />}
+                      {value === 'phone'  && <Phone className="size-3" />}
+                      {value === 'both'   && <><Mail className="size-3" /><Phone className="size-3" /></>}
                       {label}
                     </button>
                   ))}
@@ -192,6 +195,11 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
                   required maxLength={100} disabled={loading}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50"
                 />
+                {isManual && (
+                  <p className="text-xs text-gray-400 mt-1.5">
+                    Username will be generated from the name (e.g. <span className="font-mono">jane.smith</span>). Share credentials manually.
+                  </p>
+                )}
               </div>
 
               {/* Email (email + both) */}
@@ -261,7 +269,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
                     <span className="text-white text-right truncate">{formData.name}</span>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <span className="text-gray-400 shrink-0">Login</span>
+                    <span className="text-gray-400 shrink-0">{success.inviteMethod === 'manual' ? 'Username' : 'Login'}</span>
                     <span className="text-white text-right break-all">{success.loginEmail}</span>
                   </div>
                   <div className="flex justify-between gap-4">
@@ -287,7 +295,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
               </div>
 
               {/* Phone-only note */}
-              {success.isPlaceholderEmail && (
+              {success.isPlaceholderEmail && success.inviteMethod !== 'manual' && (
                 <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                   Login email was generated from the phone number and included in the SMS.
                 </p>

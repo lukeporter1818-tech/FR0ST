@@ -13,18 +13,23 @@ import { sendInviteEmail } from './email'
 export type InviteResult =
   | {
       success: true
-      /** The email address used to log in (may be a generated placeholder for phone-only invites) */
+      /**
+       * The login identifier shown to the admin/technician.
+       * - email/both:  the real email address
+       * - phone:       the placeholder email (tech.{digits}@invite.local)
+       * - manual:      the username slug (e.g. "john.smith") — auth normalises to @users.local
+       */
       loginEmail: string
       /**
-       * True when the loginEmail was generated from the phone number rather than
-       * supplied by the admin. The tech uses this placeholder email to log in;
-       * it is communicated to them via SMS.
+       * True when the loginEmail was generated rather than supplied by the admin.
+       * phone-only: placeholder derived from phone digits
+       * manual:     username slug derived from name
        */
       isPlaceholderEmail: boolean
       tempPassword: string
       technicianId: string
       userId: string
-      inviteMethod: 'email' | 'phone' | 'both'
+      inviteMethod: 'email' | 'phone' | 'both' | 'manual'
       emailStatus?: 'sent' | 'simulated' | 'failed'
       emailStatusMessage?: string
       smsStatus?: 'sent' | 'simulated' | 'failed'
@@ -33,13 +38,38 @@ export type InviteResult =
   | { success: false; error: string }
 
 /**
+ * Generates a unique username slug from a full name.
+ * Format: firstname.lastname (e.g. "John Smith" → "john.smith")
+ * Duplicates get an incrementing suffix: john.smith2, john.smith3, …
+ * The slug is stored as {slug}@users.local in User.email.
+ */
+async function generateUniqueUsername(name: string): Promise<string> {
+  const parts = name.trim().toLowerCase().split(/\s+/)
+  const first = parts[0].replace(/[^a-z0-9]/g, '')
+  const last = parts.length > 1 ? parts[parts.length - 1].replace(/[^a-z0-9]/g, '') : ''
+  const base = last ? `${first}.${last}` : first
+
+  const taken = await prisma.user.findUnique({ where: { email: `${base}@users.local` } })
+  if (!taken) return base
+
+  let i = 2
+  while (true) {
+    const candidate = `${base}${i}`
+    const exists = await prisma.user.findUnique({ where: { email: `${candidate}@users.local` } })
+    if (!exists) return candidate
+    i++
+  }
+}
+
+/**
  * Invite a technician: creates user account + technician profile, then
- * delivers credentials via the chosen method (email, SMS, or both).
+ * delivers credentials via the chosen method.
  *
- * Phone-only invites: because the auth system requires an email to log in,
- * a deterministic placeholder is generated: tech.{digits}@invite.local.
- * The technician receives this placeholder + temp password in the SMS so
- * they can log in immediately.
+ * - email / both:  real email required; credentials sent via email
+ * - phone / both:  phone required; placeholder email generated (tech.{digits}@invite.local);
+ *                  credentials sent via SMS
+ * - manual:        no contact info required; username slug generated from name
+ *                  (john.smith → stored as john.smith@users.local); admin shares manually
  *
  * Requires ADMIN role.
  */
@@ -47,7 +77,7 @@ export async function inviteTechnician(
   name: string,
   email: string | undefined,
   phone: string | undefined,
-  inviteMethod: 'email' | 'phone' | 'both'
+  inviteMethod: 'email' | 'phone' | 'both' | 'manual'
 ): Promise<InviteResult> {
   // Auth runs outside the try/catch — Next.js redirect() signals must propagate.
   const session = await requireRole('ADMIN')
@@ -68,26 +98,37 @@ export async function inviteTechnician(
     const validPhone = parsed.data.phone
 
     // Determine login email identity
-    let loginEmail: string
+    let loginEmail: string       // displayed credential (username slug for manual, email otherwise)
+    let internalEmail: string    // stored in User.email
     let isPlaceholderEmail: boolean
 
     if (validMethod === 'email' || validMethod === 'both') {
       loginEmail = parsed.data.email!.toLowerCase()
+      internalEmail = loginEmail
       isPlaceholderEmail = false
+    } else if (validMethod === 'manual') {
+      // Generate username slug; auth normalises slug → slug@users.local for DB lookup
+      const slug = await generateUniqueUsername(validName)
+      loginEmail = slug                        // shown to admin: "john.smith"
+      internalEmail = `${slug}@users.local`   // stored in DB
+      isPlaceholderEmail = true
     } else {
       // Phone-only: generate a deterministic placeholder so the tech can still log in.
       // Format: tech.{digits}@invite.local — communicated in the SMS.
       const digits = validPhone!.replace(/\D/g, '')
       loginEmail = `tech.${digits}@invite.local`
+      internalEmail = loginEmail
       isPlaceholderEmail = true
     }
 
-    // Duplicate check
-    const existing = await prisma.user.findUnique({ where: { email: loginEmail } })
+    // Duplicate check (manual already guaranteed unique by generateUniqueUsername)
+    const existing = validMethod === 'manual'
+      ? null
+      : await prisma.user.findUnique({ where: { email: internalEmail } })
     if (existing) {
       const msg = isPlaceholderEmail
         ? `A technician with phone ${validPhone} already has an account`
-        : `A user with email ${loginEmail} already exists`
+        : `A user with email ${internalEmail} already exists`
       return { success: false, error: msg }
     }
 
@@ -99,7 +140,7 @@ export async function inviteTechnician(
       const user = await tx.user.create({
         data: {
           name: validName,
-          email: loginEmail,
+          email: internalEmail,
           passwordHash,
           role: 'TECHNICIAN',
           // Phone stored on User when provided; empty string when email-only
@@ -130,9 +171,9 @@ export async function inviteTechnician(
     let emailStatusMessage: string | undefined
 
     if (validMethod === 'email' || validMethod === 'both') {
-      const redactedLog = `Login: ${loginEmail} / Password: [redacted - delivered via email only]`
+      const redactedLog = `Login: ${internalEmail} / Password: [redacted - delivered via email only]`
       const emailResult = await sendInviteEmail(
-        loginEmail,
+        internalEmail,
         validName,
         loginEmail,
         tempPassword,
@@ -200,7 +241,8 @@ export async function inviteTechnician(
         emailStatus: emailStatus ?? 'skipped',
         smsStatus: smsStatus ?? 'skipped',
         name: validName,
-        loginEmail,
+        loginEmail: internalEmail,
+        displayLogin: loginEmail,
         isPlaceholderEmail,
       },
     })

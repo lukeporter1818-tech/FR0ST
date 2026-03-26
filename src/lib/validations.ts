@@ -207,7 +207,7 @@ const phoneField = z
 export const technicianInviteSchema = z
   .object({
     name: text(100),
-    inviteMethod: z.enum(['email', 'phone', 'both']),
+    inviteMethod: z.enum(['email', 'phone', 'both', 'manual']),
     email: z.string().trim().email().max(200).optional(),
     phone: phoneField.optional(),
   })
@@ -230,4 +230,5 @@ export const technicianInviteSchema = z
         })
       }
     }
+    // manual: no additional fields required
   })
