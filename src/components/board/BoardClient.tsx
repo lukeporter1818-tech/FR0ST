@@ -156,6 +156,8 @@ export function BoardClient({
   const handleDrop = useCallback(async (e: React.DragEvent, tech: { id: string; name: string }) => {
     e.preventDefault()
     setDragOverTechId(null)
+    // Prevent a second drop while extraction/confirmation is already in progress
+    if (dropState) return
     const file = Array.from(e.dataTransfer.files).find((f) => f.type.startsWith('image/'))
     if (!file) return
 
@@ -194,7 +196,7 @@ export function BoardClient({
         message: err instanceof Error ? err.message : 'Extraction failed. Please try again.',
       })
     }
-  }, [])
+  }, [dropState])
 
   const handleConfirmWO = useCallback(async () => {
     if (!dropState || dropState.phase !== 'confirm') return

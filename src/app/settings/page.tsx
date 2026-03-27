@@ -1,5 +1,8 @@
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { BookOpen, Building2, MessageSquare, Sparkles, Users } from 'lucide-react'
+import { auth } from '@/lib/auth'
+import { hasRole } from '@/lib/auth-guard'
 
 const sections = [
   {
@@ -44,7 +47,11 @@ const sections = [
   },
 ]
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const session = await auth()
+  if (!session?.user?.id) redirect('/login')
+  if (!hasRole(session.user.role, 'DISPATCHER')) redirect('/ai')
+
   return (
     <div className="space-y-6">
       <div>

@@ -36,20 +36,22 @@ export async function saveBoardEntries(
     throw new Error('Invalid rows array')
   }
 
-  await prisma.boardEntry.deleteMany({ where: { date: parsedDate } })
-
-  if (rows.length > 0) {
-    await prisma.boardEntry.createMany({
-      data: rows.map((row, index) => ({
-        technicianId: String(row.technicianId).slice(0, 100),
-        date: parsedDate,
-        assignment: String(row.assignment ?? '').slice(0, 200),
-        note: String(row.note ?? '').slice(0, 500),
-        status: parseBoardStatus(row.status),
-        orderIndex: index,
-      })),
-    })
-  }
+  // Atomic: if createMany fails the delete is rolled back — no data loss
+  await prisma.$transaction(async (tx) => {
+    await tx.boardEntry.deleteMany({ where: { date: parsedDate } })
+    if (rows.length > 0) {
+      await tx.boardEntry.createMany({
+        data: rows.map((row, index) => ({
+          technicianId: String(row.technicianId).slice(0, 100),
+          date: parsedDate,
+          assignment: String(row.assignment ?? '').slice(0, 200),
+          note: String(row.note ?? '').slice(0, 500),
+          status: parseBoardStatus(row.status),
+          orderIndex: index,
+        })),
+      })
+    }
+  })
 
   auditLog({
     action: 'board.save',
@@ -58,7 +60,7 @@ export async function saveBoardEntries(
     meta: { date, rowCount: rows.length },
   })
 
-  revalidatePath('/')
+  revalidatePath('/schedule')
 }
 
 /**
@@ -118,7 +120,7 @@ export async function addWorkOrderToBoard(
     meta: { date, assignment: sanitizedAssignment },
   })
 
-  revalidatePath('/')
+  revalidatePath('/schedule')
 }
 
 export async function updateMyRow(
@@ -165,5 +167,5 @@ export async function updateMyRow(
     meta: { date, status },
   })
 
-  revalidatePath('/')
+  revalidatePath('/schedule')
 }

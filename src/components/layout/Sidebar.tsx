@@ -23,7 +23,7 @@ const primaryNavItems = [
 const secondaryNavItems = [
   { label: "Technicians", href: "/technicians", icon: Users, roles: ["DISPATCHER", "ADMIN"] },
   { label: "Users", href: "/settings/users", icon: Users, roles: ["ADMIN"] },
-  { label: "Settings", href: "/settings", icon: Settings, roles: null },
+  { label: "Settings", href: "/settings", icon: Settings, roles: ["DISPATCHER", "ADMIN"] },
 ] as const;
 
 interface SidebarProps {
