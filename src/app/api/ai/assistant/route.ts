@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { NextRequest } from 'next/server'
-import { SYSTEM_PROMPT } from '@/lib/ai/system-prompt'
+import { FROST_SYSTEM_PROMPT } from '@/lib/ai/system-prompt'
 import { requireApiSession, unauthorized, tooManyRequests } from '@/lib/auth-guard'
 import { rateLimit, getClientIp, LIMITS } from '@/lib/rate-limit'
 import { aiAssistantSchema } from '@/lib/validations'
@@ -30,9 +30,12 @@ export async function POST(req: NextRequest) {
 
   const { messages, imageBase64 } = result.data
 
-  const claudeMessages: Anthropic.MessageParam[] = messages.map(
+  // Trim to last 10 messages before sending — keeps payloads small
+  const trimmedMessages = messages.slice(-10)
+
+  const claudeMessages: Anthropic.MessageParam[] = trimmedMessages.map(
     (m, index) => {
-      const isLastUserMessage = index === messages.length - 1 && m.role === 'user'
+      const isLastUserMessage = index === trimmedMessages.length - 1 && m.role === 'user'
 
       if (isLastUserMessage && imageBase64) {
         const match = imageBase64.match(/^data:(image\/(jpeg|png|gif|webp));base64,(.+)$/)
@@ -60,8 +63,9 @@ export async function POST(req: NextRequest) {
   try {
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      system: SYSTEM_PROMPT,
+      max_tokens: 512,
+      temperature: 0.3,
+      system: FROST_SYSTEM_PROMPT,
       messages: claudeMessages,
     })
 
