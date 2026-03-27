@@ -35,7 +35,7 @@ export function DateNav({ date }: DateNavProps) {
   const today = getLocalTodayStr()
   const tomorrow = addDays(today, 1)
 
-  function go(d: string) { router.push(`/?date=${d}`) }
+  function go(d: string) { router.push(`/schedule?date=${d}`) }
 
   return (
     <div className="flex items-center gap-1">

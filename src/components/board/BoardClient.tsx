@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, ImageDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { DateNav } from './DateNav'
@@ -108,6 +108,8 @@ export function BoardClient({
 
   // ── Drag-and-drop WO intake ────────────────────────────────────────────────
   const [dragOverTechId, setDragOverTechId] = useState<string | null>(null)
+  const [isDraggingFile, setIsDraggingFile] = useState(false)
+  const dragEnterCount = useRef(0)
   const [dropState, setDropState] = useState<DropState>(null)
 
   const isTechnician = currentUserRole === 'TECHNICIAN'
@@ -373,7 +375,27 @@ export function BoardClient({
       )}
 
       {/* Board */}
-      <div className="divide-y divide-gray-100">
+      <div
+        className="divide-y divide-gray-100"
+        onDragEnter={!isTechnician ? (e) => {
+          if (Array.from(e.dataTransfer.types).includes('Files')) {
+            dragEnterCount.current += 1
+            setIsDraggingFile(true)
+          }
+        } : undefined}
+        onDragLeave={!isTechnician ? () => {
+          dragEnterCount.current -= 1
+          if (dragEnterCount.current <= 0) {
+            dragEnterCount.current = 0
+            setIsDraggingFile(false)
+            setDragOverTechId(null)
+          }
+        } : undefined}
+        onDrop={!isTechnician ? () => {
+          dragEnterCount.current = 0
+          setIsDraggingFile(false)
+        } : undefined}
+      >
         {rows.map((row) => {
           const isEditing = editingId === row.technicianId
           const isOwnRow = isTechnician && row.technicianId === currentTechnicianId
@@ -383,6 +405,7 @@ export function BoardClient({
           // Technicians see no drag targets (server action enforces DISPATCHER role anyway).
           const canDropWO = !isTechnician
           const isDragTarget = dragOverTechId === row.technicianId
+          const isDropZone = isDraggingFile && canDropWO && !isDragTarget
 
           return (
             <div
@@ -398,7 +421,8 @@ export function BoardClient({
                   ? 'cursor-pointer hover:bg-gray-50/70'
                   : 'cursor-default opacity-60',
                 isOwnRow && 'border-l-2 border-blue-400 pl-2 font-semibold',
-                isDragTarget && 'bg-blue-50 outline outline-2 outline-blue-300 outline-offset-[-2px]',
+                isDropZone && 'bg-blue-50/40 outline outline-1 outline-blue-200 outline-offset-[-1px]',
+                isDragTarget && 'bg-blue-100 outline outline-2 outline-blue-400 outline-offset-[-2px] scale-[1.01]',
               )}
             >
               {/* Name */}
@@ -458,6 +482,18 @@ export function BoardClient({
                   </div>
                   {row.dirty && (
                     <span className="w-1 h-1 rounded-full bg-amber-400 shrink-0 self-center" />
+                  )}
+                  {canDropWO && !isDragTarget && !isDraggingFile && (
+                    <ImageDown
+                      className="size-3.5 text-gray-300 opacity-0 group-hover:opacity-100 shrink-0 self-center transition-opacity"
+                      aria-label="Drop work order screenshot here"
+                    />
+                  )}
+                  {canDropWO && isDragTarget && (
+                    <span className="text-xs font-semibold text-blue-600 shrink-0 self-center">Drop here</span>
+                  )}
+                  {canDropWO && isDropZone && (
+                    <ImageDown className="size-3.5 text-blue-400 shrink-0 self-center animate-pulse" />
                   )}
                 </>
               )}

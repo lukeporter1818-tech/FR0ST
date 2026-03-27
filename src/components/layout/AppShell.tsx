@@ -7,9 +7,9 @@ import { TopBar } from "@/components/layout/TopBar";
 import { AiPanel } from "@/components/ai/AiPanel";
 
 const pageTitles: Record<string, string> = {
-  "/": "Schedule",
-  "/chat": "Team Chat",
   "/ai": "Frost",
+  "/chat": "Team Chat",
+  "/schedule": "Schedule",
   "/management": "Management",
   "/technicians": "Technicians",
   "/settings": "Settings",

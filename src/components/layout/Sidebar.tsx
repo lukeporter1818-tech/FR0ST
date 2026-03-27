@@ -14,9 +14,9 @@ import {
 import { cn } from "@/lib/utils";
 
 const primaryNavItems = [
-  { label: "Schedule",   href: "/",           icon: LayoutList,   roles: null },
-  { label: "Team Chat",  href: "/chat",        icon: MessageSquare, roles: null },
   { label: "Frost",      href: "/ai",          icon: Bot,          roles: null },
+  { label: "Team Chat",  href: "/chat",        icon: MessageSquare, roles: null },
+  { label: "Schedule",   href: "/schedule",    icon: LayoutList,   roles: null },
   { label: "Management", href: "/management",  icon: Shield,       roles: ["DISPATCHER", "ADMIN"] as string[] },
 ];
 
@@ -38,7 +38,6 @@ export function Sidebar({ userRole, userName, userInitials, open, onClose }: Sid
   const pathname = usePathname();
 
   function isActive(href: string) {
-    if (href === "/") return pathname === "/";
     return pathname === href || pathname.startsWith(href + "/");
   }
 
@@ -99,7 +98,7 @@ export function Sidebar({ userRole, userName, userInitials, open, onClose }: Sid
     )}>
       {/* Brand */}
       <div className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-4">
-        <Link href="/" className="flex items-center gap-2.5" onClick={onClose}>
+        <Link href="/ai" className="flex items-center gap-2.5" onClick={onClose}>
           <div className="flex size-7 items-center justify-center rounded-lg bg-amber-400/15">
             <Wrench className="size-4 text-amber-400" />
           </div>
