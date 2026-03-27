@@ -24,6 +24,9 @@ export type AuditAction =
   | 'ai.triage_applied'
   | 'upload.received'
   | 'access.forbidden'
+  | 'mgmt_task.create'
+  | 'mgmt_task.update'
+  | 'mgmt_task.delete'
 
 interface AuditEntry {
   action: AuditAction
