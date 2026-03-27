@@ -8,7 +8,6 @@ import {
   FileText,
   CalendarDays,
   Loader2,
-  MessageSquare,
   Send,
   Sparkles,
   X,
@@ -23,7 +22,6 @@ import { applyTriageToJob } from '@/lib/actions/ai'
 type Mode =
   | 'home'
   | 'triage'
-  | 'draft-text'
   | 'schedule'
   | 'clean-notes'
   | 'ask'
@@ -55,12 +53,6 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
   const [triageInput, setTriageInput] = useState('')
   const [triageResult, setTriageResult] = useState<TriageResult | null>(null)
 
-  // Draft text state
-  const [draftTechName, setDraftTechName] = useState('')
-  const [draftJobContext, setDraftJobContext] = useState('')
-  const [draftIntent, setDraftIntent] = useState('schedule notification')
-  const [draftTone, setDraftTone] = useState<'professional' | 'direct' | 'casual'>('professional')
-  const [draftResult, setDraftResult] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
   // Schedule chat state
@@ -81,11 +73,6 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
     setError(null)
     setTriageInput('')
     setTriageResult(null)
-    setDraftTechName('')
-    setDraftJobContext('')
-    setDraftIntent('schedule notification')
-    setDraftTone('professional')
-    setDraftResult(null)
     setCopied(false)
     setScheduleContext(null)
     setScheduleHistory([])
@@ -179,31 +166,6 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
       setTriageResult(data)
     } catch {
       setError('Failed to triage. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleDraftText() {
-    if (!draftTechName.trim()) return
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch('/api/ai/draft-text', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          technicianName: draftTechName,
-          jobSummary: draftJobContext || undefined,
-          intent: draftIntent,
-          tone: draftTone,
-        }),
-      })
-      if (!res.ok) throw new Error('Draft text request failed')
-      const data = await res.json()
-      setDraftResult(data.draft)
-    } catch {
-      setError('Failed to draft text. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -366,12 +328,6 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
                 onClick={() => switchMode('triage')}
               />
               <QuickAction
-                icon={<MessageSquare className="size-4" />}
-                label="Draft a Text"
-                description="Generate a professional SMS for a technician"
-                onClick={() => switchMode('draft-text')}
-              />
-              <QuickAction
                 icon={<CalendarDays className="size-4" />}
                 label="Scheduled Work Orders"
                 description="Ask Frost who's on what job and what the WO is about"
@@ -416,85 +372,6 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
                   onApplyToJob={handleApplyTriage}
                   applyLoading={applyLoading}
                 />
-              )}
-            </div>
-          )}
-
-          {/* Draft text mode */}
-          {mode === 'draft-text' && (
-            <div className="space-y-3">
-              <p className="text-sm font-medium">Draft an SMS</p>
-              <input
-                type="text"
-                value={draftTechName}
-                onChange={(e) => setDraftTechName(e.target.value)}
-                placeholder="Technician name"
-                className="w-full rounded-lg border bg-muted/30 px-3 py-2 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-ring"
-                disabled={loading}
-              />
-              <input
-                type="text"
-                value={draftJobContext}
-                onChange={(e) => setDraftJobContext(e.target.value)}
-                placeholder="Job context (optional)"
-                className="w-full rounded-lg border bg-muted/30 px-3 py-2 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-ring"
-                disabled={loading}
-              />
-              <select
-                value={draftIntent}
-                onChange={(e) => setDraftIntent(e.target.value)}
-                className="w-full rounded-lg border bg-muted/30 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                disabled={loading}
-              >
-                <option value="schedule notification">Schedule notification</option>
-                <option value="status check">Status check</option>
-                <option value="new stop">New stop added</option>
-                <option value="running late">Running late</option>
-                <option value="job completed">Job completed</option>
-                <option value="reminder">Reminder</option>
-              </select>
-              <div className="flex gap-1.5">
-                {(['professional', 'direct', 'casual'] as const).map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setDraftTone(t)}
-                    className={cn(
-                      'rounded-full px-3 py-1 text-xs font-medium transition-colors',
-                      draftTone === t
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                    )}
-                  >
-                    {t.charAt(0).toUpperCase() + t.slice(1)}
-                  </button>
-                ))}
-              </div>
-              <Button className="w-full" onClick={handleDraftText} disabled={loading || !draftTechName.trim()}>
-                {loading ? (
-                  <><Loader2 className="size-4 animate-spin" />Drafting...</>
-                ) : (
-                  <><MessageSquare className="size-4" />Generate Draft</>
-                )}
-              </Button>
-              {draftResult && (
-                <div className="space-y-2">
-                  <div className="rounded-lg border bg-muted/30 p-3">
-                    <p className="text-sm">{draftResult}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {draftResult.length} characters
-                      {draftResult.length > 160 && (
-                        <span className="ml-1 text-amber-600">(over 160 char SMS limit)</span>
-                      )}
-                    </p>
-                  </div>
-                  <Button variant="outline" size="sm" className="w-full" onClick={() => copyToClipboard(draftResult)}>
-                    {copied ? (
-                      <><ClipboardCheck className="size-3.5" />Copied!</>
-                    ) : (
-                      <><Copy className="size-3.5" />Copy to Clipboard</>
-                    )}
-                  </Button>
-                </div>
               )}
             </div>
           )}
