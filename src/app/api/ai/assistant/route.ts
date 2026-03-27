@@ -5,6 +5,7 @@ import { requireApiSession, unauthorized, tooManyRequests } from '@/lib/auth-gua
 import { rateLimit, getClientIp, LIMITS } from '@/lib/rate-limit'
 import { aiAssistantSchema } from '@/lib/validations'
 import { auditLog } from '@/lib/audit'
+import { prisma } from '@/lib/db'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -78,7 +79,25 @@ export async function POST(req: NextRequest) {
       meta: { endpoint: 'assistant', hasImage: !!imageBase64, turns: messages.length },
     })
 
-    return Response.json({ response: text })
+    // Log interaction for Frost learning system — non-fatal if DB write fails
+    let interactionId: string | undefined
+    try {
+      const lastUserMessage = trimmedMessages.filter((m) => m.role === 'user').pop()
+      const interaction = await prisma.aIInteraction.create({
+        data: {
+          userId: session.user.id,
+          actionType: 'frost.chat',
+          prompt: lastUserMessage?.content ?? '',
+          response: text,
+        },
+        select: { id: true },
+      })
+      interactionId = interaction.id
+    } catch {
+      // Non-fatal: learning log unavailable, response still delivered
+    }
+
+    return Response.json({ response: text, interactionId })
   } catch (error) {
     console.error('AI assistant error:', error)
     return Response.json({ error: 'Failed to get a response. Please try again.' }, { status: 500 })

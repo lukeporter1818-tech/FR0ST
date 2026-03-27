@@ -220,6 +220,11 @@ export const AIInteractionScalarFieldEnum = {
   actionType: 'actionType',
   prompt: 'prompt',
   response: 'response',
+  feedback: 'feedback',
+  actualFix: 'actualFix',
+  issueSummary: 'issueSummary',
+  systemType: 'systemType',
+  approved: 'approved',
   createdAt: 'createdAt'
 } as const
 

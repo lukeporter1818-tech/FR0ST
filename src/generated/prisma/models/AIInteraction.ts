@@ -31,6 +31,11 @@ export type AIInteractionMinAggregateOutputType = {
   actionType: string | null
   prompt: string | null
   response: string | null
+  feedback: string | null
+  actualFix: string | null
+  issueSummary: string | null
+  systemType: string | null
+  approved: boolean | null
   createdAt: Date | null
 }
 
@@ -41,6 +46,11 @@ export type AIInteractionMaxAggregateOutputType = {
   actionType: string | null
   prompt: string | null
   response: string | null
+  feedback: string | null
+  actualFix: string | null
+  issueSummary: string | null
+  systemType: string | null
+  approved: boolean | null
   createdAt: Date | null
 }
 
@@ -51,6 +61,11 @@ export type AIInteractionCountAggregateOutputType = {
   actionType: number
   prompt: number
   response: number
+  feedback: number
+  actualFix: number
+  issueSummary: number
+  systemType: number
+  approved: number
   createdAt: number
   _all: number
 }
@@ -63,6 +78,11 @@ export type AIInteractionMinAggregateInputType = {
   actionType?: true
   prompt?: true
   response?: true
+  feedback?: true
+  actualFix?: true
+  issueSummary?: true
+  systemType?: true
+  approved?: true
   createdAt?: true
 }
 
@@ -73,6 +93,11 @@ export type AIInteractionMaxAggregateInputType = {
   actionType?: true
   prompt?: true
   response?: true
+  feedback?: true
+  actualFix?: true
+  issueSummary?: true
+  systemType?: true
+  approved?: true
   createdAt?: true
 }
 
@@ -83,6 +108,11 @@ export type AIInteractionCountAggregateInputType = {
   actionType?: true
   prompt?: true
   response?: true
+  feedback?: true
+  actualFix?: true
+  issueSummary?: true
+  systemType?: true
+  approved?: true
   createdAt?: true
   _all?: true
 }
@@ -166,6 +196,11 @@ export type AIInteractionGroupByOutputType = {
   actionType: string
   prompt: string
   response: string
+  feedback: string | null
+  actualFix: string | null
+  issueSummary: string | null
+  systemType: string | null
+  approved: boolean
   createdAt: Date
   _count: AIInteractionCountAggregateOutputType | null
   _min: AIInteractionMinAggregateOutputType | null
@@ -197,6 +232,11 @@ export type AIInteractionWhereInput = {
   actionType?: Prisma.StringFilter<"AIInteraction"> | string
   prompt?: Prisma.StringFilter<"AIInteraction"> | string
   response?: Prisma.StringFilter<"AIInteraction"> | string
+  feedback?: Prisma.StringNullableFilter<"AIInteraction"> | string | null
+  actualFix?: Prisma.StringNullableFilter<"AIInteraction"> | string | null
+  issueSummary?: Prisma.StringNullableFilter<"AIInteraction"> | string | null
+  systemType?: Prisma.StringNullableFilter<"AIInteraction"> | string | null
+  approved?: Prisma.BoolFilter<"AIInteraction"> | boolean
   createdAt?: Prisma.DateTimeFilter<"AIInteraction"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   job?: Prisma.XOR<Prisma.JobNullableScalarRelationFilter, Prisma.JobWhereInput> | null
@@ -209,6 +249,11 @@ export type AIInteractionOrderByWithRelationInput = {
   actionType?: Prisma.SortOrder
   prompt?: Prisma.SortOrder
   response?: Prisma.SortOrder
+  feedback?: Prisma.SortOrderInput | Prisma.SortOrder
+  actualFix?: Prisma.SortOrderInput | Prisma.SortOrder
+  issueSummary?: Prisma.SortOrderInput | Prisma.SortOrder
+  systemType?: Prisma.SortOrderInput | Prisma.SortOrder
+  approved?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   job?: Prisma.JobOrderByWithRelationInput
@@ -224,6 +269,11 @@ export type AIInteractionWhereUniqueInput = Prisma.AtLeast<{
   actionType?: Prisma.StringFilter<"AIInteraction"> | string
   prompt?: Prisma.StringFilter<"AIInteraction"> | string
   response?: Prisma.StringFilter<"AIInteraction"> | string
+  feedback?: Prisma.StringNullableFilter<"AIInteraction"> | string | null
+  actualFix?: Prisma.StringNullableFilter<"AIInteraction"> | string | null
+  issueSummary?: Prisma.StringNullableFilter<"AIInteraction"> | string | null
+  systemType?: Prisma.StringNullableFilter<"AIInteraction"> | string | null
+  approved?: Prisma.BoolFilter<"AIInteraction"> | boolean
   createdAt?: Prisma.DateTimeFilter<"AIInteraction"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   job?: Prisma.XOR<Prisma.JobNullableScalarRelationFilter, Prisma.JobWhereInput> | null
@@ -236,6 +286,11 @@ export type AIInteractionOrderByWithAggregationInput = {
   actionType?: Prisma.SortOrder
   prompt?: Prisma.SortOrder
   response?: Prisma.SortOrder
+  feedback?: Prisma.SortOrderInput | Prisma.SortOrder
+  actualFix?: Prisma.SortOrderInput | Prisma.SortOrder
+  issueSummary?: Prisma.SortOrderInput | Prisma.SortOrder
+  systemType?: Prisma.SortOrderInput | Prisma.SortOrder
+  approved?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.AIInteractionCountOrderByAggregateInput
   _max?: Prisma.AIInteractionMaxOrderByAggregateInput
@@ -252,6 +307,11 @@ export type AIInteractionScalarWhereWithAggregatesInput = {
   actionType?: Prisma.StringWithAggregatesFilter<"AIInteraction"> | string
   prompt?: Prisma.StringWithAggregatesFilter<"AIInteraction"> | string
   response?: Prisma.StringWithAggregatesFilter<"AIInteraction"> | string
+  feedback?: Prisma.StringNullableWithAggregatesFilter<"AIInteraction"> | string | null
+  actualFix?: Prisma.StringNullableWithAggregatesFilter<"AIInteraction"> | string | null
+  issueSummary?: Prisma.StringNullableWithAggregatesFilter<"AIInteraction"> | string | null
+  systemType?: Prisma.StringNullableWithAggregatesFilter<"AIInteraction"> | string | null
+  approved?: Prisma.BoolWithAggregatesFilter<"AIInteraction"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"AIInteraction"> | Date | string
 }
 
@@ -260,6 +320,11 @@ export type AIInteractionCreateInput = {
   actionType: string
   prompt: string
   response: string
+  feedback?: string | null
+  actualFix?: string | null
+  issueSummary?: string | null
+  systemType?: string | null
+  approved?: boolean
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutAiInteractionsInput
   job?: Prisma.JobCreateNestedOneWithoutAiInteractionsInput
@@ -272,6 +337,11 @@ export type AIInteractionUncheckedCreateInput = {
   actionType: string
   prompt: string
   response: string
+  feedback?: string | null
+  actualFix?: string | null
+  issueSummary?: string | null
+  systemType?: string | null
+  approved?: boolean
   createdAt?: Date | string
 }
 
@@ -280,6 +350,11 @@ export type AIInteractionUpdateInput = {
   actionType?: Prisma.StringFieldUpdateOperationsInput | string
   prompt?: Prisma.StringFieldUpdateOperationsInput | string
   response?: Prisma.StringFieldUpdateOperationsInput | string
+  feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actualFix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  issueSummary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  systemType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutAiInteractionsNestedInput
   job?: Prisma.JobUpdateOneWithoutAiInteractionsNestedInput
@@ -292,6 +367,11 @@ export type AIInteractionUncheckedUpdateInput = {
   actionType?: Prisma.StringFieldUpdateOperationsInput | string
   prompt?: Prisma.StringFieldUpdateOperationsInput | string
   response?: Prisma.StringFieldUpdateOperationsInput | string
+  feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actualFix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  issueSummary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  systemType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -302,6 +382,11 @@ export type AIInteractionCreateManyInput = {
   actionType: string
   prompt: string
   response: string
+  feedback?: string | null
+  actualFix?: string | null
+  issueSummary?: string | null
+  systemType?: string | null
+  approved?: boolean
   createdAt?: Date | string
 }
 
@@ -310,6 +395,11 @@ export type AIInteractionUpdateManyMutationInput = {
   actionType?: Prisma.StringFieldUpdateOperationsInput | string
   prompt?: Prisma.StringFieldUpdateOperationsInput | string
   response?: Prisma.StringFieldUpdateOperationsInput | string
+  feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actualFix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  issueSummary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  systemType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -320,6 +410,11 @@ export type AIInteractionUncheckedUpdateManyInput = {
   actionType?: Prisma.StringFieldUpdateOperationsInput | string
   prompt?: Prisma.StringFieldUpdateOperationsInput | string
   response?: Prisma.StringFieldUpdateOperationsInput | string
+  feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actualFix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  issueSummary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  systemType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -340,6 +435,11 @@ export type AIInteractionCountOrderByAggregateInput = {
   actionType?: Prisma.SortOrder
   prompt?: Prisma.SortOrder
   response?: Prisma.SortOrder
+  feedback?: Prisma.SortOrder
+  actualFix?: Prisma.SortOrder
+  issueSummary?: Prisma.SortOrder
+  systemType?: Prisma.SortOrder
+  approved?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -350,6 +450,11 @@ export type AIInteractionMaxOrderByAggregateInput = {
   actionType?: Prisma.SortOrder
   prompt?: Prisma.SortOrder
   response?: Prisma.SortOrder
+  feedback?: Prisma.SortOrder
+  actualFix?: Prisma.SortOrder
+  issueSummary?: Prisma.SortOrder
+  systemType?: Prisma.SortOrder
+  approved?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -360,6 +465,11 @@ export type AIInteractionMinOrderByAggregateInput = {
   actionType?: Prisma.SortOrder
   prompt?: Prisma.SortOrder
   response?: Prisma.SortOrder
+  feedback?: Prisma.SortOrder
+  actualFix?: Prisma.SortOrder
+  issueSummary?: Prisma.SortOrder
+  systemType?: Prisma.SortOrder
+  approved?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -452,6 +562,11 @@ export type AIInteractionCreateWithoutUserInput = {
   actionType: string
   prompt: string
   response: string
+  feedback?: string | null
+  actualFix?: string | null
+  issueSummary?: string | null
+  systemType?: string | null
+  approved?: boolean
   createdAt?: Date | string
   job?: Prisma.JobCreateNestedOneWithoutAiInteractionsInput
 }
@@ -462,6 +577,11 @@ export type AIInteractionUncheckedCreateWithoutUserInput = {
   actionType: string
   prompt: string
   response: string
+  feedback?: string | null
+  actualFix?: string | null
+  issueSummary?: string | null
+  systemType?: string | null
+  approved?: boolean
   createdAt?: Date | string
 }
 
@@ -501,6 +621,11 @@ export type AIInteractionScalarWhereInput = {
   actionType?: Prisma.StringFilter<"AIInteraction"> | string
   prompt?: Prisma.StringFilter<"AIInteraction"> | string
   response?: Prisma.StringFilter<"AIInteraction"> | string
+  feedback?: Prisma.StringNullableFilter<"AIInteraction"> | string | null
+  actualFix?: Prisma.StringNullableFilter<"AIInteraction"> | string | null
+  issueSummary?: Prisma.StringNullableFilter<"AIInteraction"> | string | null
+  systemType?: Prisma.StringNullableFilter<"AIInteraction"> | string | null
+  approved?: Prisma.BoolFilter<"AIInteraction"> | boolean
   createdAt?: Prisma.DateTimeFilter<"AIInteraction"> | Date | string
 }
 
@@ -509,6 +634,11 @@ export type AIInteractionCreateWithoutJobInput = {
   actionType: string
   prompt: string
   response: string
+  feedback?: string | null
+  actualFix?: string | null
+  issueSummary?: string | null
+  systemType?: string | null
+  approved?: boolean
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutAiInteractionsInput
 }
@@ -519,6 +649,11 @@ export type AIInteractionUncheckedCreateWithoutJobInput = {
   actionType: string
   prompt: string
   response: string
+  feedback?: string | null
+  actualFix?: string | null
+  issueSummary?: string | null
+  systemType?: string | null
+  approved?: boolean
   createdAt?: Date | string
 }
 
@@ -554,6 +689,11 @@ export type AIInteractionCreateManyUserInput = {
   actionType: string
   prompt: string
   response: string
+  feedback?: string | null
+  actualFix?: string | null
+  issueSummary?: string | null
+  systemType?: string | null
+  approved?: boolean
   createdAt?: Date | string
 }
 
@@ -562,6 +702,11 @@ export type AIInteractionUpdateWithoutUserInput = {
   actionType?: Prisma.StringFieldUpdateOperationsInput | string
   prompt?: Prisma.StringFieldUpdateOperationsInput | string
   response?: Prisma.StringFieldUpdateOperationsInput | string
+  feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actualFix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  issueSummary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  systemType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   job?: Prisma.JobUpdateOneWithoutAiInteractionsNestedInput
 }
@@ -572,6 +717,11 @@ export type AIInteractionUncheckedUpdateWithoutUserInput = {
   actionType?: Prisma.StringFieldUpdateOperationsInput | string
   prompt?: Prisma.StringFieldUpdateOperationsInput | string
   response?: Prisma.StringFieldUpdateOperationsInput | string
+  feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actualFix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  issueSummary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  systemType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -581,6 +731,11 @@ export type AIInteractionUncheckedUpdateManyWithoutUserInput = {
   actionType?: Prisma.StringFieldUpdateOperationsInput | string
   prompt?: Prisma.StringFieldUpdateOperationsInput | string
   response?: Prisma.StringFieldUpdateOperationsInput | string
+  feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actualFix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  issueSummary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  systemType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -590,6 +745,11 @@ export type AIInteractionCreateManyJobInput = {
   actionType: string
   prompt: string
   response: string
+  feedback?: string | null
+  actualFix?: string | null
+  issueSummary?: string | null
+  systemType?: string | null
+  approved?: boolean
   createdAt?: Date | string
 }
 
@@ -598,6 +758,11 @@ export type AIInteractionUpdateWithoutJobInput = {
   actionType?: Prisma.StringFieldUpdateOperationsInput | string
   prompt?: Prisma.StringFieldUpdateOperationsInput | string
   response?: Prisma.StringFieldUpdateOperationsInput | string
+  feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actualFix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  issueSummary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  systemType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutAiInteractionsNestedInput
 }
@@ -608,6 +773,11 @@ export type AIInteractionUncheckedUpdateWithoutJobInput = {
   actionType?: Prisma.StringFieldUpdateOperationsInput | string
   prompt?: Prisma.StringFieldUpdateOperationsInput | string
   response?: Prisma.StringFieldUpdateOperationsInput | string
+  feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actualFix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  issueSummary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  systemType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -617,6 +787,11 @@ export type AIInteractionUncheckedUpdateManyWithoutJobInput = {
   actionType?: Prisma.StringFieldUpdateOperationsInput | string
   prompt?: Prisma.StringFieldUpdateOperationsInput | string
   response?: Prisma.StringFieldUpdateOperationsInput | string
+  feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actualFix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  issueSummary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  systemType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -629,6 +804,11 @@ export type AIInteractionSelect<ExtArgs extends runtime.Types.Extensions.Interna
   actionType?: boolean
   prompt?: boolean
   response?: boolean
+  feedback?: boolean
+  actualFix?: boolean
+  issueSummary?: boolean
+  systemType?: boolean
+  approved?: boolean
   createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   job?: boolean | Prisma.AIInteraction$jobArgs<ExtArgs>
@@ -641,6 +821,11 @@ export type AIInteractionSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   actionType?: boolean
   prompt?: boolean
   response?: boolean
+  feedback?: boolean
+  actualFix?: boolean
+  issueSummary?: boolean
+  systemType?: boolean
+  approved?: boolean
   createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   job?: boolean | Prisma.AIInteraction$jobArgs<ExtArgs>
@@ -653,6 +838,11 @@ export type AIInteractionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   actionType?: boolean
   prompt?: boolean
   response?: boolean
+  feedback?: boolean
+  actualFix?: boolean
+  issueSummary?: boolean
+  systemType?: boolean
+  approved?: boolean
   createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   job?: boolean | Prisma.AIInteraction$jobArgs<ExtArgs>
@@ -665,10 +855,15 @@ export type AIInteractionSelectScalar = {
   actionType?: boolean
   prompt?: boolean
   response?: boolean
+  feedback?: boolean
+  actualFix?: boolean
+  issueSummary?: boolean
+  systemType?: boolean
+  approved?: boolean
   createdAt?: boolean
 }
 
-export type AIInteractionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "jobId" | "actionType" | "prompt" | "response" | "createdAt", ExtArgs["result"]["aIInteraction"]>
+export type AIInteractionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "jobId" | "actionType" | "prompt" | "response" | "feedback" | "actualFix" | "issueSummary" | "systemType" | "approved" | "createdAt", ExtArgs["result"]["aIInteraction"]>
 export type AIInteractionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   job?: boolean | Prisma.AIInteraction$jobArgs<ExtArgs>
@@ -695,6 +890,11 @@ export type $AIInteractionPayload<ExtArgs extends runtime.Types.Extensions.Inter
     actionType: string
     prompt: string
     response: string
+    feedback: string | null
+    actualFix: string | null
+    issueSummary: string | null
+    systemType: string | null
+    approved: boolean
     createdAt: Date
   }, ExtArgs["result"]["aIInteraction"]>
   composites: {}
@@ -1127,6 +1327,11 @@ export interface AIInteractionFieldRefs {
   readonly actionType: Prisma.FieldRef<"AIInteraction", 'String'>
   readonly prompt: Prisma.FieldRef<"AIInteraction", 'String'>
   readonly response: Prisma.FieldRef<"AIInteraction", 'String'>
+  readonly feedback: Prisma.FieldRef<"AIInteraction", 'String'>
+  readonly actualFix: Prisma.FieldRef<"AIInteraction", 'String'>
+  readonly issueSummary: Prisma.FieldRef<"AIInteraction", 'String'>
+  readonly systemType: Prisma.FieldRef<"AIInteraction", 'String'>
+  readonly approved: Prisma.FieldRef<"AIInteraction", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"AIInteraction", 'DateTime'>
 }
     

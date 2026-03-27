@@ -34,6 +34,14 @@ const sections = [
     iconColor: 'text-violet-600',
     href: null,
   },
+  {
+    title: 'Frost Learning Log',
+    description: 'Review Frost interactions, technician feedback, and logged fixes.',
+    icon: Sparkles,
+    iconBg: 'bg-amber-50',
+    iconColor: 'text-amber-600',
+    href: '/settings/ai-interactions',
+  },
 ]
 
 export default function SettingsPage() {

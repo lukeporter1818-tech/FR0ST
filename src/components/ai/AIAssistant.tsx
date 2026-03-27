@@ -15,6 +15,7 @@ interface Message {
   imageUrl?: string
   timestamp: Date
   workOrder?: WorkOrderExtraction // present when this message displays a WO card
+  interactionId?: string          // present on assistant messages with a learning log entry
 }
 
 interface TechMatch {
@@ -157,6 +158,12 @@ export function AIAssistant() {
   const [menuPos, setMenuPos] = useState<{ bottom: number; left: number } | null>(null)
   const cameraButtonRef = useRef<HTMLButtonElement>(null)
 
+  // Frost learning: feedback given per message id, and log-fix form open state
+  const [feedbackGiven, setFeedbackGiven] = useState<Record<string, 'helpful' | 'not_helpful'>>({})
+  const [logFixOpen, setLogFixOpen] = useState<string | null>(null) // message id
+  const [fixForm, setFixForm] = useState({ issueSummary: '', actualFix: '', systemType: '' })
+  const [fixSubmitting, setFixSubmitting] = useState(false)
+
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   // Single file input — accept/capture are set dynamically before .click()
@@ -243,6 +250,35 @@ export function AIAssistant() {
     setPendingExtraction(null)
     setPendingTechMatch(null)
   }, [])
+
+  // ── Frost learning handlers ──────────────────────────────────────────────────
+
+  const submitFeedback = useCallback(async (msg: Message, feedback: 'helpful' | 'not_helpful') => {
+    if (!msg.interactionId || feedbackGiven[msg.id]) return
+    setFeedbackGiven((prev) => ({ ...prev, [msg.id]: feedback }))
+    await fetch(`/api/ai/interactions/${msg.interactionId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ feedback }),
+    }).catch(() => {}) // non-fatal
+  }, [feedbackGiven])
+
+  const submitFix = useCallback(async (msg: Message) => {
+    if (!msg.interactionId) return
+    setFixSubmitting(true)
+    await fetch(`/api/ai/interactions/${msg.interactionId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        issueSummary: fixForm.issueSummary || undefined,
+        actualFix: fixForm.actualFix || undefined,
+        systemType: fixForm.systemType || undefined,
+      }),
+    }).catch(() => {})
+    setFixSubmitting(false)
+    setLogFixOpen(null)
+    setFixForm({ issueSummary: '', actualFix: '', systemType: '' })
+  }, [fixForm])
 
   const handleConfirmAssign = useCallback(async () => {
     if (!pendingExtraction || !pendingTechMatch) return
@@ -431,6 +467,7 @@ export function AIAssistant() {
           role: 'assistant',
           content: data.response,
           timestamp: new Date(),
+          interactionId: data.interactionId as string | undefined,
         },
       ])
     } catch {
@@ -529,11 +566,108 @@ export function AIAssistant() {
                     )}
                   </div>
                 ) : (
-                  <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-3 max-w-[85%]">
-                    {/* Work order card appears above the text when present */}
-                    {message.workOrder && <WorkOrderCard wo={message.workOrder} />}
-                    {message.content && <AssistantContent content={message.content} />}
-                  </div>
+                  <>
+                    <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-3 max-w-[85%]">
+                      {/* Work order card appears above the text when present */}
+                      {message.workOrder && <WorkOrderCard wo={message.workOrder} />}
+                      {message.content && <AssistantContent content={message.content} />}
+                    </div>
+
+                    {/* Feedback + log fix — only shown when interaction was logged */}
+                    {message.interactionId && (
+                      <div className="flex items-center gap-2 px-1 mt-0.5">
+                        <button
+                          onClick={() => submitFeedback(message, 'helpful')}
+                          disabled={!!feedbackGiven[message.id]}
+                          title="Helpful"
+                          className={cn(
+                            'text-sm transition-colors',
+                            feedbackGiven[message.id] === 'helpful'
+                              ? 'opacity-100'
+                              : feedbackGiven[message.id]
+                                ? 'opacity-30'
+                                : 'opacity-40 hover:opacity-80'
+                          )}
+                        >
+                          👍
+                        </button>
+                        <button
+                          onClick={() => submitFeedback(message, 'not_helpful')}
+                          disabled={!!feedbackGiven[message.id]}
+                          title="Not helpful"
+                          className={cn(
+                            'text-sm transition-colors',
+                            feedbackGiven[message.id] === 'not_helpful'
+                              ? 'opacity-100'
+                              : feedbackGiven[message.id]
+                                ? 'opacity-30'
+                                : 'opacity-40 hover:opacity-80'
+                          )}
+                        >
+                          👎
+                        </button>
+                        <button
+                          onClick={() => {
+                            setLogFixOpen(logFixOpen === message.id ? null : message.id)
+                            setFixForm({ issueSummary: '', actualFix: '', systemType: '' })
+                          }}
+                          className="text-xs text-gray-400 hover:text-gray-600 transition-colors ml-1"
+                        >
+                          Log fix
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Inline log fix form */}
+                    {logFixOpen === message.id && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-3 max-w-[85%] space-y-2">
+                        <input
+                          type="text"
+                          placeholder="Issue summary (optional)"
+                          value={fixForm.issueSummary}
+                          onChange={(e) => setFixForm((f) => ({ ...f, issueSummary: e.target.value }))}
+                          className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-gray-900 text-gray-900 placeholder:text-gray-400"
+                        />
+                        <textarea
+                          placeholder="What fixed it *"
+                          value={fixForm.actualFix}
+                          onChange={(e) => setFixForm((f) => ({ ...f, actualFix: e.target.value }))}
+                          rows={2}
+                          className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-gray-900 text-gray-900 placeholder:text-gray-400 resize-none"
+                        />
+                        <select
+                          value={fixForm.systemType}
+                          onChange={(e) => setFixForm((f) => ({ ...f, systemType: e.target.value }))}
+                          className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-gray-900 text-gray-600 bg-white"
+                        >
+                          <option value="">System type (optional)</option>
+                          <option value="Rack">Rack</option>
+                          <option value="Display Case">Display Case</option>
+                          <option value="Defrost">Defrost</option>
+                          <option value="Electrical">Electrical</option>
+                          <option value="HVAC">HVAC</option>
+                          <option value="Plumbing">Plumbing</option>
+                          <option value="Controls">Controls</option>
+                          <option value="Other">Other</option>
+                        </select>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => submitFix(message)}
+                            disabled={fixSubmitting || !fixForm.actualFix.trim()}
+                            className="flex-1 rounded-lg bg-gray-900 py-1.5 text-xs font-medium text-white hover:bg-gray-700 disabled:opacity-50 transition-colors"
+                          >
+                            {fixSubmitting ? 'Saving…' : 'Save fix'}
+                          </button>
+                          <button
+                            onClick={() => setLogFixOpen(null)}
+                            className="px-3 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
                 <span className="text-xs text-gray-400 px-1">{formatTime(message.timestamp)}</span>
               </div>

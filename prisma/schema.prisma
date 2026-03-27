@@ -241,13 +241,18 @@ model BoardEntry {
 // ── AI LOG ──
 
 model AIInteraction {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  jobId      String?
-  job        Job?     @relation(fields: [jobId], references: [id])
-  actionType String
-  prompt     String
-  response   String
-  createdAt  DateTime @default(now())
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  jobId        String?
+  job          Job?     @relation(fields: [jobId], references: [id])
+  actionType   String
+  prompt       String
+  response     String
+  feedback     String?  // "helpful" | "not_helpful"
+  actualFix    String?
+  issueSummary String?
+  systemType   String?
+  approved     Boolean  @default(false)
+  createdAt    DateTime @default(now())
 }
