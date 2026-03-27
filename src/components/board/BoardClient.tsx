@@ -209,7 +209,7 @@ export function BoardClient({
     setDropState({ phase: 'extracting', techId, techName })
 
     try {
-      await addWorkOrderToBoard(techId, assignment, note, date)
+      await addWorkOrderToBoard(techId, assignment, note, date, extraction.workOrderNumber ?? null)
 
       // Optimistically apply to local row so no full page reload is needed
       setRows((prev) =>

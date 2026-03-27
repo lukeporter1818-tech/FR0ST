@@ -77,7 +77,8 @@ export async function addWorkOrderToBoard(
   technicianId: string,
   assignment: string,
   note: string,
-  date: string // YYYY-MM-DD
+  date: string, // YYYY-MM-DD
+  workOrderNumber?: string | null
 ): Promise<void> {
   const session = await requireRole('DISPATCHER')
 
@@ -90,6 +91,46 @@ export async function addWorkOrderToBoard(
   const sanitizedAssignment = String(assignment ?? '').trim().slice(0, 200)
   const sanitizedNote = String(note ?? '').trim().slice(0, 500)
 
+  // ── Duplicate detection by WO number ────────────────────────────────────
+  // If a WO number was extracted, look for an existing row on this date with
+  // the same assignment value. This catches: rapid double-drops, network
+  // retries, and two dispatchers assigning the same WO simultaneously.
+  // - If found: update the existing row (re-assign tech, refresh assignment
+  //   and note) but leave status and orderIndex untouched.
+  // - If not found: fall through to the normal upsert by technicianId+date.
+  // - If no WO number: cannot deduplicate safely — use normal upsert path.
+
+  const sanitizedWO = workOrderNumber ? String(workOrderNumber).trim().slice(0, 200) : null
+
+  if (sanitizedWO) {
+    const existingByWO = await prisma.boardEntry.findFirst({
+      where: { date: parsedDate, assignment: sanitizedWO },
+      orderBy: { orderIndex: 'asc' },
+      select: { id: true },
+    })
+
+    if (existingByWO) {
+      // Re-assign to the selected tech; preserve status and orderIndex
+      await prisma.boardEntry.update({
+        where: { id: existingByWO.id },
+        data: { technicianId, assignment: sanitizedAssignment, note: sanitizedNote },
+      })
+
+      auditLog({
+        action: 'board.assign_from_screenshot',
+        userId: session.user.id,
+        userRole: session.user.role,
+        targetId: technicianId,
+        targetType: 'Technician',
+        meta: { date, assignment: sanitizedAssignment, deduped: true },
+      })
+
+      revalidatePath('/schedule')
+      return
+    }
+  }
+
+  // No WO-based duplicate found — upsert by technicianId+date (original path)
   // Determine orderIndex for a new row: append after existing rows for this date
   const rowCount = await prisma.boardEntry.count({ where: { date: parsedDate } })
 

@@ -392,7 +392,7 @@ export function AIAssistant() {
         pendingExtraction.workOrderNumber && pendingExtraction.shortDescription
           ? pendingExtraction.shortDescription
           : ''
-      await addWorkOrderToBoard(pendingTechMatch.id, assignment, note, today)
+      await addWorkOrderToBoard(pendingTechMatch.id, assignment, note, today, pendingExtraction.workOrderNumber ?? null)
       setMessages((prev) => [
         ...prev,
         {
