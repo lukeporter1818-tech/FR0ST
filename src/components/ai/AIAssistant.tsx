@@ -1,9 +1,11 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Bot, Camera, Send, X } from 'lucide-react'
+import { Bot, Camera, MapPin, Phone, Send, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { addWorkOrderToBoard } from '@/lib/actions/board'
+import { findSupplier } from '@/lib/suppliers'
+import type { SupplierInfo } from '@/lib/suppliers'
 import type { WorkOrderExtraction } from '@/types/work-order'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -41,11 +43,49 @@ function renderInline(text: string): React.ReactNode {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+// Detects the "Availability (likely):" section header that Frost emits in
+// Parts Finder and Photo Part responses.
+const AVAILABILITY_HEADER_RE = /^availability\s*\(likely\)\s*:/i
+
 function AssistantContent({ content }: { content: string }) {
   const lines = content.split('\n')
+  // Mutable flag — safe because map() is synchronous and renders once per call
+  let inAvailability = false
+
   return (
     <div className="space-y-2 text-sm leading-relaxed text-gray-100">
       {lines.map((line, i) => {
+        const trimmed = line.trim()
+
+        // ── Detect availability section header ─────────────────────────────
+        if (AVAILABILITY_HEADER_RE.test(trimmed)) {
+          inAvailability = true
+          return <p key={i} className="text-sm">{renderInline(line)}</p>
+        }
+
+        // ── Exit availability when we hit the next named section header ────
+        // A named header is a non-bullet, non-empty line ending with ":"
+        if (
+          inAvailability &&
+          trimmed !== '' &&
+          !trimmed.startsWith('-') &&
+          !trimmed.startsWith('•') &&
+          trimmed.endsWith(':')
+        ) {
+          inAvailability = false
+        }
+
+        // ── Supplier bullet inside availability section ─────────────────────
+        if (inAvailability && (line.startsWith('- ') || line.startsWith('• '))) {
+          const name = line.slice(2).trim()
+          const info = findSupplier(name)
+          if (info) {
+            return <SupplierActions key={i} name={name} info={info} />
+          }
+          // Unknown supplier — fall through to normal bullet render
+        }
+
+        // ── Standard bullet ────────────────────────────────────────────────
         if (line.startsWith('- ') || line.startsWith('• ')) {
           return (
             <div key={i} className="flex gap-2.5 items-start">
@@ -54,6 +94,8 @@ function AssistantContent({ content }: { content: string }) {
             </div>
           )
         }
+
+        // ── Numbered list ──────────────────────────────────────────────────
         if (line.match(/^\d+\.\s/)) {
           return (
             <div key={i} className="flex gap-2.5 items-start">
@@ -64,6 +106,7 @@ function AssistantContent({ content }: { content: string }) {
             </div>
           )
         }
+
         if (line === '') return <div key={i} className="h-0.5" />
         return <p key={i} className="text-sm">{renderInline(line)}</p>
       })}
@@ -118,6 +161,40 @@ function WorkOrderCard({ wo }: { wo: WorkOrderExtraction }) {
           <p className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/25 rounded px-2 py-1 mt-1">
             ⚠ Low confidence — verify the details above before assigning.
           </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function SupplierActions({ name, info }: { name: string; info: SupplierInfo }) {
+  const mapsUrl = info.onlineOnly
+    ? null
+    : `https://www.google.com/maps/search/${info.mapsQuery}`
+
+  return (
+    <div className="flex items-center justify-between gap-3 py-1">
+      <span className="text-sm text-gray-200 font-medium leading-snug">{name}</span>
+      <div className="flex gap-1.5 shrink-0">
+        {info.phone && (
+          <a
+            href={`tel:${info.phone}`}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/8 border border-white/15 text-xs font-medium text-gray-300 hover:bg-amber-500/20 hover:text-amber-300 hover:border-amber-500/40 active:bg-amber-500/30 transition-colors"
+          >
+            <Phone size={11} strokeWidth={2.5} />
+            Call
+          </a>
+        )}
+        {mapsUrl && (
+          <a
+            href={mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/8 border border-white/15 text-xs font-medium text-gray-300 hover:bg-amber-500/20 hover:text-amber-300 hover:border-amber-500/40 active:bg-amber-500/30 transition-colors"
+          >
+            <MapPin size={11} strokeWidth={2.5} />
+            Directions
+          </a>
         )}
       </div>
     </div>
