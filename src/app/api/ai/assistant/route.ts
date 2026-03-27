@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { NextRequest } from 'next/server'
 import { FROST_SYSTEM_PROMPT } from '@/lib/ai/system-prompt'
+import { isPartsQuery } from '@/lib/ai/parts-detector'
 import { requireApiSession, unauthorized, tooManyRequests } from '@/lib/auth-guard'
 import { rateLimit, getClientIp, LIMITS } from '@/lib/rate-limit'
 import { aiAssistantSchema } from '@/lib/validations'
@@ -34,9 +35,20 @@ export async function POST(req: NextRequest) {
   // Trim to last 10 messages before sending — keeps payloads small
   const trimmedMessages = messages.slice(-10)
 
+  // Deterministic parts-query detection on the last user message — zero extra API cost.
+  // When triggered, we prefix the text with [PARTS QUERY] so the system prompt
+  // routes Frost into Parts Finder mode with the correct response format.
+  const lastUserMsg = [...trimmedMessages].reverse().find((m) => m.role === 'user')
+  const partsMode = lastUserMsg ? isPartsQuery(lastUserMsg.content) : false
+
   const claudeMessages: Anthropic.MessageParam[] = trimmedMessages.map(
     (m, index) => {
       const isLastUserMessage = index === trimmedMessages.length - 1 && m.role === 'user'
+
+      // Prepend parts-mode marker to the last user message text
+      const resolvedText = (isLastUserMessage && partsMode && !m.content.startsWith('[PARTS QUERY]'))
+        ? `[PARTS QUERY] ${m.content}`
+        : m.content
 
       if (isLastUserMessage && imageBase64) {
         const match = imageBase64.match(/^data:(image\/(jpeg|png|gif|webp));base64,(.+)$/)
@@ -50,14 +62,14 @@ export async function POST(req: NextRequest) {
 
           content.push({
             type: 'text',
-            text: m.content.trim() || 'What can you tell me about this? Please describe what you see and any relevant technical findings.',
+            text: resolvedText.trim() || 'What can you tell me about this? Please describe what you see and any relevant technical findings.',
           })
 
           return { role: 'user', content }
         }
       }
 
-      return { role: m.role, content: m.content }
+      return { role: m.role, content: isLastUserMessage ? resolvedText : m.content }
     }
   )
 
@@ -76,7 +88,7 @@ export async function POST(req: NextRequest) {
     auditLog({
       action: 'ai.query',
       userId: session.user.id,
-      meta: { endpoint: 'assistant', hasImage: !!imageBase64, turns: messages.length },
+      meta: { endpoint: 'assistant', hasImage: !!imageBase64, turns: messages.length, partsMode },
     })
 
     // Log interaction for Frost learning system — non-fatal if DB write fails
