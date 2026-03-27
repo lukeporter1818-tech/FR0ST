@@ -72,7 +72,7 @@ export function TopBar({
           {/* Sign out */}
           <button
             type="button"
-            onClick={() => signOut()}
+            onClick={() => signOut({ callbackUrl: '/login' })}
             className="text-xs text-gray-400 hover:text-gray-700 transition-colors px-1"
           >
             Sign out

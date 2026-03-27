@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Building2, MessageSquare, Sparkles, Users } from 'lucide-react'
+import { BookOpen, Building2, MessageSquare, Sparkles, Users } from 'lucide-react'
 
 const sections = [
   {
@@ -37,7 +37,7 @@ const sections = [
   {
     title: 'Frost Learning Log',
     description: 'Review Frost interactions, technician feedback, and logged fixes.',
-    icon: Sparkles,
+    icon: BookOpen,
     iconBg: 'bg-amber-50',
     iconColor: 'text-amber-600',
     href: '/settings/ai-interactions',

@@ -13,6 +13,7 @@ const pageTitles: Record<string, string> = {
   "/technicians": "Technicians",
   "/settings": "Settings",
   "/settings/users": "User Management",
+  "/settings/ai-interactions": "Frost Learning Log",
   "/jobs": "Schedule",
   "/jobs/new": "New Job",
 };

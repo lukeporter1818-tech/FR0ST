@@ -1,5 +1,14 @@
 import Link from 'next/link'
-import { Plus, UserX, Shield, Truck, Headphones, Mail } from 'lucide-react'
+import { Plus, UserX, Shield, Truck, Headphones, Mail, User } from 'lucide-react'
+
+/** Strip internal placeholder domains so the UI shows only the visible login. */
+function formatLogin(email: string): { display: string; isInternal: boolean } {
+  if (email.endsWith('@users.local'))
+    return { display: email.replace('@users.local', ''), isInternal: true }
+  if (email.endsWith('@invite.local'))
+    return { display: email.replace('@invite.local', ''), isInternal: true }
+  return { display: email, isInternal: false }
+}
 import { prisma } from '@/lib/db'
 import { requireAdminSession } from '@/lib/actions/users'
 import { InviteModalWrapper, InviteModalTriggerButton } from '@/components/invite-modal/InviteModalWrapper'
@@ -87,7 +96,7 @@ function UserTable({
         <thead>
           <tr className="border-b border-gray-100 bg-gray-50">
             <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">Name</th>
-            <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">Email</th>
+            <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">Login</th>
             <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">Role</th>
             <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">Linked Tech</th>
             <th className="px-4 py-2.5" />
@@ -105,7 +114,17 @@ function UserTable({
                     {user.name}
                   </div>
                 </td>
-                <td className="px-4 py-3 text-gray-500">{user.email}</td>
+                <td className="px-4 py-3 text-gray-500">
+                  {(() => {
+                    const { display, isInternal } = formatLogin(user.email)
+                    return isInternal ? (
+                      <span className="inline-flex items-center gap-1 text-gray-600">
+                        <User className="size-3 text-gray-400" />
+                        {display}
+                      </span>
+                    ) : display
+                  })()}
+                </td>
                 <td className="px-4 py-3">
                   <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${role.className}`}>
                     <RoleIcon className="size-3" />
