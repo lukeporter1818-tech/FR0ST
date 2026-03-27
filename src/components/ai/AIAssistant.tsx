@@ -163,6 +163,7 @@ export function AIAssistant() {
   const [logFixOpen, setLogFixOpen] = useState<string | null>(null) // message id
   const [fixForm, setFixForm] = useState({ issueSummary: '', actualFix: '', systemType: '' })
   const [fixSubmitting, setFixSubmitting] = useState(false)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -605,6 +606,18 @@ export function AIAssistant() {
                           )}
                         >
                           👎
+                        </button>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(message.content).then(() => {
+                              setCopiedId(message.id)
+                              setTimeout(() => setCopiedId((prev) => prev === message.id ? null : prev), 2000)
+                            }).catch(() => {})
+                          }}
+                          title="Copy response"
+                          className="text-xs text-gray-400 hover:text-gray-600 transition-colors ml-1"
+                        >
+                          {copiedId === message.id ? '✓ Copied' : 'Copy'}
                         </button>
                         <button
                           onClick={() => {
