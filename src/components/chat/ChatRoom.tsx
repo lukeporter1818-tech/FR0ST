@@ -11,9 +11,10 @@ type ChatRoomProps = {
   initialMessages: ChatMessageData[]
   userId: string
   userName: string
+  channel?: string
 }
 
-export function ChatRoom({ initialMessages, userId, userName }: ChatRoomProps) {
+export function ChatRoom({ initialMessages, userId, userName, channel = 'general' }: ChatRoomProps) {
   const [messages, setMessages] = useState<ChatMessageData[]>(initialMessages)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -48,8 +49,8 @@ export function ChatRoom({ initialMessages, userId, userName }: ChatRoomProps) {
   // Supabase does NOT echo broadcasts back to the sender, so there is no
   // duplicate — the sender already has the message via optimistic update.
   useEffect(() => {
-    const channel = supabase
-      .channel('chat:general')
+    const supaChannel = supabase
+      .channel(`chat:${channel}`)
       .on(
         'broadcast',
         { event: 'new_message' },
@@ -65,13 +66,13 @@ export function ChatRoom({ initialMessages, userId, userName }: ChatRoomProps) {
         channelReadyRef.current = status === 'SUBSCRIBED'
       })
 
-    channelRef.current = channel
+    channelRef.current = supaChannel
 
     return () => {
       channelReadyRef.current = false
-      supabase.removeChannel(channel)
+      supabase.removeChannel(supaChannel)
     }
-  }, []) // stable – no deps
+  }, [channel]) // re-subscribe if channel changes
 
   // ── Fallback poll (30 s) ───────────────────────────────────────────────────
   // Catches any messages missed while the realtime connection was down
@@ -82,8 +83,8 @@ export function ChatRoom({ initialMessages, userId, userName }: ChatRoomProps) {
       try {
         const since = lastSeenAtRef.current
         const url = since
-          ? `/api/chat?since=${encodeURIComponent(since)}`
-          : '/api/chat'
+          ? `/api/chat?channel=${encodeURIComponent(channel)}&since=${encodeURIComponent(since)}`
+          : `/api/chat?channel=${encodeURIComponent(channel)}`
         const res = await fetch(url)
         if (!res.ok) return
         const data: ChatMessageData[] = await res.json()
@@ -126,7 +127,7 @@ export function ChatRoom({ initialMessages, userId, userName }: ChatRoomProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           body,
-          channel: 'general',
+          channel,
         }),
       })
 

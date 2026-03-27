@@ -9,14 +9,16 @@ import {
   Bot,
   Users,
   Settings,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const primaryNavItems = [
-  { label: "Schedule", href: "/", icon: LayoutList },
-  { label: "Team Chat", href: "/chat", icon: MessageSquare },
-  { label: "Frost", href: "/ai", icon: Bot },
-] as const;
+  { label: "Schedule",   href: "/",           icon: LayoutList,   roles: null },
+  { label: "Team Chat",  href: "/chat",        icon: MessageSquare, roles: null },
+  { label: "Frost",      href: "/ai",          icon: Bot,          roles: null },
+  { label: "Management", href: "/management",  icon: Shield,       roles: ["DISPATCHER", "ADMIN"] as string[] },
+];
 
 const secondaryNavItems = [
   { label: "Technicians", href: "/technicians", icon: Users, roles: ["DISPATCHER", "ADMIN"] },
@@ -122,9 +124,11 @@ export function Sidebar({ userRole, userName, userInitials, open, onClose }: Sid
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         {/* Primary section */}
         <ul className="flex flex-col gap-0.5">
-          {primaryNavItems.map(({ label, href, icon }) => (
-            <NavItem key={href} label={label} href={href} icon={icon} />
-          ))}
+          {primaryNavItems
+            .filter((item) => !item.roles || !userRole || item.roles.includes(userRole))
+            .map(({ label, href, icon }) => (
+              <NavItem key={href} label={label} href={href} icon={icon} />
+            ))}
         </ul>
 
         {/* Divider */}

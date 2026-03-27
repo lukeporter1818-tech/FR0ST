@@ -10,15 +10,30 @@ export async function GET(request: NextRequest) {
   const session = await requireApiSession()
   if (!session) return unauthorized()
 
-  const since = request.nextUrl.searchParams.get('since')
+  const { searchParams } = request.nextUrl
+  const since = searchParams.get('since')
+  const channelParam = searchParams.get('channel') ?? 'general'
 
-  // Basic sanity check on the `since` param to prevent injection
   if (since && (isNaN(Date.parse(since)) || since.length > 30)) {
     return NextResponse.json({ error: 'Invalid since parameter' }, { status: 400 })
   }
+  // Restrict to valid channel names (alphanumeric + hyphen, max 50 chars)
+  if (!/^[a-z0-9-]{1,50}$/.test(channelParam)) {
+    return NextResponse.json({ error: 'Invalid channel' }, { status: 400 })
+  }
+  // Management channel requires DISPATCHER+; everyone else is fine with any other channel
+  if (channelParam === 'management') {
+    const role = session.user.role as string
+    if (!['ADMIN', 'DISPATCHER'].includes(role)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+  }
 
   const messages = await prisma.chatMessage.findMany({
-    where: since ? { createdAt: { gt: new Date(since) } } : undefined,
+    where: {
+      channel: channelParam,
+      ...(since ? { createdAt: { gt: new Date(since) } } : {}),
+    },
     take: 100,
     orderBy: { createdAt: 'asc' },
     include: { user: { select: { name: true } } },
@@ -57,6 +72,14 @@ export async function POST(request: NextRequest) {
   }
 
   const { body: messageBody, channel } = result.data
+
+  // Management channel is restricted to ADMIN and DISPATCHER
+  if (channel === 'management') {
+    const role = session.user.role as string
+    if (!['ADMIN', 'DISPATCHER'].includes(role)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+  }
 
   const message = await prisma.chatMessage.create({
     data: {

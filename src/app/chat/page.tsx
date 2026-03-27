@@ -6,6 +6,7 @@ import type { ChatMessageData } from '@/components/chat/ChatMessage'
 export default async function TeamChatPage() {
   const [rawMessages, session] = await Promise.all([
     prisma.chatMessage.findMany({
+      where: { channel: 'general' },
       take: 100,
       orderBy: { createdAt: 'asc' },
       include: {
