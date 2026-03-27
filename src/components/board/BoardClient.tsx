@@ -1,10 +1,33 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { DateNav } from './DateNav'
-import { saveBoardEntries, updateMyRow } from '@/lib/actions/board'
+import { saveBoardEntries, updateMyRow, addWorkOrderToBoard } from '@/lib/actions/board'
+import type { WorkOrderExtraction } from '@/types/work-order'
+
+// ─── Drop state machine ───────────────────────────────────────────────────────
+type DropState =
+  | { phase: 'extracting'; techId: string; techName: string }
+  | { phase: 'confirm';    techId: string; techName: string; extraction: WorkOrderExtraction }
+  | { phase: 'error';      techId: string; techName: string; message: string }
+  | null
+
+// ─── Confidence badge ─────────────────────────────────────────────────────────
+function ConfidenceBadge({ confidence }: { confidence: 'high' | 'medium' | 'low' }) {
+  const styles = {
+    high:   'bg-green-50  text-green-700  border-green-200',
+    medium: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+    low:    'bg-red-50    text-red-700    border-red-200',
+  }
+  return (
+    <span className={cn('text-xs px-2 py-0.5 rounded-full border font-medium', styles[confidence])}>
+      {confidence} confidence
+    </span>
+  )
+}
 
 export interface BoardRow {
   technicianId: string
@@ -83,6 +106,10 @@ export function BoardClient({
   const [saving, setSaving] = useState(false)
   const assignmentRef = useRef<HTMLInputElement>(null)
 
+  // ── Drag-and-drop WO intake ────────────────────────────────────────────────
+  const [dragOverTechId, setDragOverTechId] = useState<string | null>(null)
+  const [dropState, setDropState] = useState<DropState>(null)
+
   const isTechnician = currentUserRole === 'TECHNICIAN'
 
   useEffect(() => {
@@ -123,6 +150,82 @@ export function BoardClient({
     if (e.key === 'Enter') { e.preventDefault(); commitEdit(id) }
     if (e.key === 'Escape') setEditingId(null)
   }
+
+  const handleDrop = useCallback(async (e: React.DragEvent, tech: { id: string; name: string }) => {
+    e.preventDefault()
+    setDragOverTechId(null)
+    const file = Array.from(e.dataTransfer.files).find((f) => f.type.startsWith('image/'))
+    if (!file) return
+
+    setDropState({ phase: 'extracting', techId: tech.id, techName: tech.name })
+
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = (ev) => resolve(ev.target?.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    }).catch(() => '')
+
+    if (!dataUrl) {
+      setDropState({ phase: 'error', techId: tech.id, techName: tech.name, message: 'Could not read the image file.' })
+      return
+    }
+
+    try {
+      const res = await fetch('/api/ai/extract-work-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: dataUrl }),
+      })
+      if (!res.ok) throw new Error(`Extraction failed (${res.status})`)
+      const extraction: WorkOrderExtraction = await res.json()
+      if (!extraction.detected) {
+        setDropState({ phase: 'error', techId: tech.id, techName: tech.name, message: 'No work order found in this image.' })
+        return
+      }
+      setDropState({ phase: 'confirm', techId: tech.id, techName: tech.name, extraction })
+    } catch (err) {
+      setDropState({
+        phase: 'error',
+        techId: tech.id,
+        techName: tech.name,
+        message: err instanceof Error ? err.message : 'Extraction failed. Please try again.',
+      })
+    }
+  }, [])
+
+  const handleConfirmWO = useCallback(async () => {
+    if (!dropState || dropState.phase !== 'confirm') return
+    const { techId, techName, extraction } = dropState
+
+    const assignment = extraction.workOrderNumber ?? extraction.shortDescription ?? ''
+    const note = extraction.workOrderNumber && extraction.shortDescription ? extraction.shortDescription : ''
+
+    // Reuse extracting phase as the saving loading state
+    setDropState({ phase: 'extracting', techId, techName })
+
+    try {
+      await addWorkOrderToBoard(techId, assignment, note, date)
+
+      // Optimistically apply to local row so no full page reload is needed
+      setRows((prev) =>
+        prev.map((r) =>
+          r.technicianId === techId
+            ? { ...r, assignment, note, status: r.status ?? 'ASSIGNED' }
+            : r
+        )
+      )
+      setDropState(null)
+      toast.success(`${techName} — ${assignment || 'Work order'} added to Schedule`)
+    } catch (err) {
+      setDropState({
+        phase: 'error',
+        techId,
+        techName,
+        message: err instanceof Error ? err.message : 'Failed to save. Please try again.',
+      })
+    }
+  }, [dropState, date])
 
   async function handleSave() {
     setSaving(true)
@@ -169,6 +272,106 @@ export function BoardClient({
         )}
       </div>
 
+      {/* WO drop confirmation modal */}
+      {dropState && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/30"
+            onClick={() => dropState.phase !== 'extracting' && setDropState(null)}
+          />
+          <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 px-4">
+            <div className="bg-white rounded-2xl shadow-xl p-6 space-y-4">
+
+              {dropState.phase === 'extracting' && (
+                <div className="flex flex-col items-center gap-3 py-4">
+                  <Loader2 className="size-6 animate-spin text-gray-400" />
+                  <p className="text-sm text-gray-500">Scanning work order…</p>
+                </div>
+              )}
+
+              {dropState.phase === 'error' && (
+                <>
+                  <p className="text-sm font-semibold text-red-700">Could not extract work order</p>
+                  <p className="text-sm text-gray-500">{dropState.message}</p>
+                  <button
+                    onClick={() => setDropState(null)}
+                    className="w-full rounded-lg border border-gray-200 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    Close
+                  </button>
+                </>
+              )}
+
+              {dropState.phase === 'confirm' && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-base font-semibold text-gray-900">Add to Schedule</h2>
+                    <ConfidenceBadge confidence={dropState.extraction.confidence} />
+                  </div>
+
+                  {/* Extracted WO info */}
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 space-y-1.5">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Work Order</p>
+                    {dropState.extraction.workOrderNumber && (
+                      <p className="text-sm font-bold text-gray-900">{dropState.extraction.workOrderNumber}</p>
+                    )}
+                    {dropState.extraction.shortDescription && (
+                      <p className="text-sm text-gray-700">{dropState.extraction.shortDescription}</p>
+                    )}
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-500 pt-0.5">
+                      {dropState.extraction.siteName  && <span><span className="font-medium">Site:</span> {dropState.extraction.siteName}</span>}
+                      {dropState.extraction.callType  && <span><span className="font-medium">Type:</span> {dropState.extraction.callType}</span>}
+                      {dropState.extraction.priority  && <span><span className="font-medium">Priority:</span> {dropState.extraction.priority}</span>}
+                    </div>
+                    {dropState.extraction.confidence === 'low' && (
+                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-1">
+                        ⚠ Low confidence — verify details before confirming.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Target technician */}
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Assign to</p>
+                    <p className="text-sm font-semibold text-gray-900">{dropState.techName}</p>
+                  </div>
+
+                  {/* Schedule mapping preview */}
+                  <div className="border-t pt-3 space-y-0.5 text-xs text-gray-500">
+                    <p>
+                      <span className="font-medium text-gray-700">Assignment: </span>
+                      {dropState.extraction.workOrderNumber ?? dropState.extraction.shortDescription ?? '—'}
+                    </p>
+                    {dropState.extraction.workOrderNumber && dropState.extraction.shortDescription && (
+                      <p>
+                        <span className="font-medium text-gray-700">Note: </span>
+                        {dropState.extraction.shortDescription}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3 pt-1">
+                    <button
+                      onClick={handleConfirmWO}
+                      className="flex-1 rounded-lg bg-gray-900 py-2.5 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+                    >
+                      Add to Schedule
+                    </button>
+                    <button
+                      onClick={() => setDropState(null)}
+                      className="flex-1 rounded-lg border border-gray-200 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              )}
+
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Board */}
       <div className="divide-y divide-gray-100">
         {rows.map((row) => {
@@ -176,17 +379,26 @@ export function BoardClient({
           const isOwnRow = isTechnician && row.technicianId === currentTechnicianId
           const clickable = canEditRow(row)
 
+          // Drag-and-drop is available to dispatchers/admins on all rows.
+          // Technicians see no drag targets (server action enforces DISPATCHER role anyway).
+          const canDropWO = !isTechnician
+          const isDragTarget = dragOverTechId === row.technicianId
+
           return (
             <div
               key={row.technicianId}
               onClick={() => { if (!isEditing) startEdit(row) }}
               onKeyDown={(e) => isEditing && handleRowKeyDown(e, row.technicianId)}
+              onDragOver={canDropWO ? (e) => { e.preventDefault(); if (dragOverTechId !== row.technicianId) setDragOverTechId(row.technicianId) } : undefined}
+              onDragLeave={canDropWO ? (e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverTechId(null) } : undefined}
+              onDrop={canDropWO ? (e) => handleDrop(e, { id: row.technicianId, name: row.name }) : undefined}
               className={cn(
                 'flex items-baseline gap-5 py-4 px-1 rounded-md transition-colors group',
                 clickable
                   ? 'cursor-pointer hover:bg-gray-50/70'
                   : 'cursor-default opacity-60',
-                isOwnRow && 'border-l-2 border-blue-400 pl-2 font-semibold'
+                isOwnRow && 'border-l-2 border-blue-400 pl-2 font-semibold',
+                isDragTarget && 'bg-blue-50 outline outline-2 outline-blue-300 outline-offset-[-2px]',
               )}
             >
               {/* Name */}
