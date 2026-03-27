@@ -621,7 +621,10 @@ export function AIAssistant() {
       }
 
       // ── General assistant path ────────────────────────────────────────────
-      const history = messages.map((m) => ({ role: m.role, content: m.content }))
+      // Trim to last 9 messages before appending the new one — server also trims
+      // to 10, but trimming here avoids sending the full conversation across the
+      // wire on every turn in a long session.
+      const history = messages.slice(-9).map((m) => ({ role: m.role, content: m.content }))
       history.push({ role: 'user', content: text })
 
       const body: { messages: typeof history; imageBase64?: string } = { messages: history }

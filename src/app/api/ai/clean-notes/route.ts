@@ -41,12 +41,12 @@ Return this exact JSON structure:
 }`
 
   try {
-    const raw = await askAI(SYSTEM_PROMPT, userMessage, 1024)
+    const aiResponse = await askAI(SYSTEM_PROMPT, userMessage, 1024)
     let parsed
     try {
-      parsed = JSON.parse(raw)
+      parsed = JSON.parse(aiResponse)
     } catch {
-      const jsonMatch = raw.match(/\{[\s\S]*\}/)
+      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/)
       if (jsonMatch) {
         parsed = JSON.parse(jsonMatch[0])
       } else {

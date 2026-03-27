@@ -106,7 +106,7 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
 
   async function handleSend() {
     const body = input.trim()
-    if (!body) return
+    if (!body || sending) return
 
     setSending(true)
     setInput('')

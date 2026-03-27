@@ -152,7 +152,7 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
   // ── API helpers ──
 
   async function handleTriage() {
-    if (!triageInput.trim()) return
+    if (!triageInput.trim() || loading) return
     setLoading(true)
     setError(null)
     try {
@@ -172,7 +172,7 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
   }
 
   async function handleScheduleAsk() {
-    if (!scheduleInput.trim() || !scheduleContext) return
+    if (!scheduleInput.trim() || !scheduleContext || loading) return
     const question = scheduleInput.trim()
     setScheduleInput('')
     setLoading(true)
@@ -201,7 +201,7 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
   }
 
   async function handleCleanNotes() {
-    if (!cleanInput.trim()) return
+    if (!cleanInput.trim() || loading) return
     setLoading(true)
     setError(null)
     try {
@@ -221,7 +221,7 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
   }
 
   async function handleAsk() {
-    if (!askInput.trim()) return
+    if (!askInput.trim() || loading) return
     const question = askInput.trim()
     setAskInput('')
     setLoading(true)

@@ -104,7 +104,9 @@ export const jobStatusUpdateSchema = z.object({
 
 export const aiAskSchema = z.object({
   question: text(2000),
-  context: optionalText(1000),
+  // 5000 chars — schedule context for a full fleet (20+ techs × jobs) can
+  // easily exceed the previous 1000-char cap, causing silent 400 errors.
+  context: optionalText(5000),
 })
 
 export const aiAssistantSchema = z.object({

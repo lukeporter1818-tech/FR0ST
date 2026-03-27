@@ -235,6 +235,7 @@ export function BoardClient({
   }, [dropState, date])
 
   async function handleSave() {
+    if (saving) return
     setSaving(true)
     try {
       if (isTechnician && currentTechnicianId) {
