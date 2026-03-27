@@ -34,7 +34,7 @@ export function ManagementLayout({
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] -m-6">
       {/* Tab bar */}
-      <div className="shrink-0 flex border-b border-gray-200 bg-white px-4">
+      <div className="shrink-0 flex border-b border-white/10 bg-gray-950 px-4">
         <TabButton
           active={tab === 'chat'}
           onClick={() => setTab('chat')}
@@ -66,7 +66,7 @@ export function ManagementLayout({
         <div className={cn('h-full overflow-y-auto px-6 py-5', tab !== 'tasks' && 'hidden')}>
           <div className="max-w-2xl mx-auto">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-base font-semibold text-gray-900">Management Tasks</h2>
+              <h2 className="text-base font-semibold text-gray-100">Management Tasks</h2>
               {openCount > 0 && (
                 <span className="text-xs text-gray-500">{openCount} open</span>
               )}
@@ -78,7 +78,7 @@ export function ManagementLayout({
                 managementUsers={managementUsers}
               />
             ) : (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+              <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-300">
                 Tasks table not yet available. Run the pending SQL migration in Supabase to enable this feature.
               </div>
             )}
@@ -108,8 +108,8 @@ function TabButton({
       className={cn(
         'flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors',
         active
-          ? 'border-gray-900 text-gray-900'
-          : 'border-transparent text-gray-500 hover:text-gray-700'
+          ? 'border-amber-400 text-white'
+          : 'border-transparent text-gray-500 hover:text-gray-300'
       )}
     >
       {icon}

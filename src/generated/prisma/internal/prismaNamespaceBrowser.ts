@@ -59,6 +59,7 @@ export const ModelName = {
   ChatMessage: 'ChatMessage',
   Note: 'Note',
   BoardEntry: 'BoardEntry',
+  ManagementTask: 'ManagementTask',
   AIInteraction: 'AIInteraction'
 } as const
 
@@ -211,6 +212,22 @@ export const BoardEntryScalarFieldEnum = {
 } as const
 
 export type BoardEntryScalarFieldEnum = (typeof BoardEntryScalarFieldEnum)[keyof typeof BoardEntryScalarFieldEnum]
+
+
+export const ManagementTaskScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  notes: 'notes',
+  location: 'location',
+  dueDate: 'dueDate',
+  status: 'status',
+  createdById: 'createdById',
+  assignedToId: 'assignedToId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ManagementTaskScalarFieldEnum = (typeof ManagementTaskScalarFieldEnum)[keyof typeof ManagementTaskScalarFieldEnum]
 
 
 export const AIInteractionScalarFieldEnum = {

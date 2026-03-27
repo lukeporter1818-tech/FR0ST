@@ -41,7 +41,7 @@ export function DateNav({ date }: DateNavProps) {
     <div className="flex items-center gap-1">
       <button
         onClick={() => go(addDays(date, -1))}
-        className="p-1.5 text-gray-300 hover:text-gray-600 transition-colors"
+        className="p-1.5 text-gray-600 hover:text-gray-300 transition-colors"
         aria-label="Previous day"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -49,19 +49,19 @@ export function DateNav({ date }: DateNavProps) {
         </svg>
       </button>
 
-      <div className="flex items-center rounded-lg overflow-hidden border border-gray-200">
+      <div className="flex items-center rounded-lg overflow-hidden border border-white/15">
         <button
           onClick={() => go(today)}
           className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-            date === today ? 'bg-gray-900 text-white' : 'text-gray-500 hover:bg-gray-50'
+            date === today ? 'bg-amber-500 text-gray-950' : 'text-gray-400 hover:bg-white/5'
           }`}
         >
           Today
         </button>
         <button
           onClick={() => go(tomorrow)}
-          className={`px-3 py-1.5 text-sm font-medium transition-colors border-l border-gray-200 ${
-            date === tomorrow ? 'bg-gray-900 text-white' : 'text-gray-500 hover:bg-gray-50'
+          className={`px-3 py-1.5 text-sm font-medium transition-colors border-l border-white/15 ${
+            date === tomorrow ? 'bg-amber-500 text-gray-950' : 'text-gray-400 hover:bg-white/5'
           }`}
         >
           Tomorrow
@@ -70,7 +70,7 @@ export function DateNav({ date }: DateNavProps) {
 
       <button
         onClick={() => go(addDays(date, 1))}
-        className="p-1.5 text-gray-300 hover:text-gray-600 transition-colors"
+        className="p-1.5 text-gray-600 hover:text-gray-300 transition-colors"
         aria-label="Next day"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -79,7 +79,7 @@ export function DateNav({ date }: DateNavProps) {
       </button>
 
       {date !== today && date !== tomorrow && (
-        <span className="ml-2 text-sm text-gray-400">{formatShort(date)}</span>
+        <span className="ml-2 text-sm text-gray-500">{formatShort(date)}</span>
       )}
     </div>
   )

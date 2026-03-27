@@ -44,12 +44,12 @@ function renderInline(text: string): React.ReactNode {
 function AssistantContent({ content }: { content: string }) {
   const lines = content.split('\n')
   return (
-    <div className="space-y-2 text-sm leading-relaxed text-gray-900">
+    <div className="space-y-2 text-sm leading-relaxed text-gray-100">
       {lines.map((line, i) => {
         if (line.startsWith('- ') || line.startsWith('• ')) {
           return (
             <div key={i} className="flex gap-2.5 items-start">
-              <span className="mt-1.5 shrink-0 text-gray-400 text-xs">▸</span>
+              <span className="mt-1.5 shrink-0 text-gray-500 text-xs">▸</span>
               <span className="flex-1">{renderInline(line.slice(2))}</span>
             </div>
           )
@@ -57,7 +57,7 @@ function AssistantContent({ content }: { content: string }) {
         if (line.match(/^\d+\.\s/)) {
           return (
             <div key={i} className="flex gap-2.5 items-start">
-              <span className="mt-1.5 shrink-0 text-gray-400 text-xs font-medium">
+              <span className="mt-1.5 shrink-0 text-gray-500 text-xs font-medium">
                 {line.match(/^\d+/)?.[0]}
               </span>
               <span className="flex-1">{renderInline(line.replace(/^\d+\.\s/, ''))}</span>
@@ -73,9 +73,9 @@ function AssistantContent({ content }: { content: string }) {
 
 function ConfidenceBadge({ confidence }: { confidence: 'high' | 'medium' | 'low' }) {
   const styles: Record<string, string> = {
-    high: 'bg-green-50 text-green-700 border-green-200',
-    medium: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-    low: 'bg-red-50 text-red-700 border-red-200',
+    high: 'bg-green-500/15 text-green-300 border-green-500/30',
+    medium: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30',
+    low: 'bg-red-500/15 text-red-300 border-red-500/30',
   }
   return (
     <span className={cn('text-xs px-2 py-0.5 rounded-full border font-medium', styles[confidence])}>
@@ -86,23 +86,23 @@ function ConfidenceBadge({ confidence }: { confidence: 'high' | 'medium' | 'low'
 
 function WorkOrderCard({ wo }: { wo: WorkOrderExtraction }) {
   return (
-    <div className="mb-3 rounded-xl border border-gray-200 bg-gray-50 overflow-hidden">
+    <div className="mb-3 rounded-xl border border-white/10 bg-white/5 overflow-hidden">
       {/* Card header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 bg-white">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Work Order</span>
+      <div className="flex items-center justify-between px-3 py-2 border-b border-white/10 bg-white/5">
+        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Work Order</span>
         <ConfidenceBadge confidence={wo.confidence} />
       </div>
 
       {/* Card body */}
       <div className="px-3 py-2.5 space-y-1.5">
         {wo.workOrderNumber && (
-          <p className="text-sm font-semibold text-gray-900">{wo.workOrderNumber}</p>
+          <p className="text-sm font-semibold text-gray-100">{wo.workOrderNumber}</p>
         )}
         {wo.shortDescription && (
-          <p className="text-sm text-gray-700">{wo.shortDescription}</p>
+          <p className="text-sm text-gray-300">{wo.shortDescription}</p>
         )}
         {(wo.siteName || wo.callType || wo.priority) && (
-          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-600 pt-0.5">
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-400 pt-0.5">
             {wo.siteName && (
               <span><span className="font-medium">Site:</span> {wo.siteName}</span>
             )}
@@ -115,7 +115,7 @@ function WorkOrderCard({ wo }: { wo: WorkOrderExtraction }) {
           </div>
         )}
         {wo.confidence === 'low' && (
-          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-1">
+          <p className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/25 rounded px-2 py-1 mt-1">
             ⚠ Low confidence — verify the details above before assigning.
           </p>
         )}
@@ -127,9 +127,9 @@ function WorkOrderCard({ wo }: { wo: WorkOrderExtraction }) {
 function LoadingDots() {
   return (
     <div className="flex items-center gap-1 px-1 py-0.5">
-      <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.3s]" />
-      <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.15s]" />
-      <span className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" />
+      <span className="h-2 w-2 rounded-full bg-gray-600 animate-bounce [animation-delay:-0.3s]" />
+      <span className="h-2 w-2 rounded-full bg-gray-600 animate-bounce [animation-delay:-0.15s]" />
+      <span className="h-2 w-2 rounded-full bg-gray-600 animate-bounce" />
     </div>
   )
 }
@@ -618,8 +618,8 @@ export function AIAssistant() {
       />
 
       {/* Header */}
-      <div className="shrink-0 border-b border-gray-200 bg-white px-4 py-3 sm:px-6">
-        <h1 className="text-base font-semibold text-gray-900">Frost Field Helper</h1>
+      <div className="shrink-0 border-b border-white/10 bg-gray-950 px-4 py-3 sm:px-6">
+        <h1 className="text-base font-semibold text-gray-100">Frost Field Helper</h1>
         <p className="text-xs text-gray-500 mt-0.5">
           Get answers about HVAC, refrigeration, electrical, plumbing
         </p>
@@ -628,7 +628,7 @@ export function AIAssistant() {
       {/* Messages area */}
       <div
         ref={scrollRef}
-        className="relative flex-1 overflow-y-auto bg-gray-50 px-4 py-4 sm:px-6"
+        className="relative flex-1 overflow-y-auto bg-[#0f1117] px-4 py-4 sm:px-6"
         onDragOver={(e) => { e.preventDefault(); if (!isDragOver) setIsDragOver(true) }}
         onDragLeave={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false)
@@ -636,21 +636,21 @@ export function AIAssistant() {
         onDrop={handleDrop}
       >
         {isDragOver && (
-          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-blue-400 bg-blue-50/90">
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-amber-400 bg-amber-500/10">
             <div className="text-center">
-              <p className="text-sm font-semibold text-blue-700">Drop to scan or identify component</p>
-              <p className="text-xs text-blue-500 mt-1">Work orders · Part photos · Nameplates</p>
+              <p className="text-sm font-semibold text-amber-300">Drop to scan or identify component</p>
+              <p className="text-xs text-amber-400/70 mt-1">Work orders · Part photos · Nameplates</p>
             </div>
           </div>
         )}
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-4 pb-8 px-2">
             <div className="flex flex-col items-center gap-2 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-900 text-white">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400">
                 <Bot size={24} />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900">Frost Field Helper</p>
+                <p className="text-sm font-semibold text-gray-100">Frost Field Helper</p>
                 <p className="mt-0.5 max-w-sm text-xs text-gray-500 leading-relaxed">
                   Describe a problem, upload a part photo for identification, or drag a work-order screenshot to start intake.
                 </p>
@@ -668,7 +668,7 @@ export function AIAssistant() {
                 )}
               >
                 {message.role === 'user' ? (
-                  <div className="bg-gray-900 text-white rounded-2xl rounded-br-sm px-4 py-3 max-w-[80%]">
+                  <div className="bg-amber-500 text-gray-950 rounded-2xl rounded-br-sm px-4 py-3 max-w-[80%]">
                     {message.imageUrl && (
                       <img
                         src={message.imageUrl}
@@ -677,12 +677,12 @@ export function AIAssistant() {
                       />
                     )}
                     {message.content && (
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium">{message.content}</p>
                     )}
                   </div>
                 ) : (
                   <>
-                    <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-3 max-w-[85%]">
+                    <div className="bg-gray-800 border border-white/10 rounded-2xl rounded-bl-sm px-4 py-3 max-w-[85%]">
                       {/* Work order card appears above the text when present */}
                       {message.workOrder && <WorkOrderCard wo={message.workOrder} />}
                       {message.content && <AssistantContent content={message.content} />}
@@ -729,7 +729,7 @@ export function AIAssistant() {
                             }).catch(() => {})
                           }}
                           title="Copy response"
-                          className="text-xs text-gray-400 hover:text-gray-600 transition-colors ml-1"
+                          className="text-xs text-gray-500 hover:text-gray-300 transition-colors ml-1"
                         >
                           {copiedId === message.id ? '✓ Copied' : 'Copy'}
                         </button>
@@ -738,7 +738,7 @@ export function AIAssistant() {
                             setLogFixOpen(logFixOpen === message.id ? null : message.id)
                             setFixForm({ issueSummary: '', actualFix: '', systemType: '' })
                           }}
-                          className="text-xs text-gray-400 hover:text-gray-600 transition-colors ml-1"
+                          className="text-xs text-gray-500 hover:text-gray-300 transition-colors ml-1"
                         >
                           Log fix
                         </button>
@@ -747,25 +747,25 @@ export function AIAssistant() {
 
                     {/* Inline log fix form */}
                     {logFixOpen === message.id && (
-                      <div className="bg-white border border-gray-200 rounded-xl p-3 max-w-[85%] space-y-2">
+                      <div className="bg-gray-800/80 border border-white/10 rounded-xl p-3 max-w-[85%] space-y-2">
                         <input
                           type="text"
                           placeholder="Issue summary (optional)"
                           value={fixForm.issueSummary}
                           onChange={(e) => setFixForm((f) => ({ ...f, issueSummary: e.target.value }))}
-                          className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-gray-900 text-gray-900 placeholder:text-gray-400"
+                          className="w-full text-xs border border-white/15 bg-white/5 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500/50 text-gray-100 placeholder:text-gray-600"
                         />
                         <textarea
                           placeholder="What fixed it *"
                           value={fixForm.actualFix}
                           onChange={(e) => setFixForm((f) => ({ ...f, actualFix: e.target.value }))}
                           rows={2}
-                          className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-gray-900 text-gray-900 placeholder:text-gray-400 resize-none"
+                          className="w-full text-xs border border-white/15 bg-white/5 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500/50 text-gray-100 placeholder:text-gray-600 resize-none"
                         />
                         <select
                           value={fixForm.systemType}
                           onChange={(e) => setFixForm((f) => ({ ...f, systemType: e.target.value }))}
-                          className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-gray-900 text-gray-600 bg-white"
+                          className="w-full text-xs border border-white/15 bg-gray-800 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500/50 text-gray-300"
                         >
                           <option value="">System type (optional)</option>
                           <option value="Rack">Rack</option>
@@ -781,13 +781,13 @@ export function AIAssistant() {
                           <button
                             onClick={() => submitFix(message)}
                             disabled={fixSubmitting || !fixForm.actualFix.trim()}
-                            className="flex-1 rounded-lg bg-gray-900 py-1.5 text-xs font-medium text-white hover:bg-gray-700 disabled:opacity-50 transition-colors"
+                            className="flex-1 rounded-lg bg-amber-500 py-1.5 text-xs font-semibold text-gray-950 hover:bg-amber-400 disabled:opacity-50 transition-colors"
                           >
                             {fixSubmitting ? 'Saving…' : 'Save fix'}
                           </button>
                           <button
                             onClick={() => setLogFixOpen(null)}
-                            className="px-3 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50 transition-colors"
+                            className="px-3 rounded-lg border border-white/15 text-xs text-gray-400 hover:bg-white/5 transition-colors"
                           >
                             Cancel
                           </button>
@@ -796,13 +796,13 @@ export function AIAssistant() {
                     )}
                   </>
                 )}
-                <span className="text-xs text-gray-400 px-1">{formatTime(message.timestamp)}</span>
+                <span className="text-xs text-gray-600 px-1">{formatTime(message.timestamp)}</span>
               </div>
             ))}
 
             {loading && (
               <div className="flex flex-col items-start gap-1">
-                <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-3">
+                <div className="bg-gray-800 border border-white/10 rounded-2xl rounded-bl-sm px-4 py-3">
                   <LoadingDots />
                 </div>
               </div>
@@ -813,16 +813,16 @@ export function AIAssistant() {
 
       {/* Image preview strip */}
       {imagePreview && (
-        <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-2 sm:px-6">
+        <div className="shrink-0 border-t border-white/10 bg-gray-950 px-4 py-2 sm:px-6">
           <div className="relative inline-block">
             <img
               src={imagePreview}
               alt="Photo preview"
-              className="h-16 w-auto rounded-lg object-cover border border-gray-200"
+              className="h-16 w-auto rounded-lg object-cover border border-white/15"
             />
             <button
               onClick={removeImage}
-              className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900 text-white hover:bg-gray-700 transition-colors"
+              className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gray-700 text-gray-100 hover:bg-gray-600 transition-colors"
               aria-label="Remove photo"
             >
               <X size={10} strokeWidth={3} />
@@ -833,9 +833,9 @@ export function AIAssistant() {
 
       {/* Tech picker — shown when WO detected, replaces freeform name typing */}
       {intakeStep === 'awaiting-tech' && pendingExtraction && (
-        <div className="shrink-0 border-t border-blue-100 bg-blue-50 px-4 py-3 sm:px-6">
+        <div className="shrink-0 border-t border-white/10 bg-amber-500/10 px-4 py-3 sm:px-6">
           <div className="flex items-center justify-between mb-2.5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-blue-800">
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">
               Assign to technician
             </p>
             <button
@@ -847,13 +847,13 @@ export function AIAssistant() {
                   { id: crypto.randomUUID(), role: 'assistant', content: 'Work order intake cancelled.', timestamp: new Date() },
                 ])
               }}
-              className="text-xs text-blue-500 hover:text-blue-800 font-medium"
+              className="text-xs text-gray-500 hover:text-gray-300 font-medium transition-colors"
             >
               Cancel
             </button>
           </div>
           {techList.length === 0 ? (
-            <p className="text-xs text-blue-600 italic">No technicians available — type a name in the box below.</p>
+            <p className="text-xs text-gray-500 italic">No technicians available — type a name in the box below.</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {techList.map((tech) => (
@@ -873,7 +873,7 @@ export function AIAssistant() {
                       },
                     ])
                   }}
-                  className="px-3 py-1.5 rounded-lg border border-blue-200 bg-white text-sm font-medium text-blue-900 hover:bg-blue-600 hover:text-white hover:border-blue-600 active:bg-blue-700 transition-colors"
+                  className="px-3 py-1.5 rounded-lg border border-white/15 bg-white/5 text-sm font-medium text-gray-200 hover:bg-amber-500 hover:text-gray-950 hover:border-amber-500 active:bg-amber-600 transition-colors"
                 >
                   {tech.name}
                 </button>
@@ -885,8 +885,8 @@ export function AIAssistant() {
 
       {/* Schedule confirm banner — shown when tech is matched and awaiting confirmation */}
       {intakeStep === 'confirming' && pendingExtraction && pendingTechMatch && (
-        <div className="shrink-0 border-t border-amber-200 bg-amber-50 px-4 py-3 sm:px-6">
-          <p className="text-sm font-medium text-gray-900 mb-2.5">
+        <div className="shrink-0 border-t border-amber-500/25 bg-amber-500/10 px-4 py-3 sm:px-6">
+          <p className="text-sm font-medium text-gray-100 mb-2.5">
             Assign{' '}
             <strong>
               {pendingExtraction.workOrderNumber ?? pendingExtraction.shortDescription ?? 'work order'}
@@ -897,14 +897,14 @@ export function AIAssistant() {
             <button
               onClick={handleConfirmAssign}
               disabled={loading}
-              className="flex-1 rounded-lg bg-gray-900 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-700 disabled:opacity-50"
+              className="flex-1 rounded-lg bg-amber-500 py-2 text-sm font-semibold text-gray-950 transition-colors hover:bg-amber-400 disabled:opacity-50"
             >
               {loading ? 'Saving…' : 'Confirm'}
             </button>
             <button
               onClick={handleCancelAssign}
               disabled={loading}
-              className="flex-1 rounded-lg border border-gray-300 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-50"
+              className="flex-1 rounded-lg border border-white/15 py-2 text-sm font-medium text-gray-400 transition-colors hover:bg-white/5 disabled:opacity-50"
             >
               Cancel
             </button>
@@ -913,7 +913,7 @@ export function AIAssistant() {
       )}
 
       {/* Input bar */}
-      <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+      <div className="shrink-0 border-t border-white/10 bg-gray-950 px-4 py-3 sm:px-6">
         <div className="flex items-end gap-2">
           {/* Camera button — no file inputs anywhere in this subtree */}
           <div className="shrink-0">
@@ -926,10 +926,10 @@ export function AIAssistant() {
               }}
               disabled={intakeStep === 'confirming'}
               className={cn(
-                'flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white transition-colors',
+                'flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/5 transition-colors',
                 intakeStep === 'confirming'
-                  ? 'text-gray-300 cursor-not-allowed'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700 active:bg-gray-100',
+                  ? 'text-gray-700 cursor-not-allowed'
+                  : 'text-gray-400 hover:bg-white/10 hover:text-gray-200 active:bg-white/15',
               )}
               title="Add photo"
               aria-label="Add photo"
@@ -950,35 +950,35 @@ export function AIAssistant() {
 
               {/* Menu card — fixed, positioned above the camera button */}
               <div
-                className="fixed z-[999] w-48 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl"
+                className="fixed z-[999] w-48 overflow-hidden rounded-xl border border-white/15 bg-gray-900 shadow-2xl"
                 style={{ bottom: menuPos.bottom, left: menuPos.left }}
               >
                 <button
                   type="button"
                   onClick={() => triggerFileInput('image/*', 'environment')}
-                  className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                  className="w-full px-4 py-3 text-left text-sm text-gray-200 hover:bg-white/8 active:bg-white/12 transition-colors"
                 >
                   Take Photo
                 </button>
                 <button
                   type="button"
                   onClick={() => triggerFileInput('image/*')}
-                  className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                  className="w-full px-4 py-3 text-left text-sm text-gray-200 hover:bg-white/8 active:bg-white/12 transition-colors"
                 >
                   Photos
                 </button>
                 <button
                   type="button"
                   onClick={() => triggerFileInput('*/*')}
-                  className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                  className="w-full px-4 py-3 text-left text-sm text-gray-200 hover:bg-white/8 active:bg-white/12 transition-colors"
                 >
                   Files
                 </button>
-                <div className="border-t border-gray-100" />
+                <div className="border-t border-white/10" />
                 <button
                   type="button"
                   onClick={() => { setShowUploadMenu(false); setMenuPos(null) }}
-                  className="w-full px-4 py-3 text-left text-sm font-medium text-gray-500 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                  className="w-full px-4 py-3 text-left text-sm font-medium text-gray-500 hover:bg-white/8 active:bg-white/12 transition-colors"
                 >
                   Cancel
                 </button>
@@ -1002,9 +1002,9 @@ export function AIAssistant() {
             rows={1}
             disabled={loading || intakeStep === 'confirming'}
             className={cn(
-              'flex-1 resize-none rounded-xl bg-gray-100 px-4 py-3 text-sm text-gray-900',
-              'placeholder:text-gray-400 outline-none',
-              'focus:bg-white focus:ring-2 focus:ring-gray-900',
+              'flex-1 resize-none rounded-xl bg-white/5 px-4 py-3 text-sm text-gray-100',
+              'placeholder:text-gray-600 outline-none',
+              'focus:bg-white/8 focus:ring-2 focus:ring-amber-500/50',
               'transition-colors max-h-32 leading-relaxed',
               (loading || intakeStep === 'confirming') && 'opacity-50 cursor-not-allowed',
             )}
@@ -1023,8 +1023,8 @@ export function AIAssistant() {
             className={cn(
               'shrink-0 flex h-10 w-10 items-center justify-center rounded-xl transition-colors',
               canSend
-                ? 'bg-gray-900 text-white hover:bg-gray-700 active:bg-gray-800'
-                : 'bg-gray-100 text-gray-300 cursor-not-allowed',
+                ? 'bg-amber-500 text-gray-950 hover:bg-amber-400 active:bg-amber-600'
+                : 'bg-white/5 text-gray-700 cursor-not-allowed',
             )}
             aria-label="Send message"
           >

@@ -18,9 +18,9 @@ type DropState =
 // ─── Confidence badge ─────────────────────────────────────────────────────────
 function ConfidenceBadge({ confidence }: { confidence: 'high' | 'medium' | 'low' }) {
   const styles = {
-    high:   'bg-green-50  text-green-700  border-green-200',
-    medium: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-    low:    'bg-red-50    text-red-700    border-red-200',
+    high:   'bg-green-500/15  text-green-300  border-green-500/30',
+    medium: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30',
+    low:    'bg-red-500/15    text-red-300    border-red-500/30',
   }
   return (
     <span className={cn('text-xs px-2 py-0.5 rounded-full border font-medium', styles[confidence])}>
@@ -57,14 +57,15 @@ const STATUS_OPTIONS = [
   { value: 'OUT', label: 'Out' },
 ]
 
-const STATUS_COLORS: Record<string, string> = {
-  ASSIGNED:  'text-blue-600',
-  EN_ROUTE:  'text-amber-600',
-  ON_SITE:   'text-green-600',
-  WAITING:   'text-yellow-600',
-  PARTS:     'text-orange-600',
-  DONE:      'text-gray-400',
-  OUT:       'text-red-500',
+// ─── Status badge pills ────────────────────────────────────────────────────────
+const STATUS_BADGE: Record<string, string> = {
+  ASSIGNED:  'bg-blue-500/15  text-blue-300  ring-blue-500/30',
+  EN_ROUTE:  'bg-amber-500/15 text-amber-300 ring-amber-500/30',
+  ON_SITE:   'bg-green-500/15 text-green-300 ring-green-500/30',
+  WAITING:   'bg-yellow-500/15 text-yellow-300 ring-yellow-500/30',
+  PARTS:     'bg-orange-500/15 text-orange-300 ring-orange-500/30',
+  DONE:      'bg-gray-500/10  text-gray-500  ring-gray-500/20',
+  OUT:       'bg-red-500/15   text-red-300   ring-red-500/30',
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -80,8 +81,10 @@ const STATUS_LABELS: Record<string, string> = {
 function StatusText({ status }: { status: string | null }) {
   if (!status) return null
   return (
-    <span className={cn('flex items-center gap-1 text-xs font-semibold shrink-0', STATUS_COLORS[status])}>
-      <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
+    <span className={cn(
+      'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset shrink-0',
+      STATUS_BADGE[status] ?? 'bg-gray-500/10 text-gray-500 ring-gray-500/20'
+    )}>
       {STATUS_LABELS[status]}
     </span>
   )
@@ -280,26 +283,26 @@ export function BoardClient({
       {dropState && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black/30"
+            className="fixed inset-0 z-40 bg-black/60"
             onClick={() => dropState.phase !== 'extracting' && setDropState(null)}
           />
           <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 px-4">
-            <div className="bg-white rounded-2xl shadow-xl p-6 space-y-4">
+            <div className="bg-gray-900 rounded-2xl shadow-2xl ring-1 ring-white/10 p-6 space-y-4">
 
               {dropState.phase === 'extracting' && (
                 <div className="flex flex-col items-center gap-3 py-4">
-                  <Loader2 className="size-6 animate-spin text-gray-400" />
-                  <p className="text-sm text-gray-500">Scanning work order…</p>
+                  <Loader2 className="size-6 animate-spin text-gray-500" />
+                  <p className="text-sm text-gray-400">Scanning work order…</p>
                 </div>
               )}
 
               {dropState.phase === 'error' && (
                 <>
-                  <p className="text-sm font-semibold text-red-700">Could not extract work order</p>
-                  <p className="text-sm text-gray-500">{dropState.message}</p>
+                  <p className="text-sm font-semibold text-red-400">Could not extract work order</p>
+                  <p className="text-sm text-gray-400">{dropState.message}</p>
                   <button
                     onClick={() => setDropState(null)}
-                    className="w-full rounded-lg border border-gray-200 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                    className="w-full rounded-lg border border-white/15 py-2.5 text-sm text-gray-400 hover:bg-white/5 transition-colors"
                   >
                     Close
                   </button>
@@ -309,18 +312,18 @@ export function BoardClient({
               {dropState.phase === 'confirm' && (
                 <>
                   <div className="flex items-center justify-between">
-                    <h2 className="text-base font-semibold text-gray-900">Add to Schedule</h2>
+                    <h2 className="text-base font-semibold text-white">Add to Schedule</h2>
                     <ConfidenceBadge confidence={dropState.extraction.confidence} />
                   </div>
 
                   {/* Extracted WO info */}
-                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 space-y-1.5">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Work Order</p>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3 space-y-1.5">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Work Order</p>
                     {dropState.extraction.workOrderNumber && (
-                      <p className="text-sm font-bold text-gray-900">{dropState.extraction.workOrderNumber}</p>
+                      <p className="text-sm font-bold text-white">{dropState.extraction.workOrderNumber}</p>
                     )}
                     {dropState.extraction.shortDescription && (
-                      <p className="text-sm text-gray-700">{dropState.extraction.shortDescription}</p>
+                      <p className="text-sm text-gray-300">{dropState.extraction.shortDescription}</p>
                     )}
                     <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-500 pt-0.5">
                       {dropState.extraction.siteName  && <span><span className="font-medium">Site:</span> {dropState.extraction.siteName}</span>}
@@ -328,27 +331,27 @@ export function BoardClient({
                       {dropState.extraction.priority  && <span><span className="font-medium">Priority:</span> {dropState.extraction.priority}</span>}
                     </div>
                     {dropState.extraction.confidence === 'low' && (
-                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-1">
+                      <p className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/25 rounded px-2 py-1 mt-1">
                         ⚠ Low confidence — verify details before confirming.
                       </p>
                     )}
                   </div>
 
                   {/* Target technician */}
-                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Assign to</p>
-                    <p className="text-sm font-semibold text-gray-900">{dropState.techName}</p>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Assign to</p>
+                    <p className="text-sm font-semibold text-white">{dropState.techName}</p>
                   </div>
 
                   {/* Schedule mapping preview */}
-                  <div className="border-t pt-3 space-y-0.5 text-xs text-gray-500">
+                  <div className="border-t border-white/10 pt-3 space-y-0.5 text-xs text-gray-500">
                     <p>
-                      <span className="font-medium text-gray-700">Assignment: </span>
+                      <span className="font-medium text-gray-400">Assignment: </span>
                       {dropState.extraction.workOrderNumber ?? dropState.extraction.shortDescription ?? '—'}
                     </p>
                     {dropState.extraction.workOrderNumber && dropState.extraction.shortDescription && (
                       <p>
-                        <span className="font-medium text-gray-700">Note: </span>
+                        <span className="font-medium text-gray-400">Note: </span>
                         {dropState.extraction.shortDescription}
                       </p>
                     )}
@@ -357,13 +360,13 @@ export function BoardClient({
                   <div className="flex gap-3 pt-1">
                     <button
                       onClick={handleConfirmWO}
-                      className="flex-1 rounded-lg bg-gray-900 py-2.5 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+                      className="flex-1 rounded-lg bg-amber-500 py-2.5 text-sm font-semibold text-gray-900 hover:bg-amber-400 transition-colors"
                     >
                       Add to Schedule
                     </button>
                     <button
                       onClick={() => setDropState(null)}
-                      className="flex-1 rounded-lg border border-gray-200 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                      className="flex-1 rounded-lg border border-white/15 py-2.5 text-sm text-gray-400 hover:bg-white/5 transition-colors"
                     >
                       Cancel
                     </button>
@@ -378,7 +381,7 @@ export function BoardClient({
 
       {/* Board */}
       <div
-        className="divide-y divide-gray-100"
+        className="divide-y divide-white/8"
         onDragEnter={!isTechnician ? (e) => {
           if (Array.from(e.dataTransfer.types).includes('Files')) {
             dragEnterCount.current += 1
@@ -418,19 +421,19 @@ export function BoardClient({
               onDragLeave={canDropWO ? (e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverTechId(null) } : undefined}
               onDrop={canDropWO ? (e) => handleDrop(e, { id: row.technicianId, name: row.name }) : undefined}
               className={cn(
-                'flex items-baseline gap-5 py-4 px-1 rounded-md transition-colors group',
+                'flex items-baseline gap-5 py-4 px-1 rounded-md transition-all duration-150 group',
                 clickable
-                  ? 'cursor-pointer hover:bg-gray-50/70'
-                  : 'cursor-default opacity-60',
-                isOwnRow && 'border-l-2 border-blue-400 pl-2 font-semibold',
-                isDropZone && 'bg-blue-50/40 outline outline-1 outline-blue-200 outline-offset-[-1px]',
-                isDragTarget && 'bg-blue-100 outline outline-2 outline-blue-400 outline-offset-[-2px] scale-[1.01]',
+                  ? 'cursor-pointer hover:bg-white/5'
+                  : 'cursor-default opacity-40',
+                isOwnRow && 'border-l-2 border-amber-400 pl-2',
+                isDropZone && 'bg-amber-500/5 outline outline-1 outline-amber-500/25 outline-offset-[-1px]',
+                isDragTarget && 'bg-amber-500/15 outline outline-2 outline-amber-400 outline-offset-[-2px] scale-[1.005]',
               )}
             >
               {/* Name */}
               <span className={cn(
                 'w-24 shrink-0 text-[15px] leading-none',
-                isOwnRow ? 'font-bold text-gray-900' : 'font-semibold text-gray-800'
+                isOwnRow ? 'font-bold text-white' : 'font-semibold text-gray-200'
               )}>
                 {row.name.split(' ')[0]}
               </span>
@@ -445,7 +448,7 @@ export function BoardClient({
                       value={editDraft.assignment}
                       onChange={(e) => setEditDraft((d) => ({ ...d, assignment: e.target.value }))}
                       placeholder="Assignment"
-                      className="text-base font-bold text-gray-900 bg-transparent border-b border-gray-400 outline-none w-32 placeholder:text-gray-300 placeholder:font-normal"
+                      className="text-base font-bold text-gray-100 bg-transparent border-b border-white/30 outline-none w-32 placeholder:text-gray-600 placeholder:font-normal"
                       onClick={(e) => e.stopPropagation()}
                     />
                   )}
@@ -455,13 +458,13 @@ export function BoardClient({
                     value={editDraft.note}
                     onChange={(e) => setEditDraft((d) => ({ ...d, note: e.target.value }))}
                     placeholder="Note"
-                    className="flex-1 text-sm text-gray-500 bg-transparent border-b border-gray-200 outline-none placeholder:text-gray-300"
+                    className="flex-1 text-sm text-gray-400 bg-transparent border-b border-white/15 outline-none placeholder:text-gray-600"
                     onClick={(e) => e.stopPropagation()}
                   />
                   <select
                     value={editDraft.status ?? ''}
                     onChange={(e) => setEditDraft((d) => ({ ...d, status: e.target.value || null }))}
-                    className="text-xs text-gray-500 bg-transparent outline-none border-b border-gray-200 cursor-pointer"
+                    className="text-xs text-gray-400 bg-transparent outline-none border-b border-white/15 cursor-pointer"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {STATUS_OPTIONS.map((o) => (
@@ -471,11 +474,11 @@ export function BoardClient({
                 </>
               ) : (
                 <>
-                  <span className={cn('text-base font-bold leading-none tracking-wide', row.assignment ? 'text-gray-900' : 'text-gray-300')}>
+                  <span className={cn('text-base font-bold leading-none tracking-wide', row.assignment ? 'text-gray-100' : 'text-gray-600')}>
                     {row.assignment || '—'}
                   </span>
                   {row.note && (
-                    <span className="flex-1 text-sm text-gray-400 leading-none truncate italic">
+                    <span className="flex-1 text-sm text-gray-500 leading-none truncate italic">
                       {row.note}
                     </span>
                   )}
@@ -487,15 +490,15 @@ export function BoardClient({
                   )}
                   {canDropWO && !isDragTarget && !isDraggingFile && (
                     <ImageDown
-                      className="size-3.5 text-gray-300 opacity-0 group-hover:opacity-100 shrink-0 self-center transition-opacity"
+                      className="size-3.5 text-gray-700 opacity-0 group-hover:opacity-60 shrink-0 self-center transition-opacity"
                       aria-label="Drop work order screenshot here"
                     />
                   )}
                   {canDropWO && isDragTarget && (
-                    <span className="text-xs font-semibold text-blue-600 shrink-0 self-center">Drop here</span>
+                    <span className="text-xs font-semibold text-amber-400 shrink-0 self-center">Drop here</span>
                   )}
                   {canDropWO && isDropZone && (
-                    <ImageDown className="size-3.5 text-blue-400 shrink-0 self-center animate-pulse" />
+                    <ImageDown className="size-3.5 text-amber-400 shrink-0 self-center animate-pulse" />
                   )}
                 </>
               )}

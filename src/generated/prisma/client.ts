@@ -82,6 +82,11 @@ export type Note = Prisma.NoteModel
  */
 export type BoardEntry = Prisma.BoardEntryModel
 /**
+ * Model ManagementTask
+ * 
+ */
+export type ManagementTask = Prisma.ManagementTaskModel
+/**
  * Model AIInteraction
  * 
  */

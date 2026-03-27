@@ -105,3 +105,12 @@ export const BoardStatus = {
 } as const
 
 export type BoardStatus = (typeof BoardStatus)[keyof typeof BoardStatus]
+
+
+export const MgmtTaskStatus = {
+  OPEN: 'OPEN',
+  IN_PROGRESS: 'IN_PROGRESS',
+  DONE: 'DONE'
+} as const
+
+export type MgmtTaskStatus = (typeof MgmtTaskStatus)[keyof typeof MgmtTaskStatus]

@@ -169,18 +169,18 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
 
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-[#0f1117]">
       {/* Messages area */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-5 py-4 space-y-4 bg-white"
+        className="flex-1 overflow-y-auto px-5 py-4 space-y-4 bg-[#0f1117]"
       >
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center">
             <div className="text-center">
-              <MessageSquare className="size-10 text-gray-200 mx-auto mb-3" />
-              <p className="text-sm text-gray-400 font-medium">No messages yet</p>
-              <p className="text-xs text-gray-300 mt-1">Start the conversation!</p>
+              <MessageSquare className="size-10 text-gray-700 mx-auto mb-3" />
+              <p className="text-sm text-gray-500 font-medium">No messages yet</p>
+              <p className="text-xs text-gray-600 mt-1">Start the conversation!</p>
             </div>
           </div>
         ) : (
@@ -199,13 +199,13 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
                 <div
                   className={
                     isOwn
-                      ? 'bg-blue-600 text-white rounded-2xl rounded-br-md px-4 py-2 max-w-[75%]'
-                      : 'bg-gray-100 text-gray-900 rounded-2xl rounded-bl-md px-4 py-2 max-w-[75%]'
+                      ? 'bg-amber-500 text-gray-950 rounded-2xl rounded-br-md px-4 py-2 max-w-[75%]'
+                      : 'bg-gray-800 text-gray-100 rounded-2xl rounded-bl-md px-4 py-2 max-w-[75%] ring-1 ring-white/8'
                   }
                 >
                   <p className="text-sm leading-relaxed break-words">{msg.body}</p>
                 </div>
-                <span className={`text-[10px] text-gray-400 mt-1 px-1 ${isOwn ? 'text-right' : 'text-left'}`}>
+                <span className={`text-[10px] text-gray-600 mt-1 px-1 ${isOwn ? 'text-right' : 'text-left'}`}>
                   {new Date(msg.createdAt).toLocaleTimeString([], {
                     hour: '2-digit',
                     minute: '2-digit',
@@ -218,7 +218,7 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
       </div>
 
       {/* Input bar */}
-      <div className="bg-white border-t border-gray-200 p-4">
+      <div className="bg-gray-950 border-t border-white/10 p-4">
         <div className="flex items-center gap-2">
           <input
             ref={inputRef}
@@ -228,12 +228,12 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             disabled={sending}
-            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 border border-white/15 bg-white/5 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <button
             onClick={handleSend}
             disabled={sending || !input.trim()}
-            className="flex items-center justify-center w-9 h-9 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            className="flex items-center justify-center w-9 h-9 bg-amber-500 hover:bg-amber-400 text-gray-950 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
           >
             {sending ? (
               <Loader2 className="size-4 animate-spin" />

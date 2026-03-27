@@ -392,6 +392,7 @@ export const ModelName = {
   ChatMessage: 'ChatMessage',
   Note: 'Note',
   BoardEntry: 'BoardEntry',
+  ManagementTask: 'ManagementTask',
   AIInteraction: 'AIInteraction'
 } as const
 
@@ -408,7 +409,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "technician" | "job" | "scheduleEntry" | "smsMessage" | "chatMessage" | "note" | "boardEntry" | "aIInteraction"
+    modelProps: "user" | "technician" | "job" | "scheduleEntry" | "smsMessage" | "chatMessage" | "note" | "boardEntry" | "managementTask" | "aIInteraction"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1004,6 +1005,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ManagementTask: {
+      payload: Prisma.$ManagementTaskPayload<ExtArgs>
+      fields: Prisma.ManagementTaskFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ManagementTaskFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManagementTaskPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ManagementTaskFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManagementTaskPayload>
+        }
+        findFirst: {
+          args: Prisma.ManagementTaskFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManagementTaskPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ManagementTaskFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManagementTaskPayload>
+        }
+        findMany: {
+          args: Prisma.ManagementTaskFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManagementTaskPayload>[]
+        }
+        create: {
+          args: Prisma.ManagementTaskCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManagementTaskPayload>
+        }
+        createMany: {
+          args: Prisma.ManagementTaskCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ManagementTaskCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManagementTaskPayload>[]
+        }
+        delete: {
+          args: Prisma.ManagementTaskDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManagementTaskPayload>
+        }
+        update: {
+          args: Prisma.ManagementTaskUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManagementTaskPayload>
+        }
+        deleteMany: {
+          args: Prisma.ManagementTaskDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ManagementTaskUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ManagementTaskUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManagementTaskPayload>[]
+        }
+        upsert: {
+          args: Prisma.ManagementTaskUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ManagementTaskPayload>
+        }
+        aggregate: {
+          args: Prisma.ManagementTaskAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateManagementTask>
+        }
+        groupBy: {
+          args: Prisma.ManagementTaskGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ManagementTaskGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ManagementTaskCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ManagementTaskCountAggregateOutputType> | number
+        }
+      }
+    }
     AIInteraction: {
       payload: Prisma.$AIInteractionPayload<ExtArgs>
       fields: Prisma.AIInteractionFieldRefs
@@ -1252,6 +1327,22 @@ export const BoardEntryScalarFieldEnum = {
 export type BoardEntryScalarFieldEnum = (typeof BoardEntryScalarFieldEnum)[keyof typeof BoardEntryScalarFieldEnum]
 
 
+export const ManagementTaskScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  notes: 'notes',
+  location: 'location',
+  dueDate: 'dueDate',
+  status: 'status',
+  createdById: 'createdById',
+  assignedToId: 'assignedToId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ManagementTaskScalarFieldEnum = (typeof ManagementTaskScalarFieldEnum)[keyof typeof ManagementTaskScalarFieldEnum]
+
+
 export const AIInteractionScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -1476,6 +1567,20 @@ export type ListEnumBoardStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$
 
 
 /**
+ * Reference to a field of type 'MgmtTaskStatus'
+ */
+export type EnumMgmtTaskStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MgmtTaskStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'MgmtTaskStatus[]'
+ */
+export type ListEnumMgmtTaskStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MgmtTaskStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -1591,6 +1696,7 @@ export type GlobalOmitConfig = {
   chatMessage?: Prisma.ChatMessageOmit
   note?: Prisma.NoteOmit
   boardEntry?: Prisma.BoardEntryOmit
+  managementTask?: Prisma.ManagementTaskOmit
   aIInteraction?: Prisma.AIInteractionOmit
 }
 
