@@ -23,6 +23,7 @@ export type AuditAction =
   | 'ai.query'
   | 'ai.triage_applied'
   | 'upload.received'
+  | 'chat.post'
   | 'access.forbidden'
   | 'mgmt_task.create'
   | 'mgmt_task.update'

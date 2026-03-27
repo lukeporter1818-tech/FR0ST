@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     include: { user: { select: { name: true } } },
   })
 
-  auditLog({ action: 'ai.query', userId: session.user.id, meta: { channel } })
+  auditLog({ action: 'chat.post', userId: session.user.id, meta: { channel } })
 
   return NextResponse.json(
     {

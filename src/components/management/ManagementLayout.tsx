@@ -13,6 +13,7 @@ type Tab = 'chat' | 'tasks'
 interface ManagementLayoutProps {
   messages: ChatMessageData[]
   tasks: TaskData[]
+  tasksReady?: boolean
   userId: string
   userName: string
   managementUsers: { id: string; name: string }[]
@@ -21,6 +22,7 @@ interface ManagementLayoutProps {
 export function ManagementLayout({
   messages,
   tasks,
+  tasksReady = true,
   userId,
   userName,
   managementUsers,
@@ -69,11 +71,17 @@ export function ManagementLayout({
                 <span className="text-xs text-gray-500">{openCount} open</span>
               )}
             </div>
-            <TaskList
-              initialTasks={tasks}
-              currentUserId={userId}
-              managementUsers={managementUsers}
-            />
+            {tasksReady ? (
+              <TaskList
+                initialTasks={tasks}
+                currentUserId={userId}
+                managementUsers={managementUsers}
+              />
+            ) : (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                Tasks table not yet available. Run the pending SQL migration in Supabase to enable this feature.
+              </div>
+            )}
           </div>
         </div>
       </div>
