@@ -35,19 +35,28 @@ export async function POST(req: NextRequest) {
   // Trim to last 10 messages before sending — keeps payloads small
   const trimmedMessages = messages.slice(-10)
 
-  // Deterministic parts-query detection on the last user message — zero extra API cost.
-  // When triggered, we prefix the text with [PARTS QUERY] so the system prompt
-  // routes Frost into Parts Finder mode with the correct response format.
+  // ── Mode detection (deterministic, zero extra API cost) ──────────────────────
+  //
+  // PHOTO PART mode:  imageBase64 present → the client already tried work-order
+  //   extraction before calling us and it failed, so this is a physical component
+  //   photo. Inject [PHOTO PART] so the system prompt routes to part-recognition.
+  //
+  // PARTS QUERY mode: text-only query with model numbers / part keywords. Only
+  //   active when there is no image (image takes priority).
+  const photoMode = !!imageBase64
   const lastUserMsg = [...trimmedMessages].reverse().find((m) => m.role === 'user')
-  const partsMode = lastUserMsg ? isPartsQuery(lastUserMsg.content) : false
+  const textPartsMode = !photoMode && (lastUserMsg ? isPartsQuery(lastUserMsg.content) : false)
+  const modePrefix = photoMode ? '[PHOTO PART]' : textPartsMode ? '[PARTS QUERY]' : ''
 
   const claudeMessages: Anthropic.MessageParam[] = trimmedMessages.map(
     (m, index) => {
       const isLastUserMessage = index === trimmedMessages.length - 1 && m.role === 'user'
 
-      // Prepend parts-mode marker to the last user message text
-      const resolvedText = (isLastUserMessage && partsMode && !m.content.startsWith('[PARTS QUERY]'))
-        ? `[PARTS QUERY] ${m.content}`
+      // Prepend mode marker to the last user message text (skip if already prefixed)
+      const userText = m.content.trim()
+      const alreadyPrefixed = userText.startsWith('[PHOTO PART]') || userText.startsWith('[PARTS QUERY]')
+      const resolvedText = (isLastUserMessage && modePrefix && !alreadyPrefixed)
+        ? (userText ? `${modePrefix} ${userText}` : modePrefix)
         : m.content
 
       if (isLastUserMessage && imageBase64) {
@@ -60,11 +69,14 @@ export async function POST(req: NextRequest) {
             { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } },
           ]
 
-          content.push({
-            type: 'text',
-            text: resolvedText.trim() || 'What can you tell me about this? Please describe what you see and any relevant technical findings.',
-          })
+          // Use a rich default prompt when user sent no text — gives Frost
+          // enough instruction to return a fully structured part-recognition response
+          const stripped = resolvedText.trim()
+          const imgText = (stripped && stripped !== '[PHOTO PART]' && stripped !== '[PARTS QUERY]')
+            ? stripped
+            : '[PHOTO PART] Identify this commercial component. Read any visible nameplates, model numbers, and labels.'
 
+          content.push({ type: 'text', text: imgText })
           return { role: 'user', content }
         }
       }
@@ -88,7 +100,7 @@ export async function POST(req: NextRequest) {
     auditLog({
       action: 'ai.query',
       userId: session.user.id,
-      meta: { endpoint: 'assistant', hasImage: !!imageBase64, turns: messages.length, partsMode },
+      meta: { endpoint: 'assistant', hasImage: photoMode, turns: messages.length, mode: modePrefix || 'normal' },
     })
 
     // Log interaction for Frost learning system — non-fatal if DB write fails

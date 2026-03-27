@@ -638,8 +638,8 @@ export function AIAssistant() {
         {isDragOver && (
           <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-blue-400 bg-blue-50/90">
             <div className="text-center">
-              <p className="text-sm font-semibold text-blue-700">Drop to scan work order</p>
-              <p className="text-xs text-blue-500 mt-1">JPEG · PNG · WEBP</p>
+              <p className="text-sm font-semibold text-blue-700">Drop to scan or identify component</p>
+              <p className="text-xs text-blue-500 mt-1">Work orders · Part photos · Nameplates</p>
             </div>
           </div>
         )}
@@ -652,7 +652,7 @@ export function AIAssistant() {
               <div>
                 <p className="text-sm font-semibold text-gray-900">Frost Field Helper</p>
                 <p className="mt-0.5 max-w-sm text-xs text-gray-500 leading-relaxed">
-                  Describe a problem, upload a photo, or drag a work-order screenshot to start intake.
+                  Describe a problem, upload a part photo for identification, or drag a work-order screenshot to start intake.
                 </p>
               </div>
             </div>
