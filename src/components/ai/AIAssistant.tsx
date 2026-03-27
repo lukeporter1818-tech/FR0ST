@@ -164,6 +164,7 @@ export function AIAssistant() {
   const [fixForm, setFixForm] = useState({ issueSummary: '', actualFix: '', systemType: '' })
   const [fixSubmitting, setFixSubmitting] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [isDragOver, setIsDragOver] = useState(false)
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -251,6 +252,103 @@ export function AIAssistant() {
     setPendingExtraction(null)
     setPendingTechMatch(null)
   }, [])
+
+  // ── Auto-send path for dropped images ────────────────────────────────────────
+  // Runs the full extraction → assign flow without requiring a manual send click.
+  // Does NOT send conversation history — dropped images are standalone intake items.
+  const autoSendImage = useCallback(async (dataUrl: string) => {
+    if (loading) return
+    resetIntake()
+    setInput('')
+    setImageFile(null)
+    setImagePreview(null)
+
+    const userMessage: Message = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: '',
+      imageUrl: dataUrl,
+      timestamp: new Date(),
+    }
+    setMessages((prev) => [...prev, userMessage])
+    setLoading(true)
+
+    try {
+      const extractRes = await fetch('/api/ai/extract-work-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: dataUrl }),
+      })
+
+      if (extractRes.ok) {
+        const extraction: WorkOrderExtraction = await extractRes.json()
+        if (extraction.detected) {
+          setPendingExtraction(extraction)
+          setIntakeStep('awaiting-tech')
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: crypto.randomUUID(),
+              role: 'assistant',
+              content: 'Work order detected — select a technician below to assign.',
+              timestamp: new Date(),
+              workOrder: extraction,
+            },
+          ])
+          setLoading(false)
+          return
+        }
+      }
+
+      // Not a work order — pass to general assistant for image analysis
+      const res = await fetch('/api/ai/assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: '' }],
+          imageBase64: dataUrl,
+        }),
+      })
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`)
+      const data = await res.json()
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: data.response,
+          timestamp: new Date(),
+          interactionId: data.interactionId as string | undefined,
+        },
+      ])
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: 'Something went wrong reaching the assistant. Check your connection and try again.',
+          timestamp: new Date(),
+        },
+      ])
+    } finally {
+      setLoading(false)
+    }
+  }, [loading, resetIntake])
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    setIsDragOver(false)
+    if (loading || intakeStep === 'confirming') return
+    const file = Array.from(e.dataTransfer.files).find((f) => f.type.startsWith('image/'))
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string
+      if (dataUrl) autoSendImage(dataUrl)
+    }
+    reader.readAsDataURL(file)
+  }, [loading, intakeStep, autoSendImage])
 
   // ── Frost learning handlers ──────────────────────────────────────────────────
 
@@ -528,7 +626,23 @@ export function AIAssistant() {
       </div>
 
       {/* Messages area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 sm:px-6">
+      <div
+        ref={scrollRef}
+        className="relative flex-1 overflow-y-auto bg-gray-50 px-4 py-4 sm:px-6"
+        onDragOver={(e) => { e.preventDefault(); if (!isDragOver) setIsDragOver(true) }}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false)
+        }}
+        onDrop={handleDrop}
+      >
+        {isDragOver && (
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-blue-400 bg-blue-50/90">
+            <div className="text-center">
+              <p className="text-sm font-semibold text-blue-700">Drop to scan work order</p>
+              <p className="text-xs text-blue-500 mt-1">JPEG · PNG · WEBP</p>
+            </div>
+          </div>
+        )}
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-4 pb-8 px-2">
             <div className="flex flex-col items-center gap-2 text-center">
@@ -538,7 +652,7 @@ export function AIAssistant() {
               <div>
                 <p className="text-sm font-semibold text-gray-900">Frost Field Helper</p>
                 <p className="mt-0.5 max-w-sm text-xs text-gray-500 leading-relaxed">
-                  Describe a problem. Upload a photo. Get answers fast.
+                  Describe a problem, upload a photo, or drag a work-order screenshot to start intake.
                 </p>
               </div>
             </div>
@@ -717,24 +831,55 @@ export function AIAssistant() {
         </div>
       )}
 
-      {/* Intake hint bar — shown when waiting for a tech name, with escape hatch */}
+      {/* Tech picker — shown when WO detected, replaces freeform name typing */}
       {intakeStep === 'awaiting-tech' && pendingExtraction && (
-        <div className="shrink-0 border-t border-blue-200 bg-blue-50 px-4 py-2 sm:px-6 flex items-center justify-between">
-          <p className="text-xs text-blue-700">
-            <span className="font-medium">Work order detected</span> — type a technician name to assign
-          </p>
-          <button
-            onClick={() => {
-              resetIntake()
-              setMessages((prev) => [
-                ...prev,
-                { id: crypto.randomUUID(), role: 'assistant', content: 'Work order intake cancelled.', timestamp: new Date() },
-              ])
-            }}
-            className="text-xs text-blue-600 hover:text-blue-800 font-medium ml-3 shrink-0"
-          >
-            Cancel
-          </button>
+        <div className="shrink-0 border-t border-blue-100 bg-blue-50 px-4 py-3 sm:px-6">
+          <div className="flex items-center justify-between mb-2.5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-blue-800">
+              Assign to technician
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                resetIntake()
+                setMessages((prev) => [
+                  ...prev,
+                  { id: crypto.randomUUID(), role: 'assistant', content: 'Work order intake cancelled.', timestamp: new Date() },
+                ])
+              }}
+              className="text-xs text-blue-500 hover:text-blue-800 font-medium"
+            >
+              Cancel
+            </button>
+          </div>
+          {techList.length === 0 ? (
+            <p className="text-xs text-blue-600 italic">No technicians available — type a name in the box below.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {techList.map((tech) => (
+                <button
+                  key={tech.id}
+                  type="button"
+                  onClick={() => {
+                    setPendingTechMatch(tech)
+                    setIntakeStep('confirming')
+                    setMessages((prev) => [
+                      ...prev,
+                      {
+                        id: crypto.randomUUID(),
+                        role: 'assistant',
+                        content: `Assign **${pendingExtraction.workOrderNumber ?? pendingExtraction.shortDescription ?? 'this work order'}** to **${tech.name}** and add to today's Schedule?`,
+                        timestamp: new Date(),
+                      },
+                    ])
+                  }}
+                  className="px-3 py-1.5 rounded-lg border border-blue-200 bg-white text-sm font-medium text-blue-900 hover:bg-blue-600 hover:text-white hover:border-blue-600 active:bg-blue-700 transition-colors"
+                >
+                  {tech.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
