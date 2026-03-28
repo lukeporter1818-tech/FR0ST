@@ -417,14 +417,63 @@ export function AIAssistant() {
     e.preventDefault()
     setIsDragOver(false)
     if (loading || intakeStep === 'confirming') return
+
+    // ── 1. Real file drop (local files, screenshots, Photos app) ────────────
     const file = Array.from(e.dataTransfer.files).find((f) => f.type.startsWith('image/'))
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string
-      if (dataUrl) autoSendImage(dataUrl)
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        const dataUrl = ev.target?.result as string
+        if (dataUrl) autoSendImage(dataUrl)
+      }
+      reader.readAsDataURL(file)
+      return
     }
-    reader.readAsDataURL(file)
+
+    // ── 2. Items API fallback (some browsers surface files here, not in .files) ─
+    const imageItem = Array.from(e.dataTransfer.items).find(
+      (item) => item.kind === 'file' && item.type.startsWith('image/')
+    )
+    if (imageItem) {
+      const f = imageItem.getAsFile()
+      if (f) {
+        const reader = new FileReader()
+        reader.onload = (ev) => {
+          const dataUrl = ev.target?.result as string
+          if (dataUrl) autoSendImage(dataUrl)
+        }
+        reader.readAsDataURL(f)
+        return
+      }
+    }
+
+    // ── 3. Browser image drag (URL/HTML — no real file due to browser security) ─
+    // Dragging from Google Images or any website gives text/uri-list or text/html
+    // instead of a file. CORS blocks fetching these URLs. Tell the user clearly.
+    const types = Array.from(e.dataTransfer.types)
+    if (types.includes('text/uri-list') || types.includes('text/html')) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant' as const,
+          content: "Browser security blocked that image — web images can't be dragged directly. Right-click the image → **Save image**, then drag the saved file here or use the upload button.",
+          timestamp: new Date(),
+        },
+      ])
+      return
+    }
+
+    // ── 4. Unrecognized drop — surface clearly, never silently fail ──────────
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        role: 'assistant' as const,
+        content: "That drop didn't include a usable image. Try dragging a saved image file or use the upload button.",
+        timestamp: new Date(),
+      },
+    ])
   }, [loading, intakeStep, autoSendImage])
 
   // ── Frost learning handlers ──────────────────────────────────────────────────
