@@ -294,7 +294,11 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
             </div>
             <div>
               <h2 className="text-sm font-semibold">Frost</h2>
-              {mode !== 'home' && (
+              {mode === 'home' ? (
+                <p className="text-[11px] leading-tight text-muted-foreground">
+                  Commercial refrigeration, HVAC, electrical, and plumbing support
+                </p>
+              ) : (
                 <button
                   onClick={() => switchMode('home')}
                   className="text-xs text-muted-foreground hover:text-foreground"
@@ -323,13 +327,13 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
               <p className="mb-3 text-sm text-muted-foreground">What can I help you with?</p>
               <QuickAction
                 icon={<Sparkles className="size-4" />}
-                label="Triage a Job"
+                label="Triage Job"
                 description="Analyze a service call for urgency, trade, and risks"
                 onClick={() => switchMode('triage')}
               />
               <QuickAction
                 icon={<CalendarDays className="size-4" />}
-                label="Scheduled Work Orders"
+                label="Work Orders"
                 description="Ask Frost who's on what job and what the WO is about"
                 onClick={() => switchMode('schedule')}
               />
@@ -341,7 +345,7 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
               />
               <QuickAction
                 icon={<Brain className="size-4" />}
-                label="Ask Anything"
+                label="Ask Frost"
                 description="Ask about HVAC, plumbing, electrical, or operations"
                 onClick={() => switchMode('ask')}
               />
@@ -379,7 +383,7 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
           {/* Scheduled Work Orders mode */}
           {mode === 'schedule' && (
             <div className="space-y-3">
-              <p className="text-sm font-medium">Scheduled Work Orders</p>
+              <p className="text-sm font-medium">Work Orders</p>
               {loading && scheduleHistory.length === 0 && (
                 <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
                   <Loader2 className="size-4 animate-spin" />
@@ -470,7 +474,7 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
           {/* Ask anything mode */}
           {mode === 'ask' && (
             <div className="space-y-3">
-              <p className="text-sm font-medium">Ask Anything</p>
+              <p className="text-sm font-medium">Ask Frost</p>
               {askHistory.length === 0 && !loading && (
                 <p className="py-4 text-center text-sm text-muted-foreground">
                   Ask me anything about HVAC, plumbing, electrical, refrigeration, or dispatch operations.

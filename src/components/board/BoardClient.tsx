@@ -223,7 +223,7 @@ export function BoardClient({
         )
       )
       setDropState(null)
-      toast.success(`${techName} — ${assignment || 'Work order'} added to Schedule`)
+      toast.success('Added to Schedule')
     } catch (err) {
       setDropState({
         phase: 'error',

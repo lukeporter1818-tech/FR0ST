@@ -105,7 +105,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
       'Change password on first login.',
     ]
     navigator.clipboard.writeText(lines.join('\n'))
-    toast.success('Invite text copied')
+    toast.success('Copied')
   }
 
   const handleResendSms = () => {
