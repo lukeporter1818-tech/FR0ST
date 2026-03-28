@@ -36,7 +36,13 @@ export async function GET(request: NextRequest) {
     },
     take: 100,
     orderBy: { createdAt: 'asc' },
-    include: { user: { select: { name: true } } },
+    select: {
+      id: true,
+      userId: true,
+      body: true,
+      createdAt: true,
+      user: { select: { name: true } },
+    },
   })
 
   return NextResponse.json(
@@ -87,7 +93,13 @@ export async function POST(request: NextRequest) {
       body: messageBody,
       channel,
     },
-    include: { user: { select: { name: true } } },
+    select: {
+      id: true,
+      userId: true,
+      body: true,
+      createdAt: true,
+      user: { select: { name: true } },
+    },
   })
 
   auditLog({ action: 'chat.post', userId: session.user.id, meta: { channel } })

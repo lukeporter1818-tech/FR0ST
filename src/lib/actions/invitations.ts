@@ -10,6 +10,8 @@ import { generateTempPassword } from '@/lib/utils'
 import { sendSms } from './sms'
 import { sendInviteEmail } from './email'
 
+const TWILIO_SENT = new Set(['accepted', 'queued', 'sending', 'sent', 'delivered'])
+
 export type InviteResult =
   | {
       success: true
@@ -164,6 +166,7 @@ export async function inviteTechnician(
           phone: validPhone ?? null,
           active: true,
         },
+        select: { id: true },
       })
 
       const technician = await tx.technician.create({
@@ -176,6 +179,7 @@ export async function inviteTechnician(
           status: 'ACTIVE',
           active: true,
         },
+        select: { id: true },
       })
 
       return { user, technician }
@@ -225,8 +229,6 @@ export async function inviteTechnician(
           false,
           redactedSmsBody
         )
-
-        const TWILIO_SENT = new Set(['accepted', 'queued', 'sending', 'sent', 'delivered'])
 
         if (smsResult.status === 'simulated') {
           smsStatus = 'simulated'
@@ -327,9 +329,8 @@ export async function resendInviteSms(
 
     const result = await sendSms(technicianId, smsBody, undefined, false, redactedBody)
 
-    const SENT = new Set(['accepted', 'queued', 'sending', 'sent', 'delivered'])
     if (result.status === 'simulated') return { status: 'simulated', message: 'SMS not configured; share manually' }
-    if (SENT.has(result.status)) return { status: 'sent', message: 'SMS sent' }
+    if (TWILIO_SENT.has(result.status)) return { status: 'sent', message: 'SMS sent' }
     return { status: 'failed', message: `SMS status: ${result.status}` }
   } catch (err) {
     console.error('[resendInviteSms] Error:', err)

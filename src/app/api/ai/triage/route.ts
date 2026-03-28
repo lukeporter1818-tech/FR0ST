@@ -71,6 +71,7 @@ Return this exact JSON structure:
           prompt: userMessage,
           response: JSON.stringify(parsed),
         },
+        select: { id: true },
       })
     } catch {
       // Non-critical

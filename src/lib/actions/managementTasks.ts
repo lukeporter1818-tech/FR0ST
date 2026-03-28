@@ -63,7 +63,17 @@ function mapTask(t: {
   }
 }
 
-const taskInclude = {
+const taskSelect = {
+  id: true,
+  title: true,
+  notes: true,
+  location: true,
+  dueDate: true,
+  status: true,
+  createdById: true,
+  assignedToId: true,
+  createdAt: true,
+  updatedAt: true,
   createdBy: { select: { name: true } },
   assignedTo: { select: { name: true } },
 } as const
@@ -95,7 +105,7 @@ export async function createManagementTask(data: {
         createdById: session.user.id,
         status: 'OPEN',
       },
-      include: taskInclude,
+      select: taskSelect,
     })
 
     auditLog({ action: 'mgmt_task.create', userId: session.user.id, meta: { taskId: task.id, title } })
@@ -133,7 +143,7 @@ export async function updateManagementTask(
         ...(data.status !== undefined && { status: data.status }),
         ...(data.assignedToId !== undefined && { assignedToId: data.assignedToId || null }),
       },
-      include: taskInclude,
+      select: taskSelect,
     })
 
     auditLog({ action: 'mgmt_task.update', userId: session.user.id, meta: { taskId: id } })
