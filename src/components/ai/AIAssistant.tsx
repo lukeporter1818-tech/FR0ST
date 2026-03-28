@@ -732,7 +732,7 @@ export function AIAssistant() {
               <div>
                 <p className="text-sm font-semibold text-gray-100">Frost Field Helper</p>
                 <p className="mt-0.5 max-w-sm text-xs text-gray-500 leading-relaxed">
-                  Describe a problem, upload a part photo for identification, or drag a work-order screenshot to start intake.
+                  Describe a problem or upload a part photo for identification.
                 </p>
               </div>
             </div>
