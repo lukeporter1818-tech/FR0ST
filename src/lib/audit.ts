@@ -11,6 +11,8 @@ export type AuditAction =
   | 'board.save'
   | 'board.update_own_row'
   | 'board.assign_from_screenshot'
+  | 'board.add_tech'
+  | 'board.remove_tech'
   | 'job.create'
   | 'job.update'
   | 'job.delete'

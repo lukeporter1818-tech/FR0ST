@@ -164,6 +164,81 @@ export async function addWorkOrderToBoard(
   revalidatePath('/schedule')
 }
 
+/**
+ * Add a technician to the board for a given date.
+ * Creates an empty BoardEntry. No-ops if the entry already exists (idempotent).
+ */
+export async function addTechToBoard(technicianId: string, date: string): Promise<void> {
+  const session = await requireRole('DISPATCHER')
+
+  if (!technicianId || typeof technicianId !== 'string' || technicianId.length > 100) {
+    throw new Error('Invalid technicianId')
+  }
+
+  const parsedDate = parseDate(date)
+
+  // Duplicate guard: do nothing if already on the board for this date
+  const existing = await prisma.boardEntry.findUnique({
+    where: { technicianId_date: { technicianId, date: parsedDate } },
+    select: { id: true },
+  })
+  if (existing) return
+
+  const rowCount = await prisma.boardEntry.count({ where: { date: parsedDate } })
+
+  await prisma.boardEntry.create({
+    data: {
+      technicianId,
+      date: parsedDate,
+      assignment: '',
+      note: '',
+      status: null,
+      orderIndex: rowCount,
+    },
+  })
+
+  auditLog({
+    action: 'board.add_tech',
+    userId: session.user.id,
+    userRole: session.user.role,
+    targetId: technicianId,
+    targetType: 'Technician',
+    meta: { date },
+  })
+
+  revalidatePath('/schedule')
+}
+
+/**
+ * Remove a technician from the board for a given date.
+ * Deletes only the BoardEntry for that tech+date. No-ops if not found.
+ * Does NOT delete the technician or their account.
+ */
+export async function removeTechFromBoard(technicianId: string, date: string): Promise<void> {
+  const session = await requireRole('DISPATCHER')
+
+  if (!technicianId || typeof technicianId !== 'string' || technicianId.length > 100) {
+    throw new Error('Invalid technicianId')
+  }
+
+  const parsedDate = parseDate(date)
+
+  await prisma.boardEntry.deleteMany({
+    where: { technicianId, date: parsedDate },
+  })
+
+  auditLog({
+    action: 'board.remove_tech',
+    userId: session.user.id,
+    userRole: session.user.role,
+    targetId: technicianId,
+    targetType: 'Technician',
+    meta: { date },
+  })
+
+  revalidatePath('/schedule')
+}
+
 export async function updateMyRow(
   technicianId: string,
   date: string,

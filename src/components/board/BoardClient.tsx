@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Loader2, ImageDown } from 'lucide-react'
+import { Loader2, ImageDown, UserPlus, X, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { DateNav } from './DateNav'
-import { saveBoardEntries, updateMyRow, addWorkOrderToBoard } from '@/lib/actions/board'
+import { saveBoardEntries, updateMyRow, addWorkOrderToBoard, addTechToBoard, removeTechFromBoard } from '@/lib/actions/board'
 import type { WorkOrderExtraction } from '@/types/work-order'
 
 // ─── Drop state machine ───────────────────────────────────────────────────────
@@ -40,6 +40,7 @@ export interface BoardRow {
 
 interface BoardClientProps {
   rows: BoardRow[]
+  allTechs: { id: string; name: string }[]
   date: string
   currentUserId: string
   currentUserRole: string
@@ -94,6 +95,7 @@ interface LocalRow extends BoardRow { dirty: boolean }
 
 export function BoardClient({
   rows: initialRows,
+  allTechs,
   date,
   currentUserId,
   currentUserRole,
@@ -109,6 +111,13 @@ export function BoardClient({
   const [saving, setSaving] = useState(false)
   const assignmentRef = useRef<HTMLInputElement>(null)
 
+  // ── Roster management state ────────────────────────────────────────────────
+  const [showAddPicker, setShowAddPicker] = useState(false)
+  const [addingTechId, setAddingTechId] = useState<string | null>(null)
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)
+  const [removingId, setRemovingId] = useState<string | null>(null)
+  const addPickerRef = useRef<HTMLDivElement>(null)
+
   // ── Drag-and-drop WO intake ────────────────────────────────────────────────
   const [dragOverTechId, setDragOverTechId] = useState<string | null>(null)
   const [isDraggingFile, setIsDraggingFile] = useState(false)
@@ -116,10 +125,13 @@ export function BoardClient({
   const [dropState, setDropState] = useState<DropState>(null)
 
   const isTechnician = currentUserRole === 'TECHNICIAN'
+  const canManageRoster = !isTechnician
 
   useEffect(() => {
     setRows(initialRows.map((r) => ({ ...r, dirty: false })))
     setEditingId(null)
+    setShowAddPicker(false)
+    setConfirmRemoveId(null)
   }, [date, initialRows])
 
   useEffect(() => {
@@ -234,6 +246,50 @@ export function BoardClient({
     }
   }, [dropState, date])
 
+  // Close add picker when clicking outside
+  useEffect(() => {
+    if (!showAddPicker) return
+    function handleOutside(e: MouseEvent) {
+      if (addPickerRef.current && !addPickerRef.current.contains(e.target as Node)) {
+        setShowAddPicker(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [showAddPicker])
+
+  async function handleAddTech(techId: string) {
+    if (addingTechId) return
+    setAddingTechId(techId)
+    setShowAddPicker(false)
+    try {
+      await addTechToBoard(techId, date)
+      // optimistic: add row locally
+      const tech = allTechs.find((t) => t.id === techId)
+      if (tech) {
+        setRows((prev) => [...prev, { technicianId: tech.id, name: tech.name, assignment: '', note: '', status: null, orderIndex: prev.length, dirty: false }])
+      }
+    } catch {
+      toast.error('Failed to add technician.')
+    } finally {
+      setAddingTechId(null)
+    }
+  }
+
+  async function handleRemoveTech(techId: string) {
+    if (removingId) return
+    setRemovingId(techId)
+    setConfirmRemoveId(null)
+    try {
+      await removeTechFromBoard(techId, date)
+      setRows((prev) => prev.filter((r) => r.technicianId !== techId))
+    } catch {
+      toast.error('Failed to remove technician.')
+    } finally {
+      setRemovingId(null)
+    }
+  }
+
   async function handleSave() {
     if (saving) return
     setSaving(true)
@@ -269,15 +325,46 @@ export function BoardClient({
       {/* Top bar */}
       <div className="flex items-center justify-between gap-4 mb-6">
         <DateNav date={date} />
-        {dirtyCount > 0 && (
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-400 text-gray-900 hover:bg-amber-500 transition-colors disabled:opacity-40 shrink-0"
-          >
-            {saving ? 'Saving…' : `Save${dirtyCount > 1 ? ` (${dirtyCount})` : ''}`}
-          </button>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          {dirtyCount > 0 && (
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-400 text-gray-900 hover:bg-amber-500 transition-colors disabled:opacity-40"
+            >
+              {saving ? 'Saving…' : `Save${dirtyCount > 1 ? ` (${dirtyCount})` : ''}`}
+            </button>
+          )}
+          {canManageRoster && (() => {
+            const available = allTechs.filter((t) => !rows.some((r) => r.technicianId === t.id))
+            return (
+              <div className="relative" ref={addPickerRef}>
+                <button
+                  onClick={() => setShowAddPicker((v) => !v)}
+                  disabled={available.length === 0}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/15 text-xs font-medium text-gray-400 hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  aria-label="Add technician to schedule"
+                >
+                  {addingTechId ? <Loader2 className="size-3.5 animate-spin" /> : <UserPlus className="size-3.5" />}
+                  Add Tech
+                </button>
+                {showAddPicker && available.length > 0 && (
+                  <div className="absolute right-0 top-full mt-1 z-30 w-44 rounded-xl border border-white/15 bg-gray-900 shadow-2xl py-1 overflow-hidden">
+                    {available.map((tech) => (
+                      <button
+                        key={tech.id}
+                        onClick={() => handleAddTech(tech.id)}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-white/8 transition-colors"
+                      >
+                        {tech.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })()}
+        </div>
       </div>
 
       {/* WO drop confirmation modal */}
@@ -500,6 +587,34 @@ export function BoardClient({
                   )}
                   {canDropWO && isDropZone && (
                     <ImageDown className="size-3.5 text-amber-400 shrink-0 self-center animate-pulse" />
+                  )}
+                  {canManageRoster && !isDragTarget && (
+                    removingId === row.technicianId ? (
+                      <Loader2 className="size-3.5 animate-spin text-gray-600 shrink-0 self-center" />
+                    ) : confirmRemoveId === row.technicianId ? (
+                      <span className="flex items-center gap-1 shrink-0 self-center" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => handleRemoveTech(row.technicianId)}
+                          className="text-xs text-red-400 hover:text-red-300 font-medium transition-colors"
+                        >
+                          Remove
+                        </button>
+                        <button
+                          onClick={() => setConfirmRemoveId(null)}
+                          className="text-gray-600 hover:text-gray-400 transition-colors"
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setConfirmRemoveId(row.technicianId) }}
+                        className="opacity-0 group-hover:opacity-40 hover:!opacity-100 text-gray-500 hover:text-red-400 shrink-0 self-center transition-all"
+                        aria-label={`Remove ${row.name} from schedule`}
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    )
                   )}
                 </>
               )}

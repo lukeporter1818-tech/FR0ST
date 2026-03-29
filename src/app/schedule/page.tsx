@@ -28,9 +28,10 @@ export default async function SchedulePage({
   const startOfDay = new Date(date + 'T00:00:00.000Z')
   const endOfDay = new Date(date + 'T23:59:59.999Z')
 
-  const [techs, entries] = await Promise.all([
+  const [allTechs, entries] = await Promise.all([
     prisma.technician.findMany({
       where: { active: true },
+      select: { id: true, name: true },
       orderBy: { name: 'asc' },
     }),
     prisma.boardEntry.findMany({
@@ -41,22 +42,23 @@ export default async function SchedulePage({
     }),
   ])
 
-  const rows = techs.map((tech) => {
-    const entry = entries.find((e) => e.technicianId === tech.id)
-    return {
-      technicianId: tech.id,
-      name: tech.name,
-      assignment: entry?.assignment ?? '',
-      note: entry?.note ?? '',
-      status: entry?.status ?? null,
-      orderIndex: entry?.orderIndex ?? 0,
-    }
-  })
+  // Only show techs that have a board entry for this date (roster-based)
+  const rows = entries
+    .sort((a, b) => a.orderIndex - b.orderIndex)
+    .map((entry) => ({
+      technicianId: entry.technicianId,
+      name: entry.technician.name,
+      assignment: entry.assignment ?? '',
+      note: entry.note ?? '',
+      status: entry.status,
+      orderIndex: entry.orderIndex,
+    }))
 
   return (
     <div className="max-w-2xl">
       <BoardClient
         rows={rows}
+        allTechs={allTechs}
         date={date}
         currentUserId={session?.user?.id ?? ''}
         currentUserRole={session?.user?.role ?? 'DISPATCHER'}
