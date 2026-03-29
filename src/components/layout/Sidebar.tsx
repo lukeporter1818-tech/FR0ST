@@ -10,14 +10,16 @@ import {
   Users,
   Settings,
   Shield,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const primaryNavItems = [
-  { label: "Frost",      href: "/ai",          icon: Bot,          roles: null },
+  { label: "Frost",      href: "/ai",          icon: Bot,           roles: null },
   { label: "Team Chat",  href: "/chat",        icon: MessageSquare, roles: null },
-  { label: "Schedule",   href: "/schedule",    icon: LayoutList,   roles: null },
-  { label: "Management", href: "/management",  icon: Shield,       roles: ["DISPATCHER", "ADMIN"] as string[] },
+  { label: "Schedule",   href: "/schedule",    icon: LayoutList,    roles: null },
+  { label: "Management", href: "/management",  icon: Shield,        roles: ["DISPATCHER", "ADMIN"] as string[] },
+  { label: "Overview",   href: "/overview",    icon: Activity,      roles: ["DISPATCHER", "ADMIN"] as string[] },
 ];
 
 const secondaryNavItems = [
