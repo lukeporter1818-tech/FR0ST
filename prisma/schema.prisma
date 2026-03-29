@@ -228,8 +228,9 @@ enum BoardStatus {
 
 model BoardEntry {
   id           String       @id @default(cuid())
-  technicianId String
-  technician   Technician   @relation(fields: [technicianId], references: [id])
+  technicianId String?
+  technician   Technician?  @relation(fields: [technicianId], references: [id])
+  manualName   String?
   date         DateTime     @db.Date
   assignment   String
   note         String?
@@ -239,6 +240,7 @@ model BoardEntry {
   updatedAt    DateTime     @updatedAt
 
   @@unique([technicianId, date])
+  @@unique([manualName, date])
 }
 
 // ── MANAGEMENT TASKS ──

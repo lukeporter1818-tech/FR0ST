@@ -5,7 +5,7 @@ import { Loader2, ImageDown, UserPlus, X, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { DateNav } from './DateNav'
-import { saveBoardEntries, updateMyRow, addWorkOrderToBoard, addTechToBoard, removeTechFromBoard } from '@/lib/actions/board'
+import { saveBoardEntries, updateMyRow, addWorkOrderToBoard, addTechToBoard, addManualNameToBoard, removeFromBoard } from '@/lib/actions/board'
 import type { WorkOrderExtraction } from '@/types/work-order'
 
 // ─── Drop state machine ───────────────────────────────────────────────────────
@@ -30,7 +30,9 @@ function ConfidenceBadge({ confidence }: { confidence: 'high' | 'medium' | 'low'
 }
 
 export interface BoardRow {
-  technicianId: string
+  id: string
+  technicianId: string | null
+  manualName: string | null
   name: string
   assignment: string
   note: string
@@ -114,9 +116,13 @@ export function BoardClient({
   // ── Roster management state ────────────────────────────────────────────────
   const [showAddPicker, setShowAddPicker] = useState(false)
   const [addingTechId, setAddingTechId] = useState<string | null>(null)
-  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)
-  const [removingId, setRemovingId] = useState<string | null>(null)
+  const [showManualInput, setShowManualInput] = useState(false)
+  const [manualNameDraft, setManualNameDraft] = useState('')
+  const [addingManual, setAddingManual] = useState(false)
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)  // uses row.id
+  const [removingId, setRemovingId] = useState<string | null>(null)             // uses row.id
   const addPickerRef = useRef<HTMLDivElement>(null)
+  const manualInputRef = useRef<HTMLInputElement>(null)
 
   // ── Drag-and-drop WO intake ────────────────────────────────────────────────
   const [dragOverTechId, setDragOverTechId] = useState<string | null>(null)
@@ -141,21 +147,23 @@ export function BoardClient({
   const dirtyCount = rows.filter((r) => r.dirty).length
 
   function canEditRow(row: LocalRow): boolean {
+    // Manual rows: dispatcher/admin only (no linked technician account)
+    if (!row.technicianId) return !isTechnician
     if (!isTechnician) return true
     return row.technicianId === currentTechnicianId
   }
 
   function startEdit(row: LocalRow) {
     if (!canEditRow(row)) return
-    if (editingId && editingId !== row.technicianId) commitEdit(editingId)
-    setEditingId(row.technicianId)
+    if (editingId && editingId !== row.id) commitEdit(editingId)
+    setEditingId(row.id)
     setEditDraft({ assignment: row.assignment, note: row.note, status: row.status })
   }
 
-  const commitEdit = useCallback((technicianId: string) => {
+  const commitEdit = useCallback((rowId: string) => {
     setRows((prev) =>
       prev.map((r) => {
-        if (r.technicianId !== technicianId) return r
+        if (r.id !== rowId) return r
         const changed = r.assignment !== editDraft.assignment || r.note !== editDraft.note || r.status !== editDraft.status
         return { ...r, assignment: editDraft.assignment, note: editDraft.note, status: editDraft.status, dirty: r.dirty || changed }
       })
@@ -168,7 +176,7 @@ export function BoardClient({
     if (e.key === 'Escape') setEditingId(null)
   }
 
-  const handleDrop = useCallback(async (e: React.DragEvent, tech: { id: string; name: string }) => {
+  const handleDrop = useCallback(async (e: React.DragEvent, tech: { id: string; technicianId: string; name: string }) => {
     e.preventDefault()
     setDragOverTechId(null)
     // Prevent a second drop while extraction/confirmation is already in progress
@@ -176,7 +184,7 @@ export function BoardClient({
     const file = Array.from(e.dataTransfer.files).find((f) => f.type.startsWith('image/'))
     if (!file) return
 
-    setDropState({ phase: 'extracting', techId: tech.id, techName: tech.name })
+    setDropState({ phase: 'extracting', techId: tech.technicianId, techName: tech.name })
 
     const dataUrl = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader()
@@ -186,7 +194,7 @@ export function BoardClient({
     }).catch(() => '')
 
     if (!dataUrl) {
-      setDropState({ phase: 'error', techId: tech.id, techName: tech.name, message: 'Could not read the image file.' })
+      setDropState({ phase: 'error', techId: tech.technicianId, techName: tech.name, message: 'Could not read the image file.' })
       return
     }
 
@@ -202,11 +210,11 @@ export function BoardClient({
         setDropState({ phase: 'error', techId: tech.id, techName: tech.name, message: 'No work order found in this image.' })
         return
       }
-      setDropState({ phase: 'confirm', techId: tech.id, techName: tech.name, extraction })
+      setDropState({ phase: 'confirm', techId: tech.technicianId, techName: tech.name, extraction })
     } catch (err) {
       setDropState({
         phase: 'error',
-        techId: tech.id,
+        techId: tech.technicianId,
         techName: tech.name,
         message: err instanceof Error ? err.message : 'Extraction failed. Please try again.',
       })
@@ -263,11 +271,10 @@ export function BoardClient({
     setAddingTechId(techId)
     setShowAddPicker(false)
     try {
-      await addTechToBoard(techId, date)
-      // optimistic: add row locally
+      const { id } = await addTechToBoard(techId, date)
       const tech = allTechs.find((t) => t.id === techId)
       if (tech) {
-        setRows((prev) => [...prev, { technicianId: tech.id, name: tech.name, assignment: '', note: '', status: null, orderIndex: prev.length, dirty: false }])
+        setRows((prev) => [...prev, { id, technicianId: tech.id, manualName: null, name: tech.name, assignment: '', note: '', status: null, orderIndex: prev.length, dirty: false }])
       }
     } catch {
       toast.error('Failed to add technician.')
@@ -276,15 +283,33 @@ export function BoardClient({
     }
   }
 
-  async function handleRemoveTech(techId: string) {
+  async function handleAddManual(e: React.FormEvent) {
+    e.preventDefault()
+    const name = manualNameDraft.trim()
+    if (!name || addingManual) return
+    setAddingManual(true)
+    try {
+      const { id } = await addManualNameToBoard(name, date)
+      setRows((prev) => [...prev, { id, technicianId: null, manualName: name, name, assignment: '', note: '', status: null, orderIndex: prev.length, dirty: false }])
+      setManualNameDraft('')
+      setShowManualInput(false)
+      setShowAddPicker(false)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to add name.')
+    } finally {
+      setAddingManual(false)
+    }
+  }
+
+  async function handleRemoveRow(rowId: string) {
     if (removingId) return
-    setRemovingId(techId)
+    setRemovingId(rowId)
     setConfirmRemoveId(null)
     try {
-      await removeTechFromBoard(techId, date)
-      setRows((prev) => prev.filter((r) => r.technicianId !== techId))
+      await removeFromBoard(rowId)
+      setRows((prev) => prev.filter((r) => r.id !== rowId))
     } catch {
-      toast.error('Failed to remove technician.')
+      toast.error('Failed to remove from schedule.')
     } finally {
       setRemovingId(null)
     }
@@ -298,15 +323,15 @@ export function BoardClient({
         // Technicians update only their own row — saveBoardEntries requires DISPATCHER
         const myRow = rows.find((r) => r.technicianId === currentTechnicianId)
         if (!myRow) return
-        // Use live editDraft if their row is currently open in the editor
-        const note = editingId === currentTechnicianId ? editDraft.note : myRow.note
-        const status = editingId === currentTechnicianId ? editDraft.status : myRow.status
+        const note = editingId === myRow.id ? editDraft.note : myRow.note
+        const status = editingId === myRow.id ? editDraft.status : myRow.status
         if (editingId) setEditingId(null)
         await updateMyRow(currentTechnicianId, date, status, note)
       } else {
         if (editingId) commitEdit(editingId)
         await saveBoardEntries(date, rows.map((r) => ({
           technicianId: r.technicianId,
+          manualName: r.manualName,
           assignment: r.assignment,
           note: r.note,
           status: r.status,
@@ -337,19 +362,20 @@ export function BoardClient({
           )}
           {canManageRoster && (() => {
             const available = allTechs.filter((t) => !rows.some((r) => r.technicianId === t.id))
+            const isAdding = !!addingTechId || addingManual
             return (
               <div className="relative" ref={addPickerRef}>
                 <button
-                  onClick={() => setShowAddPicker((v) => !v)}
-                  disabled={available.length === 0}
+                  onClick={() => { setShowAddPicker((v) => !v); setShowManualInput(false) }}
+                  disabled={isAdding}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/15 text-xs font-medium text-gray-400 hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   aria-label="Add technician to schedule"
                 >
-                  {addingTechId ? <Loader2 className="size-3.5 animate-spin" /> : <UserPlus className="size-3.5" />}
+                  {isAdding ? <Loader2 className="size-3.5 animate-spin" /> : <UserPlus className="size-3.5" />}
                   Add Tech
                 </button>
-                {showAddPicker && available.length > 0 && (
-                  <div className="absolute right-0 top-full mt-1 z-30 w-44 rounded-xl border border-white/15 bg-gray-900 shadow-2xl py-1 overflow-hidden">
+                {showAddPicker && (
+                  <div className="absolute right-0 top-full mt-1 z-30 w-52 rounded-xl border border-white/15 bg-gray-900 shadow-2xl py-1 overflow-hidden">
                     {available.map((tech) => (
                       <button
                         key={tech.id}
@@ -359,6 +385,37 @@ export function BoardClient({
                         {tech.name}
                       </button>
                     ))}
+                    {available.length > 0 && (
+                      <div className="my-1 border-t border-white/10" />
+                    )}
+                    {showManualInput ? (
+                      <form onSubmit={handleAddManual} className="px-3 py-2 flex items-center gap-1.5">
+                        <input
+                          ref={manualInputRef}
+                          autoFocus
+                          type="text"
+                          value={manualNameDraft}
+                          onChange={(e) => setManualNameDraft(e.target.value)}
+                          placeholder="Enter name"
+                          maxLength={100}
+                          className="flex-1 min-w-0 text-sm bg-white/5 border border-white/15 rounded px-2 py-1 text-gray-200 placeholder:text-gray-600 outline-none focus:border-amber-500/50"
+                        />
+                        <button
+                          type="submit"
+                          disabled={!manualNameDraft.trim() || addingManual}
+                          className="text-xs font-medium text-amber-400 hover:text-amber-300 disabled:opacity-40 transition-colors shrink-0"
+                        >
+                          Add
+                        </button>
+                      </form>
+                    ) : (
+                      <button
+                        onClick={() => { setShowManualInput(true); setTimeout(() => manualInputRef.current?.focus(), 0) }}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-500 hover:text-gray-300 hover:bg-white/8 transition-colors"
+                      >
+                        + Manual name…
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -490,24 +547,24 @@ export function BoardClient({
         } : undefined}
       >
         {rows.map((row) => {
-          const isEditing = editingId === row.technicianId
-          const isOwnRow = isTechnician && row.technicianId === currentTechnicianId
+          const isEditing = editingId === row.id
+          const isOwnRow = isTechnician && !!row.technicianId && row.technicianId === currentTechnicianId
           const clickable = canEditRow(row)
 
-          // Drag-and-drop is available to dispatchers/admins on all rows.
-          // Technicians see no drag targets (server action enforces DISPATCHER role anyway).
-          const canDropWO = !isTechnician
-          const isDragTarget = dragOverTechId === row.technicianId
+          // WO drag-and-drop: dispatchers/admins only, and only on linked-tech rows
+          // (manual rows have no technicianId for the upsert key in addWorkOrderToBoard)
+          const canDropWO = !isTechnician && !!row.technicianId
+          const isDragTarget = dragOverTechId === row.id
           const isDropZone = isDraggingFile && canDropWO && !isDragTarget
 
           return (
             <div
-              key={row.technicianId}
+              key={row.id}
               onClick={() => { if (!isEditing) startEdit(row) }}
-              onKeyDown={(e) => isEditing && handleRowKeyDown(e, row.technicianId)}
-              onDragOver={canDropWO ? (e) => { e.preventDefault(); if (dragOverTechId !== row.technicianId) setDragOverTechId(row.technicianId) } : undefined}
+              onKeyDown={(e) => isEditing && handleRowKeyDown(e, row.id)}
+              onDragOver={canDropWO ? (e) => { e.preventDefault(); if (dragOverTechId !== row.id) setDragOverTechId(row.id) } : undefined}
               onDragLeave={canDropWO ? (e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverTechId(null) } : undefined}
-              onDrop={canDropWO ? (e) => handleDrop(e, { id: row.technicianId, name: row.name }) : undefined}
+              onDrop={canDropWO ? (e) => handleDrop(e, { id: row.id, technicianId: row.technicianId!, name: row.name }) : undefined}
               className={cn(
                 'flex items-baseline gap-5 py-4 px-1 rounded-md transition-all duration-150 group',
                 clickable
@@ -541,7 +598,7 @@ export function BoardClient({
                     />
                   )}
                   <input
-                    ref={isTechnician ? assignmentRef : undefined}
+                    ref={(isTechnician && !row.manualName) ? assignmentRef : undefined}
                     type="text"
                     value={editDraft.note}
                     onChange={(e) => setEditDraft((d) => ({ ...d, note: e.target.value }))}
@@ -589,12 +646,12 @@ export function BoardClient({
                     <ImageDown className="size-3.5 text-amber-400 shrink-0 self-center animate-pulse" />
                   )}
                   {canManageRoster && !isDragTarget && (
-                    removingId === row.technicianId ? (
+                    removingId === row.id ? (
                       <Loader2 className="size-3.5 animate-spin text-gray-600 shrink-0 self-center" />
-                    ) : confirmRemoveId === row.technicianId ? (
+                    ) : confirmRemoveId === row.id ? (
                       <span className="flex items-center gap-1 shrink-0 self-center" onClick={(e) => e.stopPropagation()}>
                         <button
-                          onClick={() => handleRemoveTech(row.technicianId)}
+                          onClick={() => handleRemoveRow(row.id)}
                           className="text-xs text-red-400 hover:text-red-300 font-medium transition-colors"
                         >
                           Remove
@@ -608,7 +665,7 @@ export function BoardClient({
                       </span>
                     ) : (
                       <button
-                        onClick={(e) => { e.stopPropagation(); setConfirmRemoveId(row.technicianId) }}
+                        onClick={(e) => { e.stopPropagation(); setConfirmRemoveId(row.id) }}
                         className="opacity-0 group-hover:opacity-40 hover:!opacity-100 text-gray-500 hover:text-red-400 shrink-0 self-center transition-all"
                         aria-label={`Remove ${row.name} from schedule`}
                       >

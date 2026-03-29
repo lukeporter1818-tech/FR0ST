@@ -21,7 +21,8 @@ function parseDate(date: string): Date {
 export async function saveBoardEntries(
   date: string,
   rows: Array<{
-    technicianId: string
+    technicianId: string | null
+    manualName: string | null
     assignment: string
     note: string
     status: string | null
@@ -42,7 +43,8 @@ export async function saveBoardEntries(
     if (rows.length > 0) {
       await tx.boardEntry.createMany({
         data: rows.map((row, index) => ({
-          technicianId: String(row.technicianId).slice(0, 100),
+          technicianId: row.technicianId ? String(row.technicianId).slice(0, 100) : null,
+          manualName: row.manualName ? String(row.manualName).trim().slice(0, 100) : null,
           date: parsedDate,
           assignment: String(row.assignment ?? '').slice(0, 200),
           note: String(row.note ?? '').slice(0, 500),
@@ -165,10 +167,11 @@ export async function addWorkOrderToBoard(
 }
 
 /**
- * Add a technician to the board for a given date.
- * Creates an empty BoardEntry. No-ops if the entry already exists (idempotent).
+ * Add a linked technician to the board for a given date.
+ * Returns the entry ID for optimistic client state.
+ * No-ops (returns existing id) if already on the board.
  */
-export async function addTechToBoard(technicianId: string, date: string): Promise<void> {
+export async function addTechToBoard(technicianId: string, date: string): Promise<{ id: string }> {
   const session = await requireRole('DISPATCHER')
 
   if (!technicianId || typeof technicianId !== 'string' || technicianId.length > 100) {
@@ -177,24 +180,18 @@ export async function addTechToBoard(technicianId: string, date: string): Promis
 
   const parsedDate = parseDate(date)
 
-  // Duplicate guard: do nothing if already on the board for this date
+  // Duplicate guard
   const existing = await prisma.boardEntry.findUnique({
     where: { technicianId_date: { technicianId, date: parsedDate } },
     select: { id: true },
   })
-  if (existing) return
+  if (existing) return { id: existing.id }
 
   const rowCount = await prisma.boardEntry.count({ where: { date: parsedDate } })
 
-  await prisma.boardEntry.create({
-    data: {
-      technicianId,
-      date: parsedDate,
-      assignment: '',
-      note: '',
-      status: null,
-      orderIndex: rowCount,
-    },
+  const entry = await prisma.boardEntry.create({
+    data: { technicianId, manualName: null, date: parsedDate, assignment: '', note: '', status: null, orderIndex: rowCount },
+    select: { id: true },
   })
 
   auditLog({
@@ -207,33 +204,66 @@ export async function addTechToBoard(technicianId: string, date: string): Promis
   })
 
   revalidatePath('/schedule')
+  return { id: entry.id }
 }
 
 /**
- * Remove a technician from the board for a given date.
- * Deletes only the BoardEntry for that tech+date. No-ops if not found.
- * Does NOT delete the technician or their account.
+ * Add a manual-name row to the board for a given date.
+ * Not linked to any Technician or User account.
+ * Returns the entry ID for optimistic client state.
+ * Duplicate (same name, same date) is rejected with an error.
  */
-export async function removeTechFromBoard(technicianId: string, date: string): Promise<void> {
+export async function addManualNameToBoard(name: string, date: string): Promise<{ id: string }> {
   const session = await requireRole('DISPATCHER')
 
-  if (!technicianId || typeof technicianId !== 'string' || technicianId.length > 100) {
-    throw new Error('Invalid technicianId')
-  }
+  const sanitized = String(name ?? '').trim().slice(0, 100)
+  if (!sanitized) throw new Error('Name is required')
 
   const parsedDate = parseDate(date)
 
-  await prisma.boardEntry.deleteMany({
-    where: { technicianId, date: parsedDate },
+  // Duplicate guard by name+date
+  const existing = await prisma.boardEntry.findUnique({
+    where: { manualName_date: { manualName: sanitized, date: parsedDate } },
+    select: { id: true },
   })
+  if (existing) throw new Error(`"${sanitized}" is already on the board for this date`)
+
+  const rowCount = await prisma.boardEntry.count({ where: { date: parsedDate } })
+
+  const entry = await prisma.boardEntry.create({
+    data: { technicianId: null, manualName: sanitized, date: parsedDate, assignment: '', note: '', status: null, orderIndex: rowCount },
+    select: { id: true },
+  })
+
+  auditLog({
+    action: 'board.add_tech',
+    userId: session.user.id,
+    userRole: session.user.role,
+    meta: { date, manualName: sanitized },
+  })
+
+  revalidatePath('/schedule')
+  return { id: entry.id }
+}
+
+/**
+ * Remove any board row by its entry ID (works for both linked and manual rows).
+ * Does NOT delete the technician or their account.
+ */
+export async function removeFromBoard(entryId: string): Promise<void> {
+  const session = await requireRole('DISPATCHER')
+
+  if (!entryId || typeof entryId !== 'string' || entryId.length > 100) {
+    throw new Error('Invalid entry id')
+  }
+
+  await prisma.boardEntry.deleteMany({ where: { id: entryId } })
 
   auditLog({
     action: 'board.remove_tech',
     userId: session.user.id,
     userRole: session.user.role,
-    targetId: technicianId,
-    targetType: 'Technician',
-    meta: { date },
+    meta: { entryId },
   })
 
   revalidatePath('/schedule')

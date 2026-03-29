@@ -46,8 +46,10 @@ export default async function SchedulePage({
   const rows = entries
     .sort((a, b) => a.orderIndex - b.orderIndex)
     .map((entry) => ({
+      id: entry.id,
       technicianId: entry.technicianId,
-      name: entry.technician.name,
+      manualName: entry.manualName,
+      name: entry.technician?.name ?? entry.manualName ?? '',
       assignment: entry.assignment ?? '',
       note: entry.note ?? '',
       status: entry.status,
