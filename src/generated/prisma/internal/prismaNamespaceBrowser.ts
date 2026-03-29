@@ -211,6 +211,7 @@ export const BoardEntryScalarFieldEnum = {
   note: 'note',
   status: 'status',
   orderIndex: 'orderIndex',
+  isEmergency: 'isEmergency',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

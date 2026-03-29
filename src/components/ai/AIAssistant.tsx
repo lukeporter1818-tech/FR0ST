@@ -242,6 +242,7 @@ export function AIAssistant() {
   const [fixSubmitting, setFixSubmitting] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
+  const [isEmergency, setIsEmergency] = useState(false)
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -518,7 +519,7 @@ export function AIAssistant() {
         pendingExtraction.workOrderNumber && pendingExtraction.shortDescription
           ? pendingExtraction.shortDescription
           : ''
-      await addWorkOrderToBoard(pendingTechMatch.id, assignment, note, today, pendingExtraction.workOrderNumber ?? null)
+      await addWorkOrderToBoard(pendingTechMatch.id, assignment, note, today, pendingExtraction.workOrderNumber ?? null, isEmergency)
       setMessages((prev) => [
         ...prev,
         {
@@ -676,8 +677,9 @@ export function AIAssistant() {
       const history = messages.slice(-9).map((m) => ({ role: m.role, content: m.content }))
       history.push({ role: 'user', content: text })
 
-      const body: { messages: typeof history; imageBase64?: string } = { messages: history }
+      const body: { messages: typeof history; imageBase64?: string; emergency?: boolean } = { messages: history }
       if (userMessage.imageUrl) body.imageBase64 = userMessage.imageUrl
+      if (isEmergency) body.emergency = true
 
       const res = await fetch('/api/ai/assistant', {
         method: 'POST',
@@ -1041,6 +1043,20 @@ export function AIAssistant() {
         </div>
       )}
 
+      {/* Emergency mode indicator strip — shown when emergency is active */}
+      {isEmergency && (
+        <div className="shrink-0 border-t border-red-500/30 bg-red-500/10 px-4 py-1.5 sm:px-6 flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-wide text-red-400">Emergency Mode — responses will be direct and brief</span>
+          <button
+            type="button"
+            onClick={() => setIsEmergency(false)}
+            className="text-xs text-red-500/60 hover:text-red-400 transition-colors ml-3 shrink-0"
+          >
+            Deactivate
+          </button>
+        </div>
+      )}
+
       {/* Input bar */}
       <div className="shrink-0 border-t border-white/10 bg-gray-950 px-4 py-3 sm:px-6">
         <div className="flex items-end gap-2">
@@ -1113,6 +1129,23 @@ export function AIAssistant() {
                 </button>
               </div>
             </>
+          )}
+
+          {/* Emergency toggle — only shown in normal chat mode */}
+          {intakeStep === null && (
+            <button
+              type="button"
+              onClick={() => setIsEmergency((v) => !v)}
+              className={cn(
+                'shrink-0 self-end mb-0.5 px-2 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-colors leading-none border',
+                isEmergency
+                  ? 'bg-red-500/20 border-red-500/40 text-red-400'
+                  : 'border-white/10 text-gray-600 hover:text-gray-400 hover:border-white/20 bg-transparent'
+              )}
+              title={isEmergency ? 'Emergency mode active — click to deactivate' : 'Activate emergency mode for direct, urgent responses'}
+            >
+              {isEmergency ? 'EMRG' : 'Emrg'}
+            </button>
           )}
 
           {/* Text input — locked during confirmation (banner takes over) */}

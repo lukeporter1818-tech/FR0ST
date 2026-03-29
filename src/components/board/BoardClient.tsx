@@ -38,6 +38,7 @@ export interface BoardRow {
   note: string
   status: string | null
   orderIndex: number
+  isEmergency: boolean
 }
 
 interface BoardClientProps {
@@ -107,8 +108,8 @@ export function BoardClient({
     initialRows.map((r) => ({ ...r, dirty: false }))
   )
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editDraft, setEditDraft] = useState<{ assignment: string; note: string; status: string | null }>({
-    assignment: '', note: '', status: null,
+  const [editDraft, setEditDraft] = useState<{ assignment: string; note: string; status: string | null; isEmergency: boolean }>({
+    assignment: '', note: '', status: null, isEmergency: false,
   })
   const [saving, setSaving] = useState(false)
   const assignmentRef = useRef<HTMLInputElement>(null)
@@ -129,6 +130,7 @@ export function BoardClient({
   const [isDraggingFile, setIsDraggingFile] = useState(false)
   const dragEnterCount = useRef(0)
   const [dropState, setDropState] = useState<DropState>(null)
+  const [confirmEmergency, setConfirmEmergency] = useState(false)
 
   const isTechnician = currentUserRole === 'TECHNICIAN'
   const canManageRoster = !isTechnician
@@ -157,15 +159,15 @@ export function BoardClient({
     if (!canEditRow(row)) return
     if (editingId && editingId !== row.id) commitEdit(editingId)
     setEditingId(row.id)
-    setEditDraft({ assignment: row.assignment, note: row.note, status: row.status })
+    setEditDraft({ assignment: row.assignment, note: row.note, status: row.status, isEmergency: row.isEmergency })
   }
 
   const commitEdit = useCallback((rowId: string) => {
     setRows((prev) =>
       prev.map((r) => {
         if (r.id !== rowId) return r
-        const changed = r.assignment !== editDraft.assignment || r.note !== editDraft.note || r.status !== editDraft.status
-        return { ...r, assignment: editDraft.assignment, note: editDraft.note, status: editDraft.status, dirty: r.dirty || changed }
+        const changed = r.assignment !== editDraft.assignment || r.note !== editDraft.note || r.status !== editDraft.status || r.isEmergency !== editDraft.isEmergency
+        return { ...r, assignment: editDraft.assignment, note: editDraft.note, status: editDraft.status, isEmergency: editDraft.isEmergency, dirty: r.dirty || changed }
       })
     )
     setEditingId(null)
@@ -232,18 +234,19 @@ export function BoardClient({
     setDropState({ phase: 'extracting', techId, techName })
 
     try {
-      await addWorkOrderToBoard(techId, assignment, note, date, extraction.workOrderNumber ?? null)
+      await addWorkOrderToBoard(techId, assignment, note, date, extraction.workOrderNumber ?? null, confirmEmergency)
 
       // Optimistically apply to local row so no full page reload is needed
       setRows((prev) =>
         prev.map((r) =>
           r.technicianId === techId
-            ? { ...r, assignment, note, status: r.status ?? 'ASSIGNED' }
+            ? { ...r, assignment, note, status: r.status ?? 'ASSIGNED', isEmergency: confirmEmergency }
             : r
         )
       )
       setDropState(null)
-      toast.success('Added to Schedule')
+      setConfirmEmergency(false)
+      toast.success(confirmEmergency ? 'Added to Schedule — Emergency' : 'Added to Schedule')
     } catch (err) {
       setDropState({
         phase: 'error',
@@ -274,7 +277,7 @@ export function BoardClient({
       const { id } = await addTechToBoard(techId, date)
       const tech = allTechs.find((t) => t.id === techId)
       if (tech) {
-        setRows((prev) => [...prev, { id, technicianId: tech.id, manualName: null, name: tech.name, assignment: '', note: '', status: null, orderIndex: prev.length, dirty: false }])
+        setRows((prev) => [...prev, { id, technicianId: tech.id, manualName: null, name: tech.name, assignment: '', note: '', status: null, isEmergency: false, orderIndex: prev.length, dirty: false }])
       }
     } catch {
       toast.error('Failed to add technician.')
@@ -290,7 +293,7 @@ export function BoardClient({
     setAddingManual(true)
     try {
       const { id } = await addManualNameToBoard(name, date)
-      setRows((prev) => [...prev, { id, technicianId: null, manualName: name, name, assignment: '', note: '', status: null, orderIndex: prev.length, dirty: false }])
+      setRows((prev) => [...prev, { id, technicianId: null, manualName: name, name, assignment: '', note: '', status: null, isEmergency: false, orderIndex: prev.length, dirty: false }])
       setManualNameDraft('')
       setShowManualInput(false)
       setShowAddPicker(false)
@@ -350,6 +353,7 @@ export function BoardClient({
           assignment: r.assignment,
           note: r.note,
           status: r.status,
+          isEmergency: r.isEmergency,
         })))
       }
       setRows((prev) => prev.map((r) => ({ ...r, dirty: false })))
@@ -461,7 +465,7 @@ export function BoardClient({
                   <p className="text-sm font-semibold text-red-400">Could not extract work order</p>
                   <p className="text-sm text-gray-400">{dropState.message}</p>
                   <button
-                    onClick={() => setDropState(null)}
+                    onClick={() => { setDropState(null); setConfirmEmergency(false) }}
                     className="w-full rounded-lg border border-white/15 py-2.5 text-sm text-gray-400 hover:bg-white/5 transition-colors"
                   >
                     Close
@@ -517,15 +521,35 @@ export function BoardClient({
                     )}
                   </div>
 
+                  {/* Priority toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setConfirmEmergency((v) => !v)}
+                    className={cn(
+                      'w-full flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors',
+                      confirmEmergency
+                        ? 'bg-red-500/15 border-red-500/30 text-red-400'
+                        : 'bg-white/5 border-white/15 text-gray-400 hover:text-gray-200'
+                    )}
+                  >
+                    <span className={cn('w-2.5 h-2.5 rounded-full shrink-0', confirmEmergency ? 'bg-red-500' : 'bg-gray-600')} />
+                    {confirmEmergency ? 'Emergency Priority' : 'Normal Priority'}
+                  </button>
+
                   <div className="flex gap-3 pt-1">
                     <button
                       onClick={handleConfirmWO}
-                      className="flex-1 rounded-lg bg-amber-500 py-2.5 text-sm font-semibold text-gray-900 hover:bg-amber-400 transition-colors"
+                      className={cn(
+                        'flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors',
+                        confirmEmergency
+                          ? 'bg-red-500 text-white hover:bg-red-400'
+                          : 'bg-amber-500 text-gray-900 hover:bg-amber-400'
+                      )}
                     >
                       Add to Schedule
                     </button>
                     <button
-                      onClick={() => setDropState(null)}
+                      onClick={() => { setDropState(null); setConfirmEmergency(false) }}
                       className="flex-1 rounded-lg border border-white/15 py-2.5 text-sm text-gray-400 hover:bg-white/5 transition-colors"
                     >
                       Cancel
@@ -585,7 +609,8 @@ export function BoardClient({
                 clickable
                   ? 'cursor-pointer hover:bg-white/5'
                   : 'cursor-default opacity-40',
-                isOwnRow && 'border-l-2 border-amber-400 pl-2',
+                row.isEmergency && 'border-l-2 border-red-500 pl-2 bg-red-500/5',
+                !row.isEmergency && isOwnRow && 'border-l-2 border-amber-400 pl-2',
                 isDropZone && 'bg-amber-500/5 outline outline-1 outline-amber-500/25 outline-offset-[-1px]',
                 isDragTarget && 'bg-amber-500/15 outline outline-2 outline-amber-400 outline-offset-[-2px] scale-[1.005]',
               )}
@@ -631,9 +656,28 @@ export function BoardClient({
                       <option key={o.value} value={o.value}>{o.label}</option>
                     ))}
                   </select>
+                  {!isTechnician && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setEditDraft((d) => ({ ...d, isEmergency: !d.isEmergency })) }}
+                      className={cn(
+                        'shrink-0 self-center text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded border transition-colors leading-none',
+                        editDraft.isEmergency
+                          ? 'bg-red-500/20 border-red-500/40 text-red-400'
+                          : 'bg-transparent border-white/15 text-gray-600 hover:text-gray-300'
+                      )}
+                    >
+                      {editDraft.isEmergency ? 'EMRG' : 'Nml'}
+                    </button>
+                  )}
                 </>
               ) : (
                 <>
+                  {row.isEmergency && (
+                    <span className="shrink-0 self-center text-[10px] font-bold uppercase tracking-wide text-red-400 bg-red-500/15 border border-red-500/30 rounded px-1.5 leading-5">
+                      EMRG
+                    </span>
+                  )}
                   <span className={cn('text-base font-bold leading-none tracking-wide', row.assignment ? 'text-gray-100' : 'text-gray-600')}>
                     {row.assignment || '—'}
                   </span>

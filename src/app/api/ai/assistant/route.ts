@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: result.error.issues[0]?.message ?? 'Invalid input' }, { status: 400 })
   }
 
-  const { messages, imageBase64 } = result.data
+  const { messages, imageBase64, emergency } = result.data
 
   // Trim to last 10 messages before sending — keeps payloads small
   const trimmedMessages = messages.slice(-10)
@@ -93,12 +93,17 @@ export async function POST(req: NextRequest) {
     ? await retrieveApprovedFixes(queryText).catch(() => '')
     : ''
 
+  // Emergency mode: append a short urgency modifier — no extra API call, pure string concatenation.
+  const emergencyAddendum = emergency
+    ? '\n\n[EMERGENCY] Time-critical situation. Lead with the single most important immediate action. Under 80 words total. Skip all background unless it is a safety risk.'
+    : ''
+
   try {
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 512,
+      max_tokens: emergency ? 256 : 512,
       temperature: 0.3,
-      system: FROST_SYSTEM_PROMPT + fixContext,
+      system: FROST_SYSTEM_PROMPT + fixContext + emergencyAddendum,
       messages: claudeMessages,
     })
 

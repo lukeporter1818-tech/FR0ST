@@ -54,6 +54,7 @@ export default async function SchedulePage({
       note: entry.note ?? '',
       status: entry.status,
       orderIndex: entry.orderIndex,
+      isEmergency: entry.isEmergency,
     }))
 
   return (

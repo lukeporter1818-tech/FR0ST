@@ -26,6 +26,7 @@ export async function saveBoardEntries(
     assignment: string
     note: string
     status: string | null
+    isEmergency: boolean
   }>
 ): Promise<void> {
   // Only dispatchers/admins can bulk-save the board
@@ -49,6 +50,7 @@ export async function saveBoardEntries(
           assignment: String(row.assignment ?? '').slice(0, 200),
           note: String(row.note ?? '').slice(0, 500),
           status: parseBoardStatus(row.status),
+          isEmergency: !!row.isEmergency,
           orderIndex: index,
         })),
       })
@@ -80,7 +82,8 @@ export async function addWorkOrderToBoard(
   assignment: string,
   note: string,
   date: string, // YYYY-MM-DD
-  workOrderNumber?: string | null
+  workOrderNumber?: string | null,
+  isEmergency?: boolean
 ): Promise<void> {
   const session = await requireRole('DISPATCHER')
 
@@ -115,7 +118,7 @@ export async function addWorkOrderToBoard(
       // Re-assign to the selected tech; preserve status and orderIndex
       await prisma.boardEntry.update({
         where: { id: existingByWO.id },
-        data: { technicianId, assignment: sanitizedAssignment, note: sanitizedNote },
+        data: { technicianId, assignment: sanitizedAssignment, note: sanitizedNote, isEmergency: !!isEmergency },
       })
 
       auditLog({
@@ -141,6 +144,7 @@ export async function addWorkOrderToBoard(
     update: {
       assignment: sanitizedAssignment,
       note: sanitizedNote,
+      isEmergency: !!isEmergency,
       // Intentionally not touching status or orderIndex on update —
       // the tech may already be en-route; preserve their current state.
     },
@@ -150,6 +154,7 @@ export async function addWorkOrderToBoard(
       assignment: sanitizedAssignment,
       note: sanitizedNote,
       status: 'ASSIGNED',
+      isEmergency: !!isEmergency,
       orderIndex: rowCount,
     },
   })
