@@ -56,7 +56,7 @@ export default async function SettingsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-semibold text-gray-900">Settings</h1>
-        <p className="mt-0.5 text-sm text-gray-500">Configure your FieldCommand instance.</p>
+        <p className="mt-0.5 text-sm text-gray-500">Configure your FR0ST instance.</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

@@ -48,7 +48,7 @@ export default function ResetPasswordPage() {
           <div className="flex size-8 items-center justify-center rounded-lg bg-amber-400/15">
             <Wrench className="size-4 text-amber-500" />
           </div>
-          <span className="text-lg font-semibold text-gray-900">FieldCommand</span>
+          <span className="text-lg font-semibold text-gray-900">FR0ST</span>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-8 py-8">

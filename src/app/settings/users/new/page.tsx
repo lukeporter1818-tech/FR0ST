@@ -36,7 +36,7 @@ export default async function NewUserPage() {
               name="name"
               required
               maxLength={100}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900"
               placeholder="Mike Johnson"
             />
           </div>
@@ -48,7 +48,7 @@ export default async function NewUserPage() {
               type="email"
               required
               maxLength={200}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900"
               placeholder="mike@company.com"
             />
           </div>
@@ -61,7 +61,7 @@ export default async function NewUserPage() {
               required
               minLength={8}
               maxLength={100}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900"
               placeholder="Min. 8 characters"
             />
           </div>
@@ -71,7 +71,7 @@ export default async function NewUserPage() {
             <select
               name="role"
               defaultValue="TECHNICIAN"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white"
             >
               <option value="TECHNICIAN">Technician</option>
               <option value="DISPATCHER">Dispatcher</option>
@@ -85,7 +85,7 @@ export default async function NewUserPage() {
               name="phone"
               type="tel"
               maxLength={20}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900"
               placeholder="(555) 123-4567"
             />
           </div>
@@ -97,7 +97,7 @@ export default async function NewUserPage() {
               </label>
               <select
                 name="technicianId"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white"
               >
                 <option value="">— None —</option>
                 {unlinkedTechs.map((t) => (

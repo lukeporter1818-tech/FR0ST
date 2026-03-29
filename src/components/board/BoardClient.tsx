@@ -328,8 +328,23 @@ export function BoardClient({
         if (editingId) setEditingId(null)
         await updateMyRow(currentTechnicianId, date, status, note)
       } else {
-        if (editingId) commitEdit(editingId)
-        await saveBoardEntries(date, rows.map((r) => ({
+        // Compute rows to save synchronously, merging any open edit draft inline.
+        // We cannot call commitEdit() then read `rows` because setRows is async —
+        // `rows` in this closure would still be the pre-edit value, silently
+        // dropping whatever the dispatcher was typing when they hit Save.
+        const rowsToSave = rows.map((r) =>
+          editingId && r.id === editingId
+            ? { ...r, assignment: editDraft.assignment, note: editDraft.note, status: editDraft.status }
+            : r
+        )
+        setEditingId(null)
+        // Also reflect the merged edit in local state so the UI matches immediately
+        setRows((prev) => prev.map((r) =>
+          editingId && r.id === editingId
+            ? { ...r, assignment: editDraft.assignment, note: editDraft.note, status: editDraft.status }
+            : r
+        ))
+        await saveBoardEntries(date, rowsToSave.map((r) => ({
           technicianId: r.technicianId,
           manualName: r.manualName,
           assignment: r.assignment,

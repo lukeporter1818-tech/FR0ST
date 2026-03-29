@@ -1315,6 +1315,7 @@ export type NoteScalarFieldEnum = (typeof NoteScalarFieldEnum)[keyof typeof Note
 export const BoardEntryScalarFieldEnum = {
   id: 'id',
   technicianId: 'technicianId',
+  manualName: 'manualName',
   date: 'date',
   assignment: 'assignment',
   note: 'note',

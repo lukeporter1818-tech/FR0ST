@@ -95,7 +95,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
     if (!success) return
     const url = `${window.location.origin}/login`
     const lines = [
-      'FieldCommand Login',
+      'FR0ST Login',
       '──────────────────',
       `Name:     ${formData.name}`,
       `${success.isPlaceholderEmail ? 'Username' : 'Login'}:    ${success.loginEmail}`,
@@ -194,7 +194,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
                   onChange={(e) => setFormData((d) => ({ ...d, name: e.target.value }))}
                   placeholder="Jane Smith"
                   required maxLength={100} disabled={loading}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50"
                 />
                 {isManual && (
                   <p className="text-xs text-gray-400 mt-1.5">
@@ -213,7 +213,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
                     onChange={(e) => setFormData((d) => ({ ...d, email: e.target.value }))}
                     placeholder="jane@company.com"
                     required maxLength={200} disabled={loading}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50"
                   />
                 </div>
               )}
@@ -228,7 +228,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
                     onChange={(e) => setFormData((d) => ({ ...d, phone: e.target.value }))}
                     placeholder="(555) 123-4567"
                     required maxLength={20} disabled={loading}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50"
                   />
                 </div>
               )}
@@ -259,7 +259,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
               <div className="rounded-xl overflow-hidden border border-gray-200 bg-gray-900 text-white select-all">
                 {/* Card header */}
                 <div className="px-4 pt-4 pb-3 border-b border-white/10">
-                  <p className="text-xs text-gray-400 font-medium tracking-wider uppercase">FieldCommand</p>
+                  <p className="text-xs text-gray-400 font-medium tracking-wider uppercase">FR0ST</p>
                   <p className="text-sm font-semibold mt-0.5 text-white">Login Details</p>
                 </div>
 

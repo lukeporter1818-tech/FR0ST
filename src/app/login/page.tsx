@@ -39,7 +39,7 @@ export default function LoginPage() {
           <div className="flex size-8 items-center justify-center rounded-lg bg-amber-400/15">
             <Wrench className="size-4 text-amber-400" />
           </div>
-          <span className="text-lg font-semibold text-white">FieldCommand</span>
+          <span className="text-lg font-semibold text-white">FR0ST</span>
         </div>
 
         {/* Card */}
@@ -89,7 +89,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-gray-600 mt-6">
-          FieldCommand · Field Operations Platform
+          FR0ST · Commercial refrigeration, HVAC, electrical, and plumbing operations
         </p>
       </div>
     </div>

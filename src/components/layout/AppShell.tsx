@@ -27,7 +27,7 @@ function resolveTitle(pathname: string): string {
     .filter(([key]) => key !== "/" && pathname.startsWith(key))
     .sort((a, b) => b[0].length - a[0].length)[0];
 
-  return match ? match[1] : "FieldCommand";
+  return match ? match[1] : "FR0ST";
 }
 
 interface AppShellProps {

@@ -576,10 +576,12 @@ export type TechnicianCreateNestedOneWithoutBoardEntriesInput = {
   connect?: Prisma.TechnicianWhereUniqueInput
 }
 
-export type TechnicianUpdateOneRequiredWithoutBoardEntriesNestedInput = {
+export type TechnicianUpdateOneWithoutBoardEntriesNestedInput = {
   create?: Prisma.XOR<Prisma.TechnicianCreateWithoutBoardEntriesInput, Prisma.TechnicianUncheckedCreateWithoutBoardEntriesInput>
   connectOrCreate?: Prisma.TechnicianCreateOrConnectWithoutBoardEntriesInput
   upsert?: Prisma.TechnicianUpsertWithoutBoardEntriesInput
+  disconnect?: Prisma.TechnicianWhereInput | boolean
+  delete?: Prisma.TechnicianWhereInput | boolean
   connect?: Prisma.TechnicianWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.TechnicianUpdateToOneWithWhereWithoutBoardEntriesInput, Prisma.TechnicianUpdateWithoutBoardEntriesInput>, Prisma.TechnicianUncheckedUpdateWithoutBoardEntriesInput>
 }

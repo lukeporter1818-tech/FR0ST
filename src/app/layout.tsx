@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FieldCommand",
-  description: "Dispatcher Operations Platform",
+  title: "FR0ST",
+  description: "Field Operations Platform",
 };
 
 function getInitials(name: string): string {

@@ -103,7 +103,7 @@ export function Sidebar({ userRole, userName, userInitials, open, onClose }: Sid
             <Wrench className="size-4 text-amber-400" />
           </div>
           <span className="text-sm font-semibold tracking-tight text-white">
-            FieldCommand
+            FR0ST
           </span>
         </Link>
         {onClose && (

@@ -37,6 +37,7 @@ export type BoardEntrySumAggregateOutputType = {
 export type BoardEntryMinAggregateOutputType = {
   id: string | null
   technicianId: string | null
+  manualName: string | null
   date: Date | null
   assignment: string | null
   note: string | null
@@ -49,6 +50,7 @@ export type BoardEntryMinAggregateOutputType = {
 export type BoardEntryMaxAggregateOutputType = {
   id: string | null
   technicianId: string | null
+  manualName: string | null
   date: Date | null
   assignment: string | null
   note: string | null
@@ -61,6 +63,7 @@ export type BoardEntryMaxAggregateOutputType = {
 export type BoardEntryCountAggregateOutputType = {
   id: number
   technicianId: number
+  manualName: number
   date: number
   assignment: number
   note: number
@@ -83,6 +86,7 @@ export type BoardEntrySumAggregateInputType = {
 export type BoardEntryMinAggregateInputType = {
   id?: true
   technicianId?: true
+  manualName?: true
   date?: true
   assignment?: true
   note?: true
@@ -95,6 +99,7 @@ export type BoardEntryMinAggregateInputType = {
 export type BoardEntryMaxAggregateInputType = {
   id?: true
   technicianId?: true
+  manualName?: true
   date?: true
   assignment?: true
   note?: true
@@ -107,6 +112,7 @@ export type BoardEntryMaxAggregateInputType = {
 export type BoardEntryCountAggregateInputType = {
   id?: true
   technicianId?: true
+  manualName?: true
   date?: true
   assignment?: true
   note?: true
@@ -205,7 +211,8 @@ export type BoardEntryGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inter
 
 export type BoardEntryGroupByOutputType = {
   id: string
-  technicianId: string
+  technicianId: string | null
+  manualName: string | null
   date: Date
   assignment: string
   note: string | null
@@ -240,7 +247,8 @@ export type BoardEntryWhereInput = {
   OR?: Prisma.BoardEntryWhereInput[]
   NOT?: Prisma.BoardEntryWhereInput | Prisma.BoardEntryWhereInput[]
   id?: Prisma.StringFilter<"BoardEntry"> | string
-  technicianId?: Prisma.StringFilter<"BoardEntry"> | string
+  technicianId?: Prisma.StringNullableFilter<"BoardEntry"> | string | null
+  manualName?: Prisma.StringNullableFilter<"BoardEntry"> | string | null
   date?: Prisma.DateTimeFilter<"BoardEntry"> | Date | string
   assignment?: Prisma.StringFilter<"BoardEntry"> | string
   note?: Prisma.StringNullableFilter<"BoardEntry"> | string | null
@@ -248,12 +256,13 @@ export type BoardEntryWhereInput = {
   orderIndex?: Prisma.IntFilter<"BoardEntry"> | number
   createdAt?: Prisma.DateTimeFilter<"BoardEntry"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BoardEntry"> | Date | string
-  technician?: Prisma.XOR<Prisma.TechnicianScalarRelationFilter, Prisma.TechnicianWhereInput>
+  technician?: Prisma.XOR<Prisma.TechnicianNullableScalarRelationFilter, Prisma.TechnicianWhereInput> | null
 }
 
 export type BoardEntryOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  technicianId?: Prisma.SortOrder
+  technicianId?: Prisma.SortOrderInput | Prisma.SortOrder
+  manualName?: Prisma.SortOrderInput | Prisma.SortOrder
   date?: Prisma.SortOrder
   assignment?: Prisma.SortOrder
   note?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -267,10 +276,12 @@ export type BoardEntryOrderByWithRelationInput = {
 export type BoardEntryWhereUniqueInput = Prisma.AtLeast<{
   id?: string
   technicianId_date?: Prisma.BoardEntryTechnicianIdDateCompoundUniqueInput
+  manualName_date?: Prisma.BoardEntryManualNameDateCompoundUniqueInput
   AND?: Prisma.BoardEntryWhereInput | Prisma.BoardEntryWhereInput[]
   OR?: Prisma.BoardEntryWhereInput[]
   NOT?: Prisma.BoardEntryWhereInput | Prisma.BoardEntryWhereInput[]
-  technicianId?: Prisma.StringFilter<"BoardEntry"> | string
+  technicianId?: Prisma.StringNullableFilter<"BoardEntry"> | string | null
+  manualName?: Prisma.StringNullableFilter<"BoardEntry"> | string | null
   date?: Prisma.DateTimeFilter<"BoardEntry"> | Date | string
   assignment?: Prisma.StringFilter<"BoardEntry"> | string
   note?: Prisma.StringNullableFilter<"BoardEntry"> | string | null
@@ -278,12 +289,13 @@ export type BoardEntryWhereUniqueInput = Prisma.AtLeast<{
   orderIndex?: Prisma.IntFilter<"BoardEntry"> | number
   createdAt?: Prisma.DateTimeFilter<"BoardEntry"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BoardEntry"> | Date | string
-  technician?: Prisma.XOR<Prisma.TechnicianScalarRelationFilter, Prisma.TechnicianWhereInput>
-}, "id" | "technicianId_date">
+  technician?: Prisma.XOR<Prisma.TechnicianNullableScalarRelationFilter, Prisma.TechnicianWhereInput> | null
+}, "id" | "technicianId_date" | "manualName_date">
 
 export type BoardEntryOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  technicianId?: Prisma.SortOrder
+  technicianId?: Prisma.SortOrderInput | Prisma.SortOrder
+  manualName?: Prisma.SortOrderInput | Prisma.SortOrder
   date?: Prisma.SortOrder
   assignment?: Prisma.SortOrder
   note?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -303,7 +315,8 @@ export type BoardEntryScalarWhereWithAggregatesInput = {
   OR?: Prisma.BoardEntryScalarWhereWithAggregatesInput[]
   NOT?: Prisma.BoardEntryScalarWhereWithAggregatesInput | Prisma.BoardEntryScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"BoardEntry"> | string
-  technicianId?: Prisma.StringWithAggregatesFilter<"BoardEntry"> | string
+  technicianId?: Prisma.StringNullableWithAggregatesFilter<"BoardEntry"> | string | null
+  manualName?: Prisma.StringNullableWithAggregatesFilter<"BoardEntry"> | string | null
   date?: Prisma.DateTimeWithAggregatesFilter<"BoardEntry"> | Date | string
   assignment?: Prisma.StringWithAggregatesFilter<"BoardEntry"> | string
   note?: Prisma.StringNullableWithAggregatesFilter<"BoardEntry"> | string | null
@@ -315,6 +328,7 @@ export type BoardEntryScalarWhereWithAggregatesInput = {
 
 export type BoardEntryCreateInput = {
   id?: string
+  manualName?: string | null
   date: Date | string
   assignment: string
   note?: string | null
@@ -322,12 +336,13 @@ export type BoardEntryCreateInput = {
   orderIndex?: number
   createdAt?: Date | string
   updatedAt?: Date | string
-  technician: Prisma.TechnicianCreateNestedOneWithoutBoardEntriesInput
+  technician?: Prisma.TechnicianCreateNestedOneWithoutBoardEntriesInput
 }
 
 export type BoardEntryUncheckedCreateInput = {
   id?: string
-  technicianId: string
+  technicianId?: string | null
+  manualName?: string | null
   date: Date | string
   assignment: string
   note?: string | null
@@ -339,6 +354,7 @@ export type BoardEntryUncheckedCreateInput = {
 
 export type BoardEntryUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  manualName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   assignment?: Prisma.StringFieldUpdateOperationsInput | string
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -346,12 +362,13 @@ export type BoardEntryUpdateInput = {
   orderIndex?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  technician?: Prisma.TechnicianUpdateOneRequiredWithoutBoardEntriesNestedInput
+  technician?: Prisma.TechnicianUpdateOneWithoutBoardEntriesNestedInput
 }
 
 export type BoardEntryUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  technicianId?: Prisma.StringFieldUpdateOperationsInput | string
+  technicianId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  manualName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   assignment?: Prisma.StringFieldUpdateOperationsInput | string
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -363,7 +380,8 @@ export type BoardEntryUncheckedUpdateInput = {
 
 export type BoardEntryCreateManyInput = {
   id?: string
-  technicianId: string
+  technicianId?: string | null
+  manualName?: string | null
   date: Date | string
   assignment: string
   note?: string | null
@@ -375,6 +393,7 @@ export type BoardEntryCreateManyInput = {
 
 export type BoardEntryUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  manualName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   assignment?: Prisma.StringFieldUpdateOperationsInput | string
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -386,7 +405,8 @@ export type BoardEntryUpdateManyMutationInput = {
 
 export type BoardEntryUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  technicianId?: Prisma.StringFieldUpdateOperationsInput | string
+  technicianId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  manualName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   assignment?: Prisma.StringFieldUpdateOperationsInput | string
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -411,9 +431,15 @@ export type BoardEntryTechnicianIdDateCompoundUniqueInput = {
   date: Date | string
 }
 
+export type BoardEntryManualNameDateCompoundUniqueInput = {
+  manualName: string
+  date: Date | string
+}
+
 export type BoardEntryCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   technicianId?: Prisma.SortOrder
+  manualName?: Prisma.SortOrder
   date?: Prisma.SortOrder
   assignment?: Prisma.SortOrder
   note?: Prisma.SortOrder
@@ -430,6 +456,7 @@ export type BoardEntryAvgOrderByAggregateInput = {
 export type BoardEntryMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   technicianId?: Prisma.SortOrder
+  manualName?: Prisma.SortOrder
   date?: Prisma.SortOrder
   assignment?: Prisma.SortOrder
   note?: Prisma.SortOrder
@@ -442,6 +469,7 @@ export type BoardEntryMaxOrderByAggregateInput = {
 export type BoardEntryMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   technicianId?: Prisma.SortOrder
+  manualName?: Prisma.SortOrder
   date?: Prisma.SortOrder
   assignment?: Prisma.SortOrder
   note?: Prisma.SortOrder
@@ -503,6 +531,7 @@ export type NullableEnumBoardStatusFieldUpdateOperationsInput = {
 
 export type BoardEntryCreateWithoutTechnicianInput = {
   id?: string
+  manualName?: string | null
   date: Date | string
   assignment: string
   note?: string | null
@@ -514,6 +543,7 @@ export type BoardEntryCreateWithoutTechnicianInput = {
 
 export type BoardEntryUncheckedCreateWithoutTechnicianInput = {
   id?: string
+  manualName?: string | null
   date: Date | string
   assignment: string
   note?: string | null
@@ -554,7 +584,8 @@ export type BoardEntryScalarWhereInput = {
   OR?: Prisma.BoardEntryScalarWhereInput[]
   NOT?: Prisma.BoardEntryScalarWhereInput | Prisma.BoardEntryScalarWhereInput[]
   id?: Prisma.StringFilter<"BoardEntry"> | string
-  technicianId?: Prisma.StringFilter<"BoardEntry"> | string
+  technicianId?: Prisma.StringNullableFilter<"BoardEntry"> | string | null
+  manualName?: Prisma.StringNullableFilter<"BoardEntry"> | string | null
   date?: Prisma.DateTimeFilter<"BoardEntry"> | Date | string
   assignment?: Prisma.StringFilter<"BoardEntry"> | string
   note?: Prisma.StringNullableFilter<"BoardEntry"> | string | null
@@ -566,6 +597,7 @@ export type BoardEntryScalarWhereInput = {
 
 export type BoardEntryCreateManyTechnicianInput = {
   id?: string
+  manualName?: string | null
   date: Date | string
   assignment: string
   note?: string | null
@@ -577,6 +609,7 @@ export type BoardEntryCreateManyTechnicianInput = {
 
 export type BoardEntryUpdateWithoutTechnicianInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  manualName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   assignment?: Prisma.StringFieldUpdateOperationsInput | string
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -588,6 +621,7 @@ export type BoardEntryUpdateWithoutTechnicianInput = {
 
 export type BoardEntryUncheckedUpdateWithoutTechnicianInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  manualName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   assignment?: Prisma.StringFieldUpdateOperationsInput | string
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -599,6 +633,7 @@ export type BoardEntryUncheckedUpdateWithoutTechnicianInput = {
 
 export type BoardEntryUncheckedUpdateManyWithoutTechnicianInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  manualName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   assignment?: Prisma.StringFieldUpdateOperationsInput | string
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -613,6 +648,7 @@ export type BoardEntryUncheckedUpdateManyWithoutTechnicianInput = {
 export type BoardEntrySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   technicianId?: boolean
+  manualName?: boolean
   date?: boolean
   assignment?: boolean
   note?: boolean
@@ -620,12 +656,13 @@ export type BoardEntrySelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   orderIndex?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  technician?: boolean | Prisma.TechnicianDefaultArgs<ExtArgs>
+  technician?: boolean | Prisma.BoardEntry$technicianArgs<ExtArgs>
 }, ExtArgs["result"]["boardEntry"]>
 
 export type BoardEntrySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   technicianId?: boolean
+  manualName?: boolean
   date?: boolean
   assignment?: boolean
   note?: boolean
@@ -633,12 +670,13 @@ export type BoardEntrySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   orderIndex?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  technician?: boolean | Prisma.TechnicianDefaultArgs<ExtArgs>
+  technician?: boolean | Prisma.BoardEntry$technicianArgs<ExtArgs>
 }, ExtArgs["result"]["boardEntry"]>
 
 export type BoardEntrySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   technicianId?: boolean
+  manualName?: boolean
   date?: boolean
   assignment?: boolean
   note?: boolean
@@ -646,12 +684,13 @@ export type BoardEntrySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   orderIndex?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  technician?: boolean | Prisma.TechnicianDefaultArgs<ExtArgs>
+  technician?: boolean | Prisma.BoardEntry$technicianArgs<ExtArgs>
 }, ExtArgs["result"]["boardEntry"]>
 
 export type BoardEntrySelectScalar = {
   id?: boolean
   technicianId?: boolean
+  manualName?: boolean
   date?: boolean
   assignment?: boolean
   note?: boolean
@@ -661,25 +700,26 @@ export type BoardEntrySelectScalar = {
   updatedAt?: boolean
 }
 
-export type BoardEntryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "technicianId" | "date" | "assignment" | "note" | "status" | "orderIndex" | "createdAt" | "updatedAt", ExtArgs["result"]["boardEntry"]>
+export type BoardEntryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "technicianId" | "manualName" | "date" | "assignment" | "note" | "status" | "orderIndex" | "createdAt" | "updatedAt", ExtArgs["result"]["boardEntry"]>
 export type BoardEntryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  technician?: boolean | Prisma.TechnicianDefaultArgs<ExtArgs>
+  technician?: boolean | Prisma.BoardEntry$technicianArgs<ExtArgs>
 }
 export type BoardEntryIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  technician?: boolean | Prisma.TechnicianDefaultArgs<ExtArgs>
+  technician?: boolean | Prisma.BoardEntry$technicianArgs<ExtArgs>
 }
 export type BoardEntryIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  technician?: boolean | Prisma.TechnicianDefaultArgs<ExtArgs>
+  technician?: boolean | Prisma.BoardEntry$technicianArgs<ExtArgs>
 }
 
 export type $BoardEntryPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "BoardEntry"
   objects: {
-    technician: Prisma.$TechnicianPayload<ExtArgs>
+    technician: Prisma.$TechnicianPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    technicianId: string
+    technicianId: string | null
+    manualName: string | null
     date: Date
     assignment: string
     note: string | null
@@ -1081,7 +1121,7 @@ readonly fields: BoardEntryFieldRefs;
  */
 export interface Prisma__BoardEntryClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  technician<T extends Prisma.TechnicianDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TechnicianDefaultArgs<ExtArgs>>): Prisma.Prisma__TechnicianClient<runtime.Types.Result.GetResult<Prisma.$TechnicianPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  technician<T extends Prisma.BoardEntry$technicianArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BoardEntry$technicianArgs<ExtArgs>>): Prisma.Prisma__TechnicianClient<runtime.Types.Result.GetResult<Prisma.$TechnicianPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1113,6 +1153,7 @@ export interface Prisma__BoardEntryClient<T, Null = never, ExtArgs extends runti
 export interface BoardEntryFieldRefs {
   readonly id: Prisma.FieldRef<"BoardEntry", 'String'>
   readonly technicianId: Prisma.FieldRef<"BoardEntry", 'String'>
+  readonly manualName: Prisma.FieldRef<"BoardEntry", 'String'>
   readonly date: Prisma.FieldRef<"BoardEntry", 'DateTime'>
   readonly assignment: Prisma.FieldRef<"BoardEntry", 'String'>
   readonly note: Prisma.FieldRef<"BoardEntry", 'String'>
@@ -1518,6 +1559,25 @@ export type BoardEntryDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.In
    * Limit how many BoardEntries to delete.
    */
   limit?: number
+}
+
+/**
+ * BoardEntry.technician
+ */
+export type BoardEntry$technicianArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Technician
+   */
+  select?: Prisma.TechnicianSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Technician
+   */
+  omit?: Prisma.TechnicianOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TechnicianInclude<ExtArgs> | null
+  where?: Prisma.TechnicianWhereInput
 }
 
 /**
