@@ -2,15 +2,29 @@
 
 import { revalidatePath } from 'next/cache'
 import { hash } from 'bcryptjs'
+import { createHash, randomBytes } from 'crypto'
 import { prisma } from '@/lib/db'
 import { requireRole } from '@/lib/auth-guard'
 import { auditLog } from '@/lib/audit'
 import { technicianInviteSchema } from '@/lib/validations'
-import { generateTempPassword } from '@/lib/utils'
 import { sendSms } from './sms'
 import { sendInviteEmail } from './email'
 
 const TWILIO_SENT = new Set(['accepted', 'queued', 'sending', 'sent', 'delivered'])
+
+function generateInviteToken(): { raw: string; tokenHash: string; expiresAt: Date } {
+  const raw = randomBytes(32).toString('hex')
+  const tokenHash = createHash('sha256').update(raw).digest('hex')
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
+  return { raw, tokenHash, expiresAt }
+}
+
+function getAppUrl(): string {
+  return (
+    process.env.NEXT_PUBLIC_APP_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+  )
+}
 
 export type InviteResult =
   | {
@@ -26,7 +40,7 @@ export type InviteResult =
        * phone and manual methods both generate a name-based username slug.
        */
       isPlaceholderEmail: boolean
-      tempPassword: string
+      inviteUrl: string
       technicianId: string
       userId: string
       inviteMethod: 'email' | 'phone' | 'both' | 'manual'
@@ -150,8 +164,9 @@ export async function inviteTechnician(
       return { success: false, error: msg }
     }
 
-    const tempPassword = generateTempPassword()
-    const passwordHash = await hash(tempPassword, 12)
+    const { raw: inviteRaw, tokenHash, expiresAt } = generateInviteToken()
+    // Placeholder hash — account cannot be used until activated via invite link
+    const placeholderHash = await hash(randomBytes(32).toString('hex'), 12)
 
     // Atomic transaction — rolls back both records if either fails
     const { user, technician } = await prisma.$transaction(async (tx) => {
@@ -159,12 +174,13 @@ export async function inviteTechnician(
         data: {
           name: validName,
           email: internalEmail,
-          passwordHash,
+          passwordHash: placeholderHash,
           role: 'TECHNICIAN',
-          // Phone stored on User when provided; empty string when email-only
-          // (Technician.phone is the authoritative field for SMS)
           phone: validPhone ?? null,
           active: true,
+          isActivated: false,
+          inviteTokenHash: tokenHash,
+          inviteExpiresAt: expiresAt,
         },
         select: { id: true },
       })
@@ -187,23 +203,28 @@ export async function inviteTechnician(
 
     // ── Email delivery ────────────────────────────────────────────────────────
 
+    const inviteUrl = `${getAppUrl()}/invite/${inviteRaw}`
+
+    // ── Email delivery (invite link) ──────────────────────────────────────────
+
     let emailStatus: 'sent' | 'simulated' | 'failed' | undefined
     let emailStatusMessage: string | undefined
 
     if (validMethod === 'email' || validMethod === 'both') {
-      const redactedLog = `Login: ${internalEmail} / Password: [redacted - delivered via email only]`
+      // sendInviteEmail signature: (to, name, login, password, redactedLog)
+      // Pass invite URL as the "password" field — callers use it as the link body
       const emailResult = await sendInviteEmail(
         internalEmail,
         validName,
         loginEmail,
-        tempPassword,
-        redactedLog
+        inviteUrl,
+        `Invite link sent to ${internalEmail}`
       )
       emailStatus = emailResult.status
       emailStatusMessage = emailResult.message
     }
 
-    // ── SMS delivery ──────────────────────────────────────────────────────────
+    // ── SMS delivery (invite link) ────────────────────────────────────────────
 
     let smsStatus: 'sent' | 'simulated' | 'failed' | undefined
     let smsStatusMessage: string | undefined
@@ -211,31 +232,18 @@ export async function inviteTechnician(
     if (validMethod === 'phone' || validMethod === 'both') {
       try {
         const smsBody =
-          `Welcome to FieldCommand! Your account:\n` +
-          `Login: ${loginEmail}\n` +
-          `Password: ${tempPassword}\n\n` +
-          `Log in at your site URL to get started.`
+          `Welcome to FR0ST!\n` +
+          `${validName}, activate your account:\n` +
+          inviteUrl
 
-        const redactedSmsBody =
-          `Welcome to FieldCommand! Your account:\n` +
-          `Login: ${loginEmail}\n` +
-          `Password: [redacted - delivered via SMS only]\n\n` +
-          `Log in at your site URL to get started.`
-
-        const smsResult = await sendSms(
-          technician.id,
-          smsBody,
-          undefined,
-          false,
-          redactedSmsBody
-        )
+        const smsResult = await sendSms(technician.id, smsBody, undefined, false, `Invite link sent via SMS`)
 
         if (smsResult.status === 'simulated') {
           smsStatus = 'simulated'
-          smsStatusMessage = 'SMS not configured; share credentials manually'
+          smsStatusMessage = 'SMS not configured; share invite link manually'
         } else if (TWILIO_SENT.has(smsResult.status)) {
           smsStatus = 'sent'
-          smsStatusMessage = 'SMS sent successfully'
+          smsStatusMessage = 'Invite link sent via SMS'
         } else {
           smsStatus = 'failed'
           smsStatusMessage = `SMS status: ${smsResult.status}`
@@ -248,7 +256,7 @@ export async function inviteTechnician(
     }
 
     auditLog({
-      action: 'tech.create',
+      action: 'invite.send',
       userId: session.user.id,
       userRole: session.user.role,
       targetId: user.id,
@@ -271,7 +279,7 @@ export async function inviteTechnician(
       success: true,
       loginEmail,
       isPlaceholderEmail,
-      tempPassword,
+      inviteUrl,
       technicianId: technician.id,
       userId: user.id,
       inviteMethod: validMethod,

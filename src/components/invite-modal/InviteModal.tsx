@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { X, Copy, AlertCircle, Mail, Phone, MessageSquare, UserRound } from 'lucide-react'
+import { useState } from 'react'
+import { X, Copy, AlertCircle, Mail, Phone, UserRound, Link2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { inviteTechnician, resendInviteSms } from '@/lib/actions/invitations'
+import { inviteTechnician } from '@/lib/actions/invitations'
 import type { InviteResult } from '@/lib/actions/invitations'
 
 interface InviteModalProps {
@@ -14,13 +14,6 @@ interface InviteModalProps {
 
 type InviteMethod = 'email' | 'phone' | 'both' | 'manual'
 type SuccessState = Extract<InviteResult, { success: true }>
-
-const METHOD_OPTIONS: { value: InviteMethod; label: string }[] = [
-  { value: 'manual', label: 'Manual' },
-  { value: 'email',  label: 'Email'  },
-  { value: 'phone',  label: 'Phone'  },
-  { value: 'both',   label: 'Both'   },
-]
 
 function DeliveryBadge({ status, message, label }: {
   status: 'sent' | 'simulated' | 'failed'
@@ -39,6 +32,13 @@ function DeliveryBadge({ status, message, label }: {
   )
 }
 
+const METHOD_OPTIONS: { value: InviteMethod; label: string }[] = [
+  { value: 'manual', label: 'Manual' },
+  { value: 'email',  label: 'Email'  },
+  { value: 'phone',  label: 'Phone'  },
+  { value: 'both',   label: 'Both'   },
+]
+
 export function InviteModal({ isOpen, onClose }: InviteModalProps) {
   const [step, setStep]                 = useState<'form' | 'success'>('form')
   const [loading, setLoading]           = useState(false)
@@ -46,7 +46,6 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
   const [success, setSuccess]           = useState<SuccessState | null>(null)
   const [inviteMethod, setInviteMethod] = useState<InviteMethod>('manual')
   const [formData, setFormData]         = useState({ name: '', email: '', phone: '' })
-  const [smsPending, startSmsTransition] = useTransition()
 
   if (!isOpen) return null
 
@@ -91,35 +90,11 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
     }
   }
 
-  const copyInviteText = () => {
+  const copyInviteLink = () => {
     if (!success) return
-    const url = `${window.location.origin}/login`
-    const lines = [
-      'FR0ST Login',
-      '──────────────────',
-      `Name:     ${formData.name}`,
-      `${success.isPlaceholderEmail ? 'Username' : 'Login'}:    ${success.loginEmail}`,
-      `Password: ${success.tempPassword}`,
-      `URL:      ${url}`,
-      '──────────────────',
-      'Change password on first login.',
-    ]
-    navigator.clipboard.writeText(lines.join('\n'))
-    toast.success('Copied')
+    navigator.clipboard.writeText(success.inviteUrl)
+    toast.success('Invite link copied')
   }
-
-  const handleResendSms = () => {
-    if (!success) return
-    startSmsTransition(async () => {
-      const result = await resendInviteSms(success.technicianId, success.loginEmail, success.tempPassword)
-      if (result.status === 'sent') toast.success('SMS sent')
-      else if (result.status === 'simulated') toast.info('SMS not configured — credentials shown above')
-      else toast.error(result.message)
-    })
-  }
-
-  // Show SMS resend when a phone-based method was used
-  const canResendSms = success && (success.inviteMethod === 'phone' || success.inviteMethod === 'both')
 
   return (
     <>
@@ -198,7 +173,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
                 />
                 {isManual && (
                   <p className="text-xs text-gray-400 mt-1.5">
-                    Username will be generated from the name (e.g. <span className="font-mono">jane.smith</span>). Share credentials manually.
+                    Username will be generated from the name (e.g. <span className="font-mono">jane.smith</span>). Share the invite link manually.
                   </p>
                 )}
               </div>
@@ -252,36 +227,22 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
               </div>
             </form>
           ) : success ? (
-            // ── Success + Share Card ───────────────────────────────────────
+            // ── Success — Invite Link ──────────────────────────────────────
             <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium text-gray-900 mb-0.5">{formData.name} added</p>
+                <p className="text-xs text-gray-500">
+                  Share the invite link below. The link expires in 24 hours and can only be used once.
+                </p>
+              </div>
 
-              {/* ── Share card — optimised for screenshot ── */}
-              <div className="rounded-xl overflow-hidden border border-gray-200 bg-gray-900 text-white select-all">
-                {/* Card header */}
-                <div className="px-4 pt-4 pb-3 border-b border-white/10">
-                  <p className="text-xs text-gray-400 font-medium tracking-wider uppercase">FR0ST</p>
-                  <p className="text-sm font-semibold mt-0.5 text-white">Login Details</p>
-                </div>
-
-                {/* Card body */}
-                <div className="px-4 py-3 space-y-2 font-mono text-sm">
-                  <div className="flex justify-between gap-4">
-                    <span className="text-gray-400 shrink-0">Name</span>
-                    <span className="text-white text-right truncate">{formData.name}</span>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <span className="text-gray-400 shrink-0">{success.isPlaceholderEmail ? 'Username' : 'Login'}</span>
-                    <span className="text-white text-right break-all">{success.loginEmail}</span>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <span className="text-gray-400 shrink-0">Password</span>
-                    <span className="text-amber-300 font-bold tracking-wide text-right">{success.tempPassword}</span>
-                  </div>
-                </div>
-
-                {/* Card footer */}
-                <div className="px-4 py-2.5 bg-white/5 border-t border-white/10">
-                  <p className="text-xs text-gray-400">Change password on first login · {window.location.hostname}</p>
+              {/* Invite link box */}
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
+                <div className="flex items-center gap-2">
+                  <Link2 className="size-3.5 text-gray-400 shrink-0" />
+                  <span className="flex-1 text-xs text-gray-600 font-mono break-all leading-relaxed">
+                    {success.inviteUrl}
+                  </span>
                 </div>
               </div>
 
@@ -295,28 +256,12 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
                 )}
               </div>
 
-              {/* Action buttons */}
-              <div className="flex gap-2">
-                <button
-                  type="button" onClick={copyInviteText}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  <Copy className="size-3.5" /> Copy Text
-                </button>
-                {canResendSms && (
-                  <button
-                    type="button" onClick={handleResendSms} disabled={smsPending}
-                    className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                  >
-                    <MessageSquare className="size-3.5" />
-                    {smsPending ? 'Sending…' : 'Resend SMS'}
-                  </button>
-                )}
-              </div>
-
-              <p className="text-xs text-gray-400 text-center">
-                ⓘ Screenshot the card above or use Copy Text to share via any channel.
-              </p>
+              <button
+                type="button" onClick={copyInviteLink}
+                className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Copy className="size-3.5" /> Copy Invite Link
+              </button>
 
               <button
                 type="button" onClick={handleClose}

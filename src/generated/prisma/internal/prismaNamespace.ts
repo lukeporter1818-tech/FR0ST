@@ -1202,6 +1202,9 @@ export const UserScalarFieldEnum = {
   active: 'active',
   passwordResetToken: 'passwordResetToken',
   passwordResetExpiry: 'passwordResetExpiry',
+  inviteTokenHash: 'inviteTokenHash',
+  inviteExpiresAt: 'inviteExpiresAt',
+  isActivated: 'isActivated',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

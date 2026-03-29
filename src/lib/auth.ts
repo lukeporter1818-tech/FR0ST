@@ -43,6 +43,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!user) return null
         if (!user.active) return null
+        if (!user.isActivated) return null  // invite not yet completed
 
         const valid = await compare(credentials.password as string, user.passwordHash)
         if (!valid) return null

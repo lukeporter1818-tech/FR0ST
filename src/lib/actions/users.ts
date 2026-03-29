@@ -3,11 +3,83 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { hash } from 'bcryptjs'
-import { createHash, randomUUID } from 'crypto'
+import { createHash, randomBytes, randomUUID } from 'crypto'
 import { prisma } from '@/lib/db'
 import { requireRole } from '@/lib/auth-guard'
 import { auth } from '@/lib/auth'
 import { auditLog } from '@/lib/audit'
+
+// ─── Invite token helpers ────────────────────────────────────────────────────
+
+function generateInviteToken(): { raw: string; tokenHash: string; expiresAt: Date } {
+  const raw = randomBytes(32).toString('hex')
+  const tokenHash = createHash('sha256').update(raw).digest('hex')
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+  return { raw, tokenHash, expiresAt }
+}
+
+function getAppUrl(): string {
+  return (
+    process.env.NEXT_PUBLIC_APP_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+  )
+}
+
+// ─── Create User with Invite Link ────────────────────────────────────────────
+
+export async function createUserWithInvite(formData: FormData): Promise<{ inviteUrl: string; userName: string }> {
+  const session = await requireRole('ADMIN')
+
+  const name = (formData.get('name') as string)?.trim()
+  const email = (formData.get('email') as string)?.trim().toLowerCase()
+  const role = (formData.get('role') as string) || 'TECHNICIAN'
+  const phone = (formData.get('phone') as string)?.trim() || null
+  const technicianId = (formData.get('technicianId') as string) || null
+
+  if (!name || !email) throw new Error('Name and email are required')
+  if (!['ADMIN', 'DISPATCHER', 'TECHNICIAN'].includes(role)) throw new Error('Invalid role')
+
+  const existing = await prisma.user.findUnique({ where: { email } })
+  if (existing) throw new Error('A user with that email already exists')
+
+  const { raw, tokenHash, expiresAt } = generateInviteToken()
+  // Placeholder hash — cannot be used to log in (account inactive until activated)
+  const placeholderHash = await hash(randomBytes(32).toString('hex'), 12)
+
+  const user = await prisma.user.create({
+    data: {
+      name,
+      email,
+      passwordHash: placeholderHash,
+      role: role as 'ADMIN' | 'DISPATCHER' | 'TECHNICIAN',
+      phone,
+      active: true,
+      isActivated: false,
+      inviteTokenHash: tokenHash,
+      inviteExpiresAt: expiresAt,
+    },
+    select: { id: true },
+  })
+
+  if (technicianId) {
+    await prisma.technician.update({
+      where: { id: technicianId },
+      data: { userId: user.id },
+    })
+  }
+
+  auditLog({
+    action: 'invite.send',
+    userId: session.user.id,
+    userRole: session.user.role,
+    targetId: user.id,
+    targetType: 'User',
+    meta: { name, email, role },
+  })
+
+  revalidatePath('/settings/users')
+  return { inviteUrl: `${getAppUrl()}/invite/${raw}`, userName: name }
+}
 
 // ─── Create User ─────────────────────────────────────────────────────────────
 
