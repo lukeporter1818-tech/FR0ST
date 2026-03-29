@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { NextRequest } from 'next/server'
 import { FROST_SYSTEM_PROMPT } from '@/lib/ai/system-prompt'
 import { isPartsQuery } from '@/lib/ai/parts-detector'
+import { retrieveApprovedFixes } from '@/lib/ai/retrieve-fixes'
 import { requireApiSession, unauthorized, tooManyRequests } from '@/lib/auth-guard'
 import { rateLimit, getClientIp, LIMITS } from '@/lib/rate-limit'
 import { aiAssistantSchema } from '@/lib/validations'
@@ -85,12 +86,19 @@ export async function POST(req: NextRequest) {
     }
   )
 
+  // Retrieve relevant approved company fixes (keyword match, no AI call).
+  // Only runs for text queries — skip for pure photo drops where there's no meaningful query text.
+  const queryText = lastUserMsg?.content ?? ''
+  const fixContext = (!photoMode && queryText.length >= 5)
+    ? await retrieveApprovedFixes(queryText).catch(() => '')
+    : ''
+
   try {
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 512,
       temperature: 0.3,
-      system: FROST_SYSTEM_PROMPT,
+      system: FROST_SYSTEM_PROMPT + fixContext,
       messages: claudeMessages,
     })
 

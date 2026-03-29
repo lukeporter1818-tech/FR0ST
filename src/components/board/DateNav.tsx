@@ -23,8 +23,10 @@ function getLocalTodayStr(): string {
 
 function formatShort(dateStr: string): string {
   const today = getLocalTodayStr()
+  const yesterday = addDays(today, -1)
   const tomorrow = addDays(today, 1)
   if (dateStr === today) return 'Today'
+  if (dateStr === yesterday) return 'Yesterday'
   if (dateStr === tomorrow) return 'Tomorrow'
   const [y, m, d] = dateStr.split('-').map(Number)
   return new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
@@ -33,6 +35,7 @@ function formatShort(dateStr: string): string {
 export function DateNav({ date }: DateNavProps) {
   const router = useRouter()
   const today = getLocalTodayStr()
+  const yesterday = addDays(today, -1)
   const tomorrow = addDays(today, 1)
 
   function go(d: string) { router.push(`/schedule?date=${d}`) }
@@ -51,8 +54,16 @@ export function DateNav({ date }: DateNavProps) {
 
       <div className="flex items-center rounded-lg overflow-hidden border border-white/15">
         <button
-          onClick={() => go(today)}
+          onClick={() => go(yesterday)}
           className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+            date === yesterday ? 'bg-amber-500 text-gray-950' : 'text-gray-400 hover:bg-white/5'
+          }`}
+        >
+          Yesterday
+        </button>
+        <button
+          onClick={() => go(today)}
+          className={`px-3 py-1.5 text-sm font-medium transition-colors border-l border-white/15 ${
             date === today ? 'bg-amber-500 text-gray-950' : 'text-gray-400 hover:bg-white/5'
           }`}
         >
@@ -78,7 +89,7 @@ export function DateNav({ date }: DateNavProps) {
         </svg>
       </button>
 
-      {date !== today && date !== tomorrow && (
+      {date !== yesterday && date !== today && date !== tomorrow && (
         <span className="ml-2 text-sm text-gray-500">{formatShort(date)}</span>
       )}
     </div>
