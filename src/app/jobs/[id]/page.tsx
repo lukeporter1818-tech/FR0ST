@@ -18,6 +18,7 @@ import type { Note, User as UserModel } from '@/generated/prisma'
 import { PriorityBadge } from '@/components/jobs/PriorityBadge'
 import { TradeBadge } from '@/components/jobs/TradeBadge'
 import { JobDetailActions } from '@/components/jobs/JobDetailActions'
+import { DispatchRecommend } from '@/components/jobs/DispatchRecommend'
 
 function formatEnum(val: string) {
   return val
@@ -329,6 +330,9 @@ export default async function JobDetailPage({
               </div>
             </div>
           </div>
+
+          {/* Dispatch recommendation */}
+          <DispatchRecommend jobId={job.id} />
 
           {/* AI analysis */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
