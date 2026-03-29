@@ -15,6 +15,7 @@ interface DispatchResult {
   recommended: TechCandidate | null
   backups: TechCandidate[]
   reasoning: string
+  reasons: string[]
   riskFlags: string[]
   missingInfo: string[]
   confidence: 'high' | 'medium' | 'low'
@@ -204,11 +205,18 @@ export function DispatchRecommend({ jobId }: { jobId: string }) {
               </div>
             )}
 
-            {/* Reasoning */}
-            {result.reasoning && (
+            {/* Why — structured reasons bullet list */}
+            {result.reasons.length > 0 && (
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Why</p>
-                <p className="text-sm text-gray-600 leading-relaxed">{result.reasoning}</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Why</p>
+                <ul className="space-y-1">
+                  {result.reasons.map((r, i) => (
+                    <li key={i} className="flex items-start gap-1.5 text-xs text-gray-600">
+                      <span className="mt-0.5 size-1.5 shrink-0 rounded-full bg-amber-400" />
+                      {r}
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 

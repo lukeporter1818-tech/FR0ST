@@ -31,6 +31,47 @@ type ScoredTech = {
   score: number
 }
 
+// Builds 2–4 plain-language reason strings from already-computed scoring context.
+// No AI call — purely derived from data already in memory.
+function buildReasons(
+  rec: ScoredTech,
+  second: ScoredTech | undefined,
+  scoreDiff: number,
+  jobTrade: string | null,
+  eligibleCount: number
+): string[] {
+  const r: string[] = []
+
+  // Trade match or mismatch
+  if (jobTrade && jobTrade !== 'UNKNOWN') {
+    const techTrade = rec.tradeType?.toUpperCase() ?? ''
+    const compat = TRADE_COMPAT[jobTrade] ?? []
+    if (compat.includes(techTrade)) {
+      r.push(`Trade match — ${rec.tradeType} for ${jobTrade} job`)
+    } else if (!rec.tradeType) {
+      r.push(`Trade unset — selected by workload only`)
+    } else {
+      r.push(`No ${jobTrade} tech available — best fit by workload`)
+    }
+  }
+
+  // Workload
+  if (rec.openJobs === 0) {
+    r.push('No open jobs — fully available')
+  } else {
+    r.push(`${rec.openJobs} open job${rec.openJobs > 1 ? 's' : ''} — lowest current workload`)
+  }
+
+  // Score gap or only tech
+  if (eligibleCount === 1) {
+    r.push('Only available technician')
+  } else if (second && scoreDiff >= 35) {
+    r.push(`Clear lead — ${scoreDiff} points ahead of ${second.name}`)
+  }
+
+  return r.slice(0, 4)
+}
+
 function scoreAndRank(
   techs: Array<{ id: string; name: string; tradeType: string | null; status: string; _count: { jobs: number } }>,
   jobTrade: string | null
@@ -194,6 +235,7 @@ export async function POST(req: NextRequest) {
       recommended: { id: best.id, name: best.name, tradeType: best.tradeType, openJobs: best.openJobs },
       backups,
       reasoning,
+      reasons: buildReasons(best, second, scoreDiff, job.tradeClassification, eligible.length),
       riskFlags,
       missingInfo,
       confidence: scoreDiff >= 60 ? 'high' : 'medium',
@@ -269,11 +311,17 @@ Return exactly:
       meta: { endpoint: 'dispatch-recommend', source: 'ai', jobId },
     })
 
+    // Build reasons from scoring context (already computed) — no extra AI call
+    const recScore = eligible.find((t) => t.id === recTech.id) ?? recTech
+    const recSecond = eligible.find((t) => t.id !== recTech.id)
+    const recDiff = recSecond ? recTech.score - recSecond.score : 999
+
     return Response.json({
       source: 'ai',
       recommended: { id: recTech.id, name: recTech.name, tradeType: recTech.tradeType, openJobs: recTech.openJobs },
       backups: backupTechs,
       reasoning: aiData.reasoning ?? '',
+      reasons: buildReasons(recScore, recSecond, recDiff, job.tradeClassification, eligible.length),
       riskFlags: allRiskFlags,
       missingInfo,
       confidence: (aiData.confidence as 'high' | 'medium' | 'low') ?? 'medium',
@@ -290,6 +338,7 @@ Return exactly:
       recommended: { id: best.id, name: best.name, tradeType: best.tradeType, openJobs: best.openJobs },
       backups,
       reasoning: `${best.name} ranked highest by trade match and workload.`,
+      reasons: buildReasons(best, second, scoreDiff, job.tradeClassification, eligible.length),
       riskFlags: ['AI analysis unavailable — result is rule-based'],
       missingInfo,
       confidence: 'medium',
