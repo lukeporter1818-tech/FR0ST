@@ -42,20 +42,68 @@ export default async function SchedulePage({
     }),
   ])
 
-  // Only show techs that have a board entry for this date (roster-based)
-  const rows = entries
+  // Build a merged roster: all active techs always appear; row content is date-specific.
+  // Techs with a saved entry for this date get that entry's data.
+  // Techs with no entry for this date appear as virtual rows with blank/default data.
+  // Manual name entries are always date-specific (no virtual fallback).
+
+  const entryByTechId = new Map<string, typeof entries[number]>()
+  const manualEntries: typeof entries = []
+  for (const entry of entries) {
+    if (entry.technicianId) entryByTechId.set(entry.technicianId, entry)
+    else if (entry.manualName) manualEntries.push(entry)
+  }
+
+  // Real tech rows: active techs that have a saved entry — preserve saved orderIndex
+  const realTechRows = allTechs
+    .filter((tech) => entryByTechId.has(tech.id))
+    .map((tech) => {
+      const entry = entryByTechId.get(tech.id)!
+      return {
+        id: entry.id,
+        technicianId: tech.id,
+        manualName: null as null,
+        name: tech.name,
+        assignment: entry.assignment ?? '',
+        note: entry.note ?? '',
+        status: entry.status,
+        orderIndex: entry.orderIndex,
+        isEmergency: entry.isEmergency,
+      }
+    })
+    .sort((a, b) => a.orderIndex - b.orderIndex)
+
+  // Virtual rows: active techs with no entry for this date — blank data, float after real rows
+  const virtualTechRows = allTechs
+    .filter((tech) => !entryByTechId.has(tech.id))
+    .map((tech) => ({
+      id: `virtual:${tech.id}`,
+      technicianId: tech.id,
+      manualName: null as null,
+      name: tech.name,
+      assignment: '',
+      note: '',
+      status: null as null,
+      orderIndex: 9999,
+      isEmergency: false,
+    }))
+
+  // Manual rows: date-specific only
+  const manualRows = manualEntries
     .sort((a, b) => a.orderIndex - b.orderIndex)
     .map((entry) => ({
       id: entry.id,
-      technicianId: entry.technicianId,
+      technicianId: null as null,
       manualName: entry.manualName,
-      name: entry.technician?.name ?? entry.manualName ?? '',
+      name: entry.manualName ?? '',
       assignment: entry.assignment ?? '',
       note: entry.note ?? '',
       status: entry.status,
       orderIndex: entry.orderIndex,
       isEmergency: entry.isEmergency,
     }))
+
+  const rows = [...realTechRows, ...virtualTechRows, ...manualRows]
 
   return (
     <div className="max-w-2xl">

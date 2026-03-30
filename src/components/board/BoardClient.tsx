@@ -347,7 +347,13 @@ export function BoardClient({
             ? { ...r, assignment: editDraft.assignment, note: editDraft.note, status: editDraft.status }
             : r
         ))
-        await saveBoardEntries(date, rowsToSave.map((r) => ({
+        // Exclude virtual rows that were never edited — they have no DB entry yet
+        // and saving them blank would create noise. Only persist rows that either
+        // have a real DB id or were actually touched (dirty).
+        const rowsToSend = rowsToSave.filter(
+          (r) => !r.id.startsWith('virtual:') || r.dirty
+        )
+        await saveBoardEntries(date, rowsToSend.map((r) => ({
           technicianId: r.technicianId,
           manualName: r.manualName,
           assignment: r.assignment,
@@ -704,7 +710,7 @@ export function BoardClient({
                   {canDropWO && isDropZone && (
                     <ImageDown className="size-3.5 text-amber-400 shrink-0 self-center animate-pulse" />
                   )}
-                  {canManageRoster && !isDragTarget && (
+                  {canManageRoster && !isDragTarget && !row.id.startsWith('virtual:') && (
                     removingId === row.id ? (
                       <Loader2 className="size-3.5 animate-spin text-gray-600 shrink-0 self-center" />
                     ) : confirmRemoveId === row.id ? (
