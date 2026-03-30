@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: result.error.issues[0]?.message ?? 'Invalid input' }, { status: 400 })
   }
 
-  const { messages, imageBase64, emergency } = result.data
+  const { messages, imageBase64 } = result.data
 
   // Trim to last 10 messages before sending — keeps payloads small
   const trimmedMessages = messages.slice(-10)
@@ -89,15 +89,12 @@ export async function POST(req: NextRequest) {
   )
 
   // Retrieve relevant approved company fixes (keyword match, no AI call).
-  // Only runs for text queries — skip for pure photo drops where there's no meaningful query text.
+  // Skip for photo mode (no useful text to match against) and parts-query mode
+  // (parts questions need OEM specs, not company fix history — the DB round-trip
+  // adds latency with no benefit for that mode).
   const queryText = lastUserMsg?.content ?? ''
-  const fixContext = (!photoMode && queryText.length >= 5)
+  const fixContext = (!photoMode && !textPartsMode && queryText.length >= 5)
     ? await retrieveApprovedFixes(queryText).catch(() => '')
-    : ''
-
-  // Emergency mode: append a short urgency modifier — no extra API call, pure string concatenation.
-  const emergencyAddendum = emergency
-    ? '\n\n[EMERGENCY] Time-critical situation. Lead with the single most important immediate action. Under 80 words total. Skip all background unless it is a safety risk.'
     : ''
 
   // 25 s hard timeout — prevents slow Anthropic responses from holding a
@@ -111,9 +108,9 @@ export async function POST(req: NextRequest) {
     const response = await Promise.race([
       anthropic.messages.create({
         model: 'claude-sonnet-4-6',
-        max_tokens: emergency ? 256 : 512,
+        max_tokens: 512,
         temperature: 0.3,
-        system: FROST_SYSTEM_PROMPT + fixContext + emergencyAddendum,
+        system: FROST_SYSTEM_PROMPT + fixContext,
         messages: claudeMessages,
       }),
       timeoutPromise,

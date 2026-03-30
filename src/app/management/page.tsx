@@ -12,9 +12,10 @@ export default async function ManagementPage() {
   if (!session?.user?.id) redirect('/login')
   if (!hasRole(session.user.role, 'DISPATCHER')) redirect('/')
 
-  // Run chat + users queries unconditionally; wrap tasks in try/catch so the
-  // page doesn't 500 if the ManagementTask table hasn't been migrated yet.
-  const [rawMessages, managementUsers] = await Promise.all([
+  // Run all three queries in parallel — tasks previously ran serially after
+  // messages + users, adding its full round-trip to page load.
+  // Wrap tasks in a catch so the page doesn't 500 if the table isn't migrated.
+  const [rawMessages, managementUsers, rawTasks] = await Promise.all([
     prisma.chatMessage.findMany({
       where: { channel: 'management' },
       take: 100,
@@ -26,17 +27,17 @@ export default async function ManagementPage() {
       select: { id: true, name: true },
       orderBy: { name: 'asc' },
     }),
+    prisma.managementTask
+      .findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 200, // cap to prevent unbounded scans as task history grows
+        include: {
+          createdBy:  { select: { name: true } },
+          assignedTo: { select: { name: true } },
+        },
+      })
+      .catch(() => null),  // null = table not yet migrated
   ])
-
-  const rawTasks = await prisma.managementTask
-    .findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        createdBy:  { select: { name: true } },
-        assignedTo: { select: { name: true } },
-      },
-    })
-    .catch(() => null)  // null = table not yet migrated
 
   const messages: ChatMessageData[] = rawMessages.map((m) => ({
     id: m.id,

@@ -43,7 +43,9 @@ export async function retrieveApprovedFixes(query: string, limit = 3): Promise<s
       systemType: true,
     },
     orderBy: { createdAt: 'desc' },
-    take: 200, // cap to avoid runaway scans
+    // 50 most-recent approved fixes is enough for keyword scoring — returns
+    // top 3 matches anyway. Reduces per-request DB payload by ~75%.
+    take: 50,
   })
 
   if (fixes.length === 0) return ''
