@@ -4,7 +4,6 @@ import { useCallback, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
-import { AiPanel } from "@/components/ai/AiPanel";
 
 const pageTitles: Record<string, string> = {
   "/ai": "Frost",
@@ -46,10 +45,8 @@ export function AppShell({
 }: AppShellProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [aiPanelOpen, setAiPanelOpen] = useState(false);
 
   const toggleSidebar = useCallback(() => setSidebarOpen((prev) => !prev), []);
-  const toggleAI = useCallback(() => setAiPanelOpen((prev) => !prev), []);
 
   const title = resolveTitle(pathname);
 
@@ -71,8 +68,6 @@ export function AppShell({
         <TopBar
           title={title}
           onToggleSidebar={toggleSidebar}
-          onToggleAI={toggleAI}
-          aiOpen={aiPanelOpen}
           userName={userName}
           userRole={userRole}
           userInitials={userInitials}
@@ -82,8 +77,6 @@ export function AppShell({
           {children}
         </main>
       </div>
-
-      <AiPanel isOpen={aiPanelOpen} onClose={() => setAiPanelOpen(false)} />
     </div>
   );
 }

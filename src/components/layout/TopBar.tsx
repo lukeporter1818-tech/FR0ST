@@ -1,14 +1,11 @@
 "use client";
 
-import { Brain, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { cn } from "@/lib/utils";
 
 interface TopBarProps {
   title: string;
   onToggleSidebar: () => void;
-  onToggleAI: () => void;
-  aiOpen: boolean;
   userName: string;
   userRole: string;
   userInitials: string;
@@ -17,8 +14,6 @@ interface TopBarProps {
 export function TopBar({
   title,
   onToggleSidebar,
-  onToggleAI,
-  aiOpen,
   userName,
   userRole,
   userInitials,
@@ -40,23 +35,6 @@ export function TopBar({
 
       {/* Right side */}
       <div className="ml-auto flex items-center gap-2">
-        <button
-          type="button"
-          onClick={onToggleAI}
-          className={cn(
-            "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50",
-            aiOpen
-              ? "bg-amber-500 text-gray-950 hover:bg-amber-400"
-              : "bg-white/10 text-gray-300 hover:bg-white/15"
-          )}
-        >
-          <Brain className="size-4" />
-          <span className="hidden sm:inline">Frost</span>
-        </button>
-
-        {/* Divider */}
-        <div className="mx-1 h-5 w-px bg-white/15" />
-
         {/* User info */}
         <div className="flex items-center gap-2">
           <div className="hidden sm:flex flex-col items-end leading-none">
