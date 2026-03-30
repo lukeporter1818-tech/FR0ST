@@ -11,7 +11,10 @@ export const authConfig: NextAuthConfig = {
       const isAuthRoute =
         nextUrl.pathname.startsWith('/login') ||
         nextUrl.pathname.startsWith('/api/auth') ||
-        nextUrl.pathname.startsWith('/reset-password')
+        nextUrl.pathname.startsWith('/reset-password') ||
+        // Invite activation — new users have no session yet; must be public
+        nextUrl.pathname.startsWith('/invite') ||
+        nextUrl.pathname.startsWith('/api/invite')
 
       if (isAuthRoute) return true
       if (!isLoggedIn) return Response.redirect(new URL('/login', nextUrl))
