@@ -223,7 +223,10 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
       </div>
 
       {/* Input bar */}
-      <div className="bg-gray-950 border-t border-white/10 p-4">
+      <div
+        className="bg-gray-950 border-t border-white/10 px-4 pt-3"
+        style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+      >
         <div className="flex items-center gap-2">
           <input
             ref={inputRef}
@@ -233,12 +236,12 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             disabled={sending}
-            className="flex-1 border border-white/15 bg-white/5 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 border border-white/15 bg-white/5 rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <button
             onClick={handleSend}
             disabled={sending || !input.trim()}
-            className="flex items-center justify-center w-9 h-9 bg-amber-500 hover:bg-amber-400 text-gray-950 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+            className="flex items-center justify-center w-11 h-11 bg-amber-500 hover:bg-amber-400 text-gray-950 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
           >
             {sending ? (
               <Loader2 className="size-4 animate-spin" />

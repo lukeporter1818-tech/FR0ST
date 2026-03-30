@@ -411,7 +411,7 @@ export function BoardClient({
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-400 text-gray-900 hover:bg-amber-500 transition-colors disabled:opacity-40"
+              className="px-3 py-2 rounded-full text-xs font-semibold bg-amber-400 text-gray-900 hover:bg-amber-500 transition-colors disabled:opacity-40"
             >
               {saving ? 'Saving…' : `Save${dirtyCount > 1 ? ` (${dirtyCount})` : ''}`}
             </button>
@@ -423,7 +423,7 @@ export function BoardClient({
                 <button
                   onClick={() => { setShowAddPicker((v) => !v); setShowManualInput(false) }}
                   disabled={isAdding}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/15 text-xs font-medium text-gray-400 hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/15 text-xs font-medium text-gray-400 hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   aria-label="Add technician to schedule"
                 >
                   {isAdding ? <Loader2 className="size-3.5 animate-spin" /> : <UserPlus className="size-3.5" />}
@@ -641,7 +641,7 @@ export function BoardClient({
               onDragLeave={canDropWO ? (e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverTechId(null) } : undefined}
               onDrop={canDropWO ? (e) => handleDrop(e, { id: row.id, technicianId: row.technicianId!, name: row.name }) : undefined}
               className={cn(
-                'flex items-baseline gap-5 py-4 px-1 rounded-md transition-all duration-150 group',
+                'flex items-baseline gap-2 sm:gap-5 py-3 min-h-[44px] px-1 rounded-md transition-all duration-150 group',
                 clickable
                   ? 'cursor-pointer hover:bg-white/5'
                   : 'cursor-default opacity-40',
@@ -669,7 +669,7 @@ export function BoardClient({
                       value={editDraft.assignment}
                       onChange={(e) => setEditDraft((d) => ({ ...d, assignment: e.target.value }))}
                       placeholder="Assignment"
-                      className="text-base font-bold text-gray-100 bg-transparent border-b border-white/30 outline-none w-32 placeholder:text-gray-600 placeholder:font-normal"
+                      className="text-base font-bold text-gray-100 bg-transparent border-b border-white/30 outline-none w-24 sm:w-32 placeholder:text-gray-600 placeholder:font-normal"
                       onClick={(e) => e.stopPropagation()}
                     />
                   )}

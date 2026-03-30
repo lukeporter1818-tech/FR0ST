@@ -51,7 +51,7 @@ export function AppShell({
   const title = resolveTitle(pathname);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0f1117]">
+    <div className="flex h-[100dvh] overflow-hidden bg-[#0f1117]">
       <Sidebar userRole={userRole} userName={userName} userInitials={userInitials} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Mobile sidebar backdrop */}
