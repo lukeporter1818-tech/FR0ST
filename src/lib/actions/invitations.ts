@@ -19,12 +19,13 @@ function generateInviteToken(): { raw: string; tokenHash: string; expiresAt: Dat
   return { raw, tokenHash, expiresAt }
 }
 
-function getAppUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ??
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
-  )
-}
+// Production URL — used for invite links sent to technicians.
+// VERCEL_URL is intentionally NOT used here: it resolves to the deployment-specific
+// preview URL (e.g. fieldcommand-git-abc-user.vercel.app) which sits behind Vercel's
+// own authentication gate and sends recipients to "Vercel login" instead of FR0ST.
+// NEXT_PUBLIC_APP_URL overrides for self-hosted / staging environments.
+const APP_BASE_URL =
+  process.env.NEXT_PUBLIC_APP_URL ?? 'https://fieldcommand-two.vercel.app'
 
 export type InviteResult =
   | {
@@ -203,7 +204,7 @@ export async function inviteTechnician(
 
     // ── Email delivery ────────────────────────────────────────────────────────
 
-    const inviteUrl = `${getAppUrl()}/invite/${inviteRaw}`
+    const inviteUrl = `${APP_BASE_URL}/invite/${inviteRaw}`
 
     // ── Email delivery (invite link) ──────────────────────────────────────────
 
@@ -319,21 +320,17 @@ export async function resendInviteSms(
   }
 
   try {
-    const appUrl =
-      process.env.NEXT_PUBLIC_APP_URL ??
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
-
     const smsBody =
       `FieldCommand Login\n` +
       `Login: ${loginEmail}\n` +
-      `Password: ${tempPassword}` +
-      (appUrl ? `\n\nSign in: ${appUrl}/login` : '')
+      `Password: ${tempPassword}\n\n` +
+      `Sign in: ${APP_BASE_URL}/login`
 
     const redactedBody =
       `FieldCommand Login\n` +
       `Login: ${loginEmail}\n` +
-      `Password: [redacted]` +
-      (appUrl ? `\n\nSign in: ${appUrl}/login` : '')
+      `Password: [redacted]\n\n` +
+      `Sign in: ${APP_BASE_URL}/login`
 
     const result = await sendSms(technicianId, smsBody, undefined, false, redactedBody)
 
