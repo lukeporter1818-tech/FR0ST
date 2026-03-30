@@ -1,39 +1,49 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Wrench, Loader2, Eye, EyeOff } from 'lucide-react'
+import { Wrench, Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react'
 
-type PageState =
-  | { phase: 'loading' }
-  | { phase: 'invalid'; message: string }
-  | { phase: 'form'; name: string; login: string }
-  | { phase: 'activating' }
-  | { phase: 'done' }
+type Phase = 'loading' | 'invalid' | 'form' | 'activating' | 'done'
 
 export default function InvitePage() {
   const params = useParams<{ token: string }>()
   const router = useRouter()
   const token = params.token
 
-  const [state, setState] = useState<PageState>({ phase: 'loading' })
+  const [phase, setPhase] = useState<Phase>('loading')
+  const [invalidMessage, setInvalidMessage] = useState('')
+  // userData is set once on token validation and never cleared — survives phase changes.
+  // This fixes the bug where error-recovery after a failed activation attempt lost
+  // name/login because the state object had changed to { phase: 'activating' }.
+  const userData = useRef<{ name: string; login: string } | null>(null)
+
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [showPw, setShowPw] = useState(false)
   const [fieldError, setFieldError] = useState('')
 
   useEffect(() => {
-    if (!token) { setState({ phase: 'invalid', message: 'Invalid invite link.' }); return }
+    if (!token) {
+      setInvalidMessage('Invalid invite link.')
+      setPhase('invalid')
+      return
+    }
     fetch(`/api/invite/${token}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.error) {
-          setState({ phase: 'invalid', message: data.error })
+          setInvalidMessage(data.error)
+          setPhase('invalid')
         } else {
-          setState({ phase: 'form', name: data.name, login: data.login })
+          userData.current = { name: data.name, login: data.login }
+          setPhase('form')
         }
       })
-      .catch(() => setState({ phase: 'invalid', message: 'Could not validate invite link.' }))
+      .catch(() => {
+        setInvalidMessage('Could not validate invite link.')
+        setPhase('invalid')
+      })
   }, [token])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -42,7 +52,7 @@ export default function InvitePage() {
     if (password.length < 8) { setFieldError('Password must be at least 8 characters'); return }
     if (password !== confirm) { setFieldError('Passwords do not match'); return }
 
-    setState({ phase: 'activating' })
+    setPhase('activating')
     try {
       const res = await fetch('/api/invite/activate', {
         method: 'POST',
@@ -51,15 +61,16 @@ export default function InvitePage() {
       })
       const data = await res.json()
       if (!res.ok || data.error) {
-        setState({ phase: 'form', name: (state as { name: string; login: string }).name, login: (state as { name: string; login: string }).login })
+        // userData.current is still set from the validation step — safe to read
         setFieldError(data.error ?? 'Activation failed. Please try again.')
+        setPhase('form')
         return
       }
-      setState({ phase: 'done' })
+      setPhase('done')
       setTimeout(() => router.push('/login'), 1500)
     } catch {
-      setState({ phase: 'form', name: (state as { name: string; login: string }).name, login: (state as { name: string; login: string }).login })
       setFieldError('Request failed. Check your connection.')
+      setPhase('form')
     }
   }
 
@@ -75,34 +86,40 @@ export default function InvitePage() {
         </div>
 
         <div className="bg-gray-900 rounded-xl border border-white/10 shadow-2xl px-8 py-8">
-          {state.phase === 'loading' && (
+
+          {/* Loading */}
+          {phase === 'loading' && (
             <div className="flex flex-col items-center gap-3 py-4">
               <Loader2 className="size-6 animate-spin text-gray-500" />
               <p className="text-sm text-gray-400">Validating invite…</p>
             </div>
           )}
 
-          {state.phase === 'invalid' && (
+          {/* Invalid / expired */}
+          {phase === 'invalid' && (
             <div className="text-center space-y-2">
-              <p className="text-base font-semibold text-white">Invalid invite link</p>
-              <p className="text-sm text-gray-400">{state.message}</p>
-              <p className="text-xs text-gray-600 pt-2">Contact your administrator for a new invite.</p>
+              <p className="text-base font-semibold text-white">Invite link is invalid or expired</p>
+              <p className="text-sm text-gray-400">{invalidMessage}</p>
+              <p className="text-xs text-gray-600 pt-2">Contact your admin for a new invite.</p>
             </div>
           )}
 
-          {(state.phase === 'form' || state.phase === 'activating') && (
+          {/* Password form — shown for both 'form' and 'activating' phases so
+              the username and fields remain visible while the request is in flight */}
+          {(phase === 'form' || phase === 'activating') && (
             <>
-              <h1 className="text-base font-semibold text-white mb-1">Welcome to FR0ST</h1>
+              <h1 className="text-base font-semibold text-white mb-1">
+                Set your password to activate your FR0ST account
+              </h1>
               <p className="text-sm text-gray-400 mb-6">
-                Set a password to activate your account.
+                You&apos;ll use this to sign in going forward.
               </p>
 
-              {state.phase === 'form' && (
-                <div className="rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 mb-5">
-                  <p className="text-xs text-gray-500 mb-0.5">Your username</p>
-                  <p className="text-sm font-mono text-gray-200">{state.login}</p>
-                </div>
-              )}
+              {/* Username — always visible, never disappears mid-submission */}
+              <div className="rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 mb-5">
+                <p className="text-xs text-gray-500 mb-0.5">Your username</p>
+                <p className="text-sm font-mono text-gray-200">{userData.current?.login}</p>
+              </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
@@ -115,7 +132,7 @@ export default function InvitePage() {
                       required
                       minLength={8}
                       maxLength={200}
-                      disabled={state.phase === 'activating'}
+                      disabled={phase === 'activating'}
                       autoFocus
                       className="w-full border border-white/15 bg-white/5 rounded-lg px-3 py-2.5 pr-10 text-sm text-gray-100 outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-transparent placeholder:text-gray-600 disabled:opacity-50"
                       placeholder="Min. 8 characters"
@@ -139,7 +156,7 @@ export default function InvitePage() {
                     onChange={(e) => setConfirm(e.target.value)}
                     required
                     maxLength={200}
-                    disabled={state.phase === 'activating'}
+                    disabled={phase === 'activating'}
                     className="w-full border border-white/15 bg-white/5 rounded-lg px-3 py-2.5 text-sm text-gray-100 outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-transparent placeholder:text-gray-600 disabled:opacity-50"
                     placeholder="Re-enter password"
                   />
@@ -151,10 +168,10 @@ export default function InvitePage() {
 
                 <button
                   type="submit"
-                  disabled={state.phase === 'activating'}
+                  disabled={phase === 'activating'}
                   className="w-full bg-amber-500 text-gray-950 rounded-lg py-2.5 text-sm font-semibold hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                 >
-                  {state.phase === 'activating' ? (
+                  {phase === 'activating' ? (
                     <span className="flex items-center justify-center gap-2">
                       <Loader2 className="size-4 animate-spin" /> Activating…
                     </span>
@@ -164,10 +181,14 @@ export default function InvitePage() {
             </>
           )}
 
-          {state.phase === 'done' && (
-            <div className="text-center space-y-2">
-              <p className="text-base font-semibold text-white">Account activated</p>
-              <p className="text-sm text-gray-400">Redirecting to login…</p>
+          {/* Success */}
+          {phase === 'done' && (
+            <div className="text-center space-y-3 py-2">
+              <CheckCircle2 className="size-10 text-green-400 mx-auto" />
+              <div>
+                <p className="text-base font-semibold text-white">Account activated</p>
+                <p className="text-sm text-gray-400 mt-1">Redirecting to login…</p>
+              </div>
             </div>
           )}
         </div>

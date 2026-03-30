@@ -178,13 +178,13 @@ export default function NewUserPage() {
           <div>
             <p className="text-sm font-semibold text-gray-100">{userName} added</p>
             <p className="text-xs text-gray-500 mt-0.5">
-              Share the invite link below. It expires in 24 hours and is single-use.
+              Send this link to the user to activate their account. Expires in 24 hours.
             </p>
           </div>
 
-          <div className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5">
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2.5">
             <div className="flex items-start gap-2">
-              <Link2 className="size-3.5 text-gray-500 shrink-0 mt-0.5" />
+              <Link2 className="size-3.5 text-amber-500 shrink-0 mt-0.5" />
               <span className="text-xs text-gray-300 font-mono break-all leading-relaxed">
                 {inviteUrl}
               </span>
@@ -194,7 +194,7 @@ export default function NewUserPage() {
           <button
             type="button"
             onClick={copyLink}
-            className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-white/15 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 transition-colors"
+            className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-amber-500 py-2 text-sm font-semibold text-gray-950 hover:bg-amber-400 transition-colors"
           >
             <Copy className="size-3.5" /> Copy Invite Link
           </button>
