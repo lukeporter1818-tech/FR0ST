@@ -66,11 +66,14 @@ export default async function SchedulePage({
     else if (entry.manualName) manualEntries.push(entry)
   }
 
-  // Real tech rows: roster techs that have a saved entry for this date — use saved data
-  const realTechRows = rosterTechs
-    .filter((tech) => entryByTechId.has(tech.id))
-    .map((tech) => {
-      const entry = entryByTechId.get(tech.id)!
+  // Roster rows: walk rosterTechs in the order returned by the DB query (name: 'asc').
+  // For each tech, use saved board data if it exists, otherwise produce a blank virtual row.
+  // Iterating over rosterTechs (not entries) guarantees alphabetical order regardless of
+  // whether a board entry has been saved for this date — orderIndex is intentionally ignored
+  // for display purposes so it cannot perturb the sort.
+  const rosterRows = rosterTechs.map((tech) => {
+    const entry = entryByTechId.get(tech.id)
+    if (entry) {
       return {
         id: entry.id,
         technicianId: tech.id,
@@ -82,13 +85,8 @@ export default async function SchedulePage({
         orderIndex: entry.orderIndex,
         isEmergency: entry.isEmergency,
       }
-    })
-    .sort((a, b) => a.orderIndex - b.orderIndex)
-
-  // Virtual rows: roster techs with no board entry for this date — blank, in-memory only
-  const virtualTechRows = rosterTechs
-    .filter((tech) => !entryByTechId.has(tech.id))
-    .map((tech) => ({
+    }
+    return {
       id: `virtual:${tech.id}`,
       technicianId: tech.id,
       manualName: null as null,
@@ -98,9 +96,10 @@ export default async function SchedulePage({
       status: null as null,
       orderIndex: 9999,
       isEmergency: false,
-    }))
+    }
+  })
 
-  // Manual rows: date-specific only (contractors, temp names)
+  // Manual rows: date-specific only (contractors, temp names), appended after roster techs
   const manualRows = manualEntries
     .sort((a, b) => a.orderIndex - b.orderIndex)
     .map((entry) => ({
@@ -115,7 +114,7 @@ export default async function SchedulePage({
       isEmergency: entry.isEmergency,
     }))
 
-  const rows = [...realTechRows, ...virtualTechRows, ...manualRows]
+  const rows = [...rosterRows, ...manualRows]
 
   return (
     <div className="max-w-2xl">

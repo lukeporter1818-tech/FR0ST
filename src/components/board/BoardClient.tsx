@@ -96,6 +96,15 @@ function StatusText({ status }: { status: string | null }) {
 
 interface LocalRow extends BoardRow { dirty: boolean }
 
+// Keep roster techs (linked to a Technician record) alphabetical A→Z;
+// manual-name rows (no technicianId) always trail the roster.
+function sortedRows(rows: LocalRow[]): LocalRow[] {
+  const roster = rows.filter((r) => r.technicianId !== null)
+  const manual = rows.filter((r) => r.technicianId === null)
+  roster.sort((a, b) => a.name.localeCompare(b.name))
+  return [...roster, ...manual]
+}
+
 export function BoardClient({
   rows: initialRows,
   allTechs,
@@ -285,8 +294,9 @@ export function BoardClient({
       await addTechToRoster(techId)
       const tech = allTechs.find((t) => t.id === techId)
       if (tech) {
-        // Add as a virtual row — no board entry yet for this date
-        setRows((prev) => [...prev, { id: `virtual:${tech.id}`, technicianId: tech.id, manualName: null, name: tech.name, assignment: '', note: '', status: null, isEmergency: false, orderIndex: 9999, dirty: false }])
+        // Add as a virtual row then re-sort so the new tech lands in alphabetical position
+        const newRow: LocalRow = { id: `virtual:${tech.id}`, technicianId: tech.id, manualName: null, name: tech.name, assignment: '', note: '', status: null, isEmergency: false, orderIndex: 9999, dirty: false }
+        setRows((prev) => sortedRows([...prev, newRow]))
       }
     } catch {
       toast.error('Failed to add technician.')
