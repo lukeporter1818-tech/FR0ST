@@ -13,6 +13,8 @@ export type AuditAction =
   | 'board.assign_from_screenshot'
   | 'board.add_tech'
   | 'board.remove_tech'
+  | 'roster.add_tech'
+  | 'roster.remove_tech'
   | 'job.create'
   | 'job.update'
   | 'job.delete'

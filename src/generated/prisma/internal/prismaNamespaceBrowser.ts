@@ -109,6 +109,7 @@ export const TechnicianScalarFieldEnum = {
   skillTags: 'skillTags',
   notes: 'notes',
   active: 'active',
+  onSchedule: 'onSchedule',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

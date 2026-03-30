@@ -172,6 +172,63 @@ export async function addWorkOrderToBoard(
 }
 
 /**
+ * Add a technician to the persistent schedule roster (sets onSchedule = true).
+ * Once on the roster, the tech appears on every date's schedule automatically.
+ */
+export async function addTechToRoster(technicianId: string): Promise<void> {
+  const session = await requireRole('DISPATCHER')
+
+  if (!technicianId || typeof technicianId !== 'string' || technicianId.length > 100) {
+    throw new Error('Invalid technicianId')
+  }
+
+  await prisma.technician.update({
+    where: { id: technicianId },
+    data: { onSchedule: true },
+  })
+
+  auditLog({
+    action: 'roster.add_tech',
+    userId: session.user.id,
+    userRole: session.user.role,
+    targetId: technicianId,
+    targetType: 'Technician',
+    meta: {},
+  })
+
+  revalidatePath('/schedule')
+}
+
+/**
+ * Remove a technician from the persistent schedule roster (sets onSchedule = false).
+ * The tech will no longer appear on any date's schedule.
+ * Existing BoardEntry records are preserved for history.
+ */
+export async function removeFromRoster(technicianId: string): Promise<void> {
+  const session = await requireRole('DISPATCHER')
+
+  if (!technicianId || typeof technicianId !== 'string' || technicianId.length > 100) {
+    throw new Error('Invalid technicianId')
+  }
+
+  await prisma.technician.update({
+    where: { id: technicianId },
+    data: { onSchedule: false },
+  })
+
+  auditLog({
+    action: 'roster.remove_tech',
+    userId: session.user.id,
+    userRole: session.user.role,
+    targetId: technicianId,
+    targetType: 'Technician',
+    meta: {},
+  })
+
+  revalidatePath('/schedule')
+}
+
+/**
  * Add a linked technician to the board for a given date.
  * Returns the entry ID for optimistic client state.
  * No-ops (returns existing id) if already on the board.

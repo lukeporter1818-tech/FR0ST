@@ -5,7 +5,7 @@ import { Loader2, ImageDown, UserPlus, X, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { DateNav } from './DateNav'
-import { saveBoardEntries, updateMyRow, addWorkOrderToBoard, addTechToBoard, addManualNameToBoard, removeFromBoard } from '@/lib/actions/board'
+import { saveBoardEntries, updateMyRow, addWorkOrderToBoard, addTechToRoster, removeFromRoster, addManualNameToBoard, removeFromBoard } from '@/lib/actions/board'
 import type { WorkOrderExtraction } from '@/types/work-order'
 
 // ─── Drop state machine ───────────────────────────────────────────────────────
@@ -274,10 +274,11 @@ export function BoardClient({
     setAddingTechId(techId)
     setShowAddPicker(false)
     try {
-      const { id } = await addTechToBoard(techId, date)
+      await addTechToRoster(techId)
       const tech = allTechs.find((t) => t.id === techId)
       if (tech) {
-        setRows((prev) => [...prev, { id, technicianId: tech.id, manualName: null, name: tech.name, assignment: '', note: '', status: null, isEmergency: false, orderIndex: prev.length, dirty: false }])
+        // Add as a virtual row — no board entry yet for this date
+        setRows((prev) => [...prev, { id: `virtual:${tech.id}`, technicianId: tech.id, manualName: null, name: tech.name, assignment: '', note: '', status: null, isEmergency: false, orderIndex: 9999, dirty: false }])
       }
     } catch {
       toast.error('Failed to add technician.')
@@ -306,10 +307,18 @@ export function BoardClient({
 
   async function handleRemoveRow(rowId: string) {
     if (removingId) return
+    const row = rows.find((r) => r.id === rowId)
+    if (!row) return
     setRemovingId(rowId)
     setConfirmRemoveId(null)
     try {
-      await removeFromBoard(rowId)
+      if (row.technicianId) {
+        // Roster removal: sets onSchedule=false, tech disappears from all dates
+        await removeFromRoster(row.technicianId)
+      } else {
+        // Manual name: date-specific entry, delete just this entry
+        await removeFromBoard(rowId)
+      }
       setRows((prev) => prev.filter((r) => r.id !== rowId))
     } catch {
       toast.error('Failed to remove from schedule.')
@@ -710,7 +719,7 @@ export function BoardClient({
                   {canDropWO && isDropZone && (
                     <ImageDown className="size-3.5 text-amber-400 shrink-0 self-center animate-pulse" />
                   )}
-                  {canManageRoster && !isDragTarget && !row.id.startsWith('virtual:') && (
+                  {canManageRoster && !isDragTarget && (
                     removingId === row.id ? (
                       <Loader2 className="size-3.5 animate-spin text-gray-600 shrink-0 self-center" />
                     ) : confirmRemoveId === row.id ? (
@@ -719,7 +728,7 @@ export function BoardClient({
                           onClick={() => handleRemoveRow(row.id)}
                           className="text-xs text-red-400 hover:text-red-300 font-medium transition-colors"
                         >
-                          Remove
+                          {row.technicianId ? 'Remove from roster' : 'Remove'}
                         </button>
                         <button
                           onClick={() => setConfirmRemoveId(null)}

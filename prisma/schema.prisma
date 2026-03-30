@@ -107,9 +107,10 @@ model Technician {
   tradeType String?
   skillTags String[]
   notes     String?
-  active    Boolean    @default(true)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  active      Boolean    @default(true)
+  onSchedule  Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   scheduleEntries ScheduleEntry[]
   jobs            Job[]

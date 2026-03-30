@@ -28,9 +28,16 @@ export default async function SchedulePage({
   const startOfDay = new Date(date + 'T00:00:00.000Z')
   const endOfDay = new Date(date + 'T23:59:59.999Z')
 
-  const [allTechs, entries] = await Promise.all([
+  // rosterTechs  = active + onSchedule → these always appear on every date
+  // availableTechs = active + !onSchedule → shown in "Add Tech" picker to re-add to roster
+  const [rosterTechs, availableTechs, entries] = await Promise.all([
     prisma.technician.findMany({
-      where: { active: true },
+      where: { active: true, onSchedule: true },
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
+    }),
+    prisma.technician.findMany({
+      where: { active: true, onSchedule: false },
       select: { id: true, name: true },
       orderBy: { name: 'asc' },
     }),
@@ -42,10 +49,8 @@ export default async function SchedulePage({
     }),
   ])
 
-  // Build a merged roster: all active techs always appear; row content is date-specific.
-  // Techs with a saved entry for this date get that entry's data.
-  // Techs with no entry for this date appear as virtual rows with blank/default data.
-  // Manual name entries are always date-specific (no virtual fallback).
+  // Build the board rows by merging the persistent roster with date-specific board data.
+  // rosterTechs are always shown. Only the assignment/note/status/emergency changes per date.
 
   const entryByTechId = new Map<string, typeof entries[number]>()
   const manualEntries: typeof entries = []
@@ -54,8 +59,8 @@ export default async function SchedulePage({
     else if (entry.manualName) manualEntries.push(entry)
   }
 
-  // Real tech rows: active techs that have a saved entry — preserve saved orderIndex
-  const realTechRows = allTechs
+  // Real tech rows: roster techs that have a saved entry for this date — use saved data
+  const realTechRows = rosterTechs
     .filter((tech) => entryByTechId.has(tech.id))
     .map((tech) => {
       const entry = entryByTechId.get(tech.id)!
@@ -73,8 +78,8 @@ export default async function SchedulePage({
     })
     .sort((a, b) => a.orderIndex - b.orderIndex)
 
-  // Virtual rows: active techs with no entry for this date — blank data, float after real rows
-  const virtualTechRows = allTechs
+  // Virtual rows: roster techs with no board entry for this date — blank, in-memory only
+  const virtualTechRows = rosterTechs
     .filter((tech) => !entryByTechId.has(tech.id))
     .map((tech) => ({
       id: `virtual:${tech.id}`,
@@ -88,7 +93,7 @@ export default async function SchedulePage({
       isEmergency: false,
     }))
 
-  // Manual rows: date-specific only
+  // Manual rows: date-specific only (contractors, temp names)
   const manualRows = manualEntries
     .sort((a, b) => a.orderIndex - b.orderIndex)
     .map((entry) => ({
@@ -109,7 +114,7 @@ export default async function SchedulePage({
     <div className="max-w-2xl">
       <BoardClient
         rows={rows}
-        allTechs={allTechs}
+        allTechs={availableTechs}
         date={date}
         currentUserId={session?.user?.id ?? ''}
         currentUserRole={session?.user?.role ?? 'DISPATCHER'}

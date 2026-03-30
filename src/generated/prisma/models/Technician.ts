@@ -33,6 +33,7 @@ export type TechnicianMinAggregateOutputType = {
   tradeType: string | null
   notes: string | null
   active: boolean | null
+  onSchedule: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -46,6 +47,7 @@ export type TechnicianMaxAggregateOutputType = {
   tradeType: string | null
   notes: string | null
   active: boolean | null
+  onSchedule: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -60,6 +62,7 @@ export type TechnicianCountAggregateOutputType = {
   skillTags: number
   notes: number
   active: number
+  onSchedule: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -75,6 +78,7 @@ export type TechnicianMinAggregateInputType = {
   tradeType?: true
   notes?: true
   active?: true
+  onSchedule?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -88,6 +92,7 @@ export type TechnicianMaxAggregateInputType = {
   tradeType?: true
   notes?: true
   active?: true
+  onSchedule?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -102,6 +107,7 @@ export type TechnicianCountAggregateInputType = {
   skillTags?: true
   notes?: true
   active?: true
+  onSchedule?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -189,6 +195,7 @@ export type TechnicianGroupByOutputType = {
   skillTags: string[]
   notes: string | null
   active: boolean
+  onSchedule: boolean
   createdAt: Date
   updatedAt: Date
   _count: TechnicianCountAggregateOutputType | null
@@ -224,6 +231,7 @@ export type TechnicianWhereInput = {
   skillTags?: Prisma.StringNullableListFilter<"Technician">
   notes?: Prisma.StringNullableFilter<"Technician"> | string | null
   active?: Prisma.BoolFilter<"Technician"> | boolean
+  onSchedule?: Prisma.BoolFilter<"Technician"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Technician"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Technician"> | Date | string
   user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
@@ -243,6 +251,7 @@ export type TechnicianOrderByWithRelationInput = {
   skillTags?: Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   active?: Prisma.SortOrder
+  onSchedule?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -265,6 +274,7 @@ export type TechnicianWhereUniqueInput = Prisma.AtLeast<{
   skillTags?: Prisma.StringNullableListFilter<"Technician">
   notes?: Prisma.StringNullableFilter<"Technician"> | string | null
   active?: Prisma.BoolFilter<"Technician"> | boolean
+  onSchedule?: Prisma.BoolFilter<"Technician"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Technician"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Technician"> | Date | string
   user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
@@ -284,6 +294,7 @@ export type TechnicianOrderByWithAggregationInput = {
   skillTags?: Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   active?: Prisma.SortOrder
+  onSchedule?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.TechnicianCountOrderByAggregateInput
@@ -304,6 +315,7 @@ export type TechnicianScalarWhereWithAggregatesInput = {
   skillTags?: Prisma.StringNullableListFilter<"Technician">
   notes?: Prisma.StringNullableWithAggregatesFilter<"Technician"> | string | null
   active?: Prisma.BoolWithAggregatesFilter<"Technician"> | boolean
+  onSchedule?: Prisma.BoolWithAggregatesFilter<"Technician"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Technician"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Technician"> | Date | string
 }
@@ -317,6 +329,7 @@ export type TechnicianCreateInput = {
   skillTags?: Prisma.TechnicianCreateskillTagsInput | string[]
   notes?: string | null
   active?: boolean
+  onSchedule?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   user?: Prisma.UserCreateNestedOneWithoutTechnicianInput
@@ -336,6 +349,7 @@ export type TechnicianUncheckedCreateInput = {
   skillTags?: Prisma.TechnicianCreateskillTagsInput | string[]
   notes?: string | null
   active?: boolean
+  onSchedule?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   scheduleEntries?: Prisma.ScheduleEntryUncheckedCreateNestedManyWithoutTechnicianInput
@@ -353,6 +367,7 @@ export type TechnicianUpdateInput = {
   skillTags?: Prisma.TechnicianUpdateskillTagsInput | string[]
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  onSchedule?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneWithoutTechnicianNestedInput
@@ -372,6 +387,7 @@ export type TechnicianUncheckedUpdateInput = {
   skillTags?: Prisma.TechnicianUpdateskillTagsInput | string[]
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  onSchedule?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   scheduleEntries?: Prisma.ScheduleEntryUncheckedUpdateManyWithoutTechnicianNestedInput
@@ -390,6 +406,7 @@ export type TechnicianCreateManyInput = {
   skillTags?: Prisma.TechnicianCreateskillTagsInput | string[]
   notes?: string | null
   active?: boolean
+  onSchedule?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -403,6 +420,7 @@ export type TechnicianUpdateManyMutationInput = {
   skillTags?: Prisma.TechnicianUpdateskillTagsInput | string[]
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  onSchedule?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -417,6 +435,7 @@ export type TechnicianUncheckedUpdateManyInput = {
   skillTags?: Prisma.TechnicianUpdateskillTagsInput | string[]
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  onSchedule?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -444,6 +463,7 @@ export type TechnicianCountOrderByAggregateInput = {
   skillTags?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   active?: Prisma.SortOrder
+  onSchedule?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -457,6 +477,7 @@ export type TechnicianMaxOrderByAggregateInput = {
   tradeType?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   active?: Prisma.SortOrder
+  onSchedule?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -470,6 +491,7 @@ export type TechnicianMinOrderByAggregateInput = {
   tradeType?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   active?: Prisma.SortOrder
+  onSchedule?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -595,6 +617,7 @@ export type TechnicianCreateWithoutUserInput = {
   skillTags?: Prisma.TechnicianCreateskillTagsInput | string[]
   notes?: string | null
   active?: boolean
+  onSchedule?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   scheduleEntries?: Prisma.ScheduleEntryCreateNestedManyWithoutTechnicianInput
@@ -612,6 +635,7 @@ export type TechnicianUncheckedCreateWithoutUserInput = {
   skillTags?: Prisma.TechnicianCreateskillTagsInput | string[]
   notes?: string | null
   active?: boolean
+  onSchedule?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   scheduleEntries?: Prisma.ScheduleEntryUncheckedCreateNestedManyWithoutTechnicianInput
@@ -645,6 +669,7 @@ export type TechnicianUpdateWithoutUserInput = {
   skillTags?: Prisma.TechnicianUpdateskillTagsInput | string[]
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  onSchedule?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   scheduleEntries?: Prisma.ScheduleEntryUpdateManyWithoutTechnicianNestedInput
@@ -662,6 +687,7 @@ export type TechnicianUncheckedUpdateWithoutUserInput = {
   skillTags?: Prisma.TechnicianUpdateskillTagsInput | string[]
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  onSchedule?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   scheduleEntries?: Prisma.ScheduleEntryUncheckedUpdateManyWithoutTechnicianNestedInput
@@ -679,6 +705,7 @@ export type TechnicianCreateWithoutJobsInput = {
   skillTags?: Prisma.TechnicianCreateskillTagsInput | string[]
   notes?: string | null
   active?: boolean
+  onSchedule?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   user?: Prisma.UserCreateNestedOneWithoutTechnicianInput
@@ -697,6 +724,7 @@ export type TechnicianUncheckedCreateWithoutJobsInput = {
   skillTags?: Prisma.TechnicianCreateskillTagsInput | string[]
   notes?: string | null
   active?: boolean
+  onSchedule?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   scheduleEntries?: Prisma.ScheduleEntryUncheckedCreateNestedManyWithoutTechnicianInput
@@ -729,6 +757,7 @@ export type TechnicianUpdateWithoutJobsInput = {
   skillTags?: Prisma.TechnicianUpdateskillTagsInput | string[]
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  onSchedule?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneWithoutTechnicianNestedInput
@@ -747,6 +776,7 @@ export type TechnicianUncheckedUpdateWithoutJobsInput = {
   skillTags?: Prisma.TechnicianUpdateskillTagsInput | string[]
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  onSchedule?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   scheduleEntries?: Prisma.ScheduleEntryUncheckedUpdateManyWithoutTechnicianNestedInput
@@ -763,6 +793,7 @@ export type TechnicianCreateWithoutScheduleEntriesInput = {
   skillTags?: Prisma.TechnicianCreateskillTagsInput | string[]
   notes?: string | null
   active?: boolean
+  onSchedule?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   user?: Prisma.UserCreateNestedOneWithoutTechnicianInput
@@ -781,6 +812,7 @@ export type TechnicianUncheckedCreateWithoutScheduleEntriesInput = {
   skillTags?: Prisma.TechnicianCreateskillTagsInput | string[]
   notes?: string | null
   active?: boolean
+  onSchedule?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   jobs?: Prisma.JobUncheckedCreateNestedManyWithoutAssignedTechInput
@@ -813,6 +845,7 @@ export type TechnicianUpdateWithoutScheduleEntriesInput = {
   skillTags?: Prisma.TechnicianUpdateskillTagsInput | string[]
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  onSchedule?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneWithoutTechnicianNestedInput
@@ -831,6 +864,7 @@ export type TechnicianUncheckedUpdateWithoutScheduleEntriesInput = {
   skillTags?: Prisma.TechnicianUpdateskillTagsInput | string[]
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  onSchedule?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   jobs?: Prisma.JobUncheckedUpdateManyWithoutAssignedTechNestedInput
@@ -847,6 +881,7 @@ export type TechnicianCreateWithoutSmsMessagesInput = {
   skillTags?: Prisma.TechnicianCreateskillTagsInput | string[]
   notes?: string | null
   active?: boolean
+  onSchedule?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   user?: Prisma.UserCreateNestedOneWithoutTechnicianInput
@@ -865,6 +900,7 @@ export type TechnicianUncheckedCreateWithoutSmsMessagesInput = {
   skillTags?: Prisma.TechnicianCreateskillTagsInput | string[]
   notes?: string | null
   active?: boolean
+  onSchedule?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   scheduleEntries?: Prisma.ScheduleEntryUncheckedCreateNestedManyWithoutTechnicianInput
@@ -897,6 +933,7 @@ export type TechnicianUpdateWithoutSmsMessagesInput = {
   skillTags?: Prisma.TechnicianUpdateskillTagsInput | string[]
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  onSchedule?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneWithoutTechnicianNestedInput
@@ -915,6 +952,7 @@ export type TechnicianUncheckedUpdateWithoutSmsMessagesInput = {
   skillTags?: Prisma.TechnicianUpdateskillTagsInput | string[]
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  onSchedule?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   scheduleEntries?: Prisma.ScheduleEntryUncheckedUpdateManyWithoutTechnicianNestedInput
@@ -931,6 +969,7 @@ export type TechnicianCreateWithoutBoardEntriesInput = {
   skillTags?: Prisma.TechnicianCreateskillTagsInput | string[]
   notes?: string | null
   active?: boolean
+  onSchedule?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   user?: Prisma.UserCreateNestedOneWithoutTechnicianInput
@@ -949,6 +988,7 @@ export type TechnicianUncheckedCreateWithoutBoardEntriesInput = {
   skillTags?: Prisma.TechnicianCreateskillTagsInput | string[]
   notes?: string | null
   active?: boolean
+  onSchedule?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   scheduleEntries?: Prisma.ScheduleEntryUncheckedCreateNestedManyWithoutTechnicianInput
@@ -981,6 +1021,7 @@ export type TechnicianUpdateWithoutBoardEntriesInput = {
   skillTags?: Prisma.TechnicianUpdateskillTagsInput | string[]
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  onSchedule?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneWithoutTechnicianNestedInput
@@ -999,6 +1040,7 @@ export type TechnicianUncheckedUpdateWithoutBoardEntriesInput = {
   skillTags?: Prisma.TechnicianUpdateskillTagsInput | string[]
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  onSchedule?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   scheduleEntries?: Prisma.ScheduleEntryUncheckedUpdateManyWithoutTechnicianNestedInput
@@ -1074,6 +1116,7 @@ export type TechnicianSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   skillTags?: boolean
   notes?: boolean
   active?: boolean
+  onSchedule?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.Technician$userArgs<ExtArgs>
@@ -1094,6 +1137,7 @@ export type TechnicianSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   skillTags?: boolean
   notes?: boolean
   active?: boolean
+  onSchedule?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.Technician$userArgs<ExtArgs>
@@ -1109,6 +1153,7 @@ export type TechnicianSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   skillTags?: boolean
   notes?: boolean
   active?: boolean
+  onSchedule?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.Technician$userArgs<ExtArgs>
@@ -1124,11 +1169,12 @@ export type TechnicianSelectScalar = {
   skillTags?: boolean
   notes?: boolean
   active?: boolean
+  onSchedule?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type TechnicianOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "phone" | "status" | "tradeType" | "skillTags" | "notes" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["technician"]>
+export type TechnicianOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "phone" | "status" | "tradeType" | "skillTags" | "notes" | "active" | "onSchedule" | "createdAt" | "updatedAt", ExtArgs["result"]["technician"]>
 export type TechnicianInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.Technician$userArgs<ExtArgs>
   scheduleEntries?: boolean | Prisma.Technician$scheduleEntriesArgs<ExtArgs>
@@ -1163,6 +1209,7 @@ export type $TechnicianPayload<ExtArgs extends runtime.Types.Extensions.Internal
     skillTags: string[]
     notes: string | null
     active: boolean
+    onSchedule: boolean
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["technician"]>
@@ -1602,6 +1649,7 @@ export interface TechnicianFieldRefs {
   readonly skillTags: Prisma.FieldRef<"Technician", 'String[]'>
   readonly notes: Prisma.FieldRef<"Technician", 'String'>
   readonly active: Prisma.FieldRef<"Technician", 'Boolean'>
+  readonly onSchedule: Prisma.FieldRef<"Technician", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"Technician", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Technician", 'DateTime'>
 }
