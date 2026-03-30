@@ -25,8 +25,8 @@ export default async function SchedulePage({
       ? params.date
       : getLocalTodayStr()
 
-  const startOfDay = new Date(date + 'T00:00:00.000Z')
-  const endOfDay = new Date(date + 'T23:59:59.999Z')
+  // Use exact UTC midnight for @db.Date field — avoids timezone-dependent range comparisons
+  const exactDate = new Date(date + 'T00:00:00.000Z')
 
   // rosterTechs  = active + onSchedule → these always appear on every date
   // availableTechs = active + !onSchedule → shown in "Add Tech" picker to re-add to roster
@@ -42,9 +42,7 @@ export default async function SchedulePage({
       orderBy: { name: 'asc' },
     }),
     prisma.boardEntry.findMany({
-      where: {
-        date: { gte: startOfDay, lte: endOfDay },
-      },
+      where: { date: exactDate },
       include: { technician: true },
     }),
   ])
