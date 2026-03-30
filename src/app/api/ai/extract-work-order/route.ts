@@ -38,8 +38,8 @@ export async function POST(req: NextRequest) {
   const session = await requireApiSession()
   if (!session) return unauthorized()
 
-  // Share the same AI rate-limit bucket as the assistant endpoint
-  if (!rateLimit(`ai:${getClientIp(req)}`, LIMITS.AI.limit, LIMITS.AI.windowMs)) {
+  // Per-user bucket (same pool as assistant) — avoids corporate-NAT IP-sharing issues
+  if (!rateLimit(`ai:${session.user.id}`, LIMITS.AI.limit, LIMITS.AI.windowMs)) {
     return tooManyRequests()
   }
 
@@ -66,21 +66,32 @@ export async function POST(req: NextRequest) {
   const mediaType = match[1] as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
   const base64Data = match[3]
 
+  // 20 s hard timeout — extraction is faster than general chat;
+  // if it hasn't responded by 20 s it's safe to surface an error.
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutHandle = setTimeout(() => reject(new Error('AI_TIMEOUT')), 20_000)
+  })
+
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 512, // Extraction output is small — cap tightly
-      system: EXTRACTION_SYSTEM_PROMPT,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } },
-            { type: 'text', text: 'Extract the work order information from this image.' },
-          ],
-        },
-      ],
-    })
+    const response = await Promise.race([
+      anthropic.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 512, // Extraction output is small — cap tightly
+        system: EXTRACTION_SYSTEM_PROMPT,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } },
+              { type: 'text', text: 'Extract the work order information from this image.' },
+            ],
+          },
+        ],
+      }),
+      timeoutPromise,
+    ])
+    clearTimeout(timeoutHandle)
 
     const block = response.content[0]
     if (block.type !== 'text') {
@@ -123,6 +134,10 @@ export async function POST(req: NextRequest) {
 
     return Response.json(sanitized)
   } catch (error) {
+    clearTimeout(timeoutHandle)
+    if (error instanceof Error && error.message === 'AI_TIMEOUT') {
+      return Response.json({ error: 'Extraction timed out. Please try again.' }, { status: 504 })
+    }
     console.error('Work order extraction error:', error)
     return Response.json({ error: 'Extraction failed. Please try again.' }, { status: 500 })
   }

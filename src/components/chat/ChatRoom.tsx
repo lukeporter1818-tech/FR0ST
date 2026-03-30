@@ -22,6 +22,9 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
   const inputRef = useRef<HTMLInputElement>(null)
   const channelRef = useRef<RealtimeChannel | null>(null)
   const channelReadyRef = useRef(false)
+  // Synchronous in-flight guard — prevents double-send race where two rapid
+  // taps both read `sending === false` before the first setState re-renders.
+  const sendingRef = useRef(false)
   // Stable ref for last-seen createdAt — used by fallback poll without
   // needing messages in its dependency array (avoids re-creating interval).
   const lastSeenAtRef = useRef<string | undefined>(
@@ -106,7 +109,8 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
 
   async function handleSend() {
     const body = input.trim()
-    if (!body || sending) return
+    if (!body || sendingRef.current) return
+    sendingRef.current = true
 
     setSending(true)
     setInput('')
@@ -155,6 +159,7 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
       toast.error('Failed to send message')
       setInput(body) // restore input
     } finally {
+      sendingRef.current = false
       setSending(false)
       inputRef.current?.focus()
     }

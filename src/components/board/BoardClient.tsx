@@ -112,6 +112,7 @@ export function BoardClient({
     assignment: '', note: '', status: null, isEmergency: false,
   })
   const [saving, setSaving] = useState(false)
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
   const assignmentRef = useRef<HTMLInputElement>(null)
 
   // ── Roster management state ────────────────────────────────────────────────
@@ -146,6 +147,7 @@ export function BoardClient({
     setEditingId(null)
     setShowAddPicker(false)
     setConfirmRemoveId(null)
+    setLastSavedAt(null)
   }, [date, initialRows])
 
   useEffect(() => {
@@ -378,6 +380,7 @@ export function BoardClient({
         })))
       }
       setRows((prev) => prev.map((r) => ({ ...r, dirty: false })))
+      setLastSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
     } catch {
       toast.error('Save failed. Please try again.')
     } finally {
@@ -391,6 +394,9 @@ export function BoardClient({
       <div className="flex items-center justify-between gap-4 mb-6">
         <DateNav date={date} />
         <div className="flex items-center gap-2 shrink-0">
+          {lastSavedAt && dirtyCount === 0 && (
+            <span className="text-xs text-gray-600" title="Last saved">✓ {lastSavedAt}</span>
+          )}
           {dirtyCount > 0 && (
             <button
               onClick={handleSave}

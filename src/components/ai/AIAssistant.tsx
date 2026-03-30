@@ -356,6 +356,7 @@ export function AIAssistant() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageBase64: dataUrl }),
+        signal: AbortSignal.timeout(22_000),
       })
 
       if (extractRes.ok) {
@@ -386,6 +387,7 @@ export function AIAssistant() {
           messages: [{ role: 'user', content: '' }],
           imageBase64: dataUrl,
         }),
+        signal: AbortSignal.timeout(28_000),
       })
       if (!res.ok) throw new Error(`Request failed: ${res.status}`)
       const data = await res.json()
@@ -399,13 +401,16 @@ export function AIAssistant() {
           interactionId: data.interactionId as string | undefined,
         },
       ])
-    } catch {
+    } catch (err) {
+      const isTimeout = err instanceof DOMException && err.name === 'TimeoutError'
       setMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          content: 'Something went wrong reaching the assistant. Check your connection and try again.',
+          content: isTimeout
+            ? 'Frost is taking too long to respond — try again in a moment.'
+            : 'Something went wrong reaching the assistant. Check your connection and try again.',
           timestamp: new Date(),
         },
       ])
@@ -644,6 +649,7 @@ export function AIAssistant() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ imageBase64: userMessage.imageUrl }),
+          signal: AbortSignal.timeout(22_000),
         })
 
         if (extractRes.ok) {
@@ -685,6 +691,7 @@ export function AIAssistant() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
+        signal: AbortSignal.timeout(28_000),
       })
 
       if (!res.ok) throw new Error(`Request failed: ${res.status}`)
@@ -700,13 +707,16 @@ export function AIAssistant() {
           interactionId: data.interactionId as string | undefined,
         },
       ])
-    } catch {
+    } catch (err) {
+      const isTimeout = err instanceof DOMException && err.name === 'TimeoutError'
       setMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          content: 'Something went wrong reaching the assistant. Check your connection and try again.',
+          content: isTimeout
+            ? 'Frost is taking too long to respond — try again in a moment.'
+            : 'Something went wrong reaching the assistant. Check your connection and try again.',
           timestamp: new Date(),
         },
       ])

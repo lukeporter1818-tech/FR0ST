@@ -15,7 +15,9 @@ export async function POST(req: NextRequest) {
   const session = await requireApiSession()
   if (!session) return unauthorized()
 
-  if (!rateLimit(`ai:${getClientIp(req)}`, LIMITS.AI.limit, LIMITS.AI.windowMs)) {
+  // Rate limit per user, not per IP — multiple users behind a corporate NAT
+  // would otherwise share a single bucket and exhaust it immediately.
+  if (!rateLimit(`ai:${session.user.id}`, LIMITS.AI.limit, LIMITS.AI.windowMs)) {
     return tooManyRequests()
   }
 
@@ -98,14 +100,25 @@ export async function POST(req: NextRequest) {
     ? '\n\n[EMERGENCY] Time-critical situation. Lead with the single most important immediate action. Under 80 words total. Skip all background unless it is a safety risk.'
     : ''
 
+  // 25 s hard timeout — prevents slow Anthropic responses from holding a
+  // Vercel function slot open indefinitely under concurrent load.
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutHandle = setTimeout(() => reject(new Error('AI_TIMEOUT')), 25_000)
+  })
+
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: emergency ? 256 : 512,
-      temperature: 0.3,
-      system: FROST_SYSTEM_PROMPT + fixContext + emergencyAddendum,
-      messages: claudeMessages,
-    })
+    const response = await Promise.race([
+      anthropic.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: emergency ? 256 : 512,
+        temperature: 0.3,
+        system: FROST_SYSTEM_PROMPT + fixContext + emergencyAddendum,
+        messages: claudeMessages,
+      }),
+      timeoutPromise,
+    ])
+    clearTimeout(timeoutHandle)
 
     const block = response.content[0]
     const text = block.type === 'text' ? block.text : ''
@@ -136,6 +149,10 @@ export async function POST(req: NextRequest) {
 
     return Response.json({ response: text, interactionId })
   } catch (error) {
+    clearTimeout(timeoutHandle)
+    if (error instanceof Error && error.message === 'AI_TIMEOUT') {
+      return Response.json({ error: 'Request timed out — Frost is under load. Please try again.' }, { status: 504 })
+    }
     console.error('AI assistant error:', error)
     return Response.json({ error: 'Failed to get a response. Please try again.' }, { status: 500 })
   }
