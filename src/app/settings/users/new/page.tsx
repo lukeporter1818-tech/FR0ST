@@ -21,14 +21,13 @@ async function fetchUnlinkedTechs(): Promise<UnlinkedTech[]> {
 type Step = 'form' | 'success'
 
 export default function NewUserPage() {
-  const [step, setStep] = useState<Step>('form')
+  const [step, setStep]         = useState<Step>('form')
   const [inviteUrl, setInviteUrl] = useState('')
-  const [userName, setUserName] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [techs, setTechs] = useState<UnlinkedTech[]>([])
+  const [userName, setUserName]   = useState('')
+  const [error, setError]         = useState<string | null>(null)
+  const [loading, setLoading]     = useState(false)
+  const [techs, setTechs]         = useState<UnlinkedTech[]>([])
 
-  // Load unlinked technicians for the link dropdown
   useEffect(() => {
     fetchUnlinkedTechs().then(setTechs).catch(() => {})
   }, [])
@@ -61,86 +60,91 @@ export default function NewUserPage() {
       <div>
         <Link
           href="/settings/users"
-          className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 mb-4"
+          className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-200 mb-4 transition-colors"
         >
           <ChevronLeft className="size-4" />
           Back to users
         </Link>
-        <h1 className="text-xl font-semibold text-gray-900">Add User</h1>
+        <h1 className="text-xl font-semibold text-gray-100">Add Admin / Dispatcher</h1>
         <p className="text-sm text-gray-500 mt-0.5">
-          Create an account — the user will receive an invite link to set their own password.
+          Create an office account — the user sets their own password via invite link.
+        </p>
+        <p className="text-xs text-gray-600 mt-1.5">
+          For field technicians, use <Link href="/settings/users" className="text-amber-400 hover:text-amber-300">Invite Technician</Link> instead.
         </p>
       </div>
 
       {step === 'form' ? (
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="rounded-xl border border-white/10 bg-white/[0.03] p-6 space-y-4"
+        >
           {error && (
-            <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2.5">
-              <p className="text-sm text-red-700">{error}</p>
+            <div className="rounded-lg bg-red-500/15 border border-red-500/30 px-3 py-2.5">
+              <p className="text-sm text-red-400">{error}</p>
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="block text-xs font-medium text-gray-600 mb-1.5">Full Name</label>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Full Name</label>
               <input
                 name="name"
                 required
                 maxLength={100}
                 disabled={loading}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50"
-                placeholder="Mike Johnson"
+                className="w-full border border-white/15 rounded-lg px-3 py-2 text-sm text-gray-100 bg-white/5 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 disabled:opacity-50"
+                placeholder="Sarah Miller"
               />
             </div>
 
             <div className="col-span-2">
-              <label className="block text-xs font-medium text-gray-600 mb-1.5">Email</label>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Email</label>
               <input
                 name="email"
                 type="email"
                 required
                 maxLength={200}
                 disabled={loading}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50"
-                placeholder="mike@company.com"
+                className="w-full border border-white/15 rounded-lg px-3 py-2 text-sm text-gray-100 bg-white/5 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 disabled:opacity-50"
+                placeholder="sarah@company.com"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1.5">Role</label>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Role</label>
               <select
                 name="role"
-                defaultValue="TECHNICIAN"
+                defaultValue="DISPATCHER"
                 disabled={loading}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white disabled:bg-gray-50"
+                className="w-full border border-white/15 rounded-lg px-3 py-2 text-sm text-gray-100 bg-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-500/50 disabled:opacity-50"
               >
-                <option value="TECHNICIAN">Technician</option>
                 <option value="DISPATCHER">Dispatcher</option>
                 <option value="ADMIN">Admin</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1.5">Phone (optional)</label>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Phone (optional)</label>
               <input
                 name="phone"
                 type="tel"
                 maxLength={20}
                 disabled={loading}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50"
+                className="w-full border border-white/15 rounded-lg px-3 py-2 text-sm text-gray-100 bg-white/5 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 disabled:opacity-50"
                 placeholder="(555) 123-4567"
               />
             </div>
 
             {techs.length > 0 && (
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">
                   Link to Technician Profile (optional)
                 </label>
                 <select
                   name="technicianId"
                   disabled={loading}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white disabled:bg-gray-50"
+                  className="w-full border border-white/15 rounded-lg px-3 py-2 text-sm text-gray-100 bg-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-500/50 disabled:opacity-50"
                 >
                   <option value="">— None —</option>
                   {techs.map((t) => (
@@ -157,31 +161,31 @@ export default function NewUserPage() {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-gray-900 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50"
+              className="flex-1 bg-amber-500 text-gray-900 rounded-lg py-2.5 text-sm font-semibold hover:bg-amber-400 transition-colors disabled:opacity-50"
             >
               {loading ? 'Creating…' : 'Create & Get Invite Link'}
             </button>
             <Link
               href="/settings/users"
-              className="flex-1 text-center border border-gray-200 text-gray-600 rounded-lg py-2.5 text-sm font-medium hover:bg-gray-50 transition-colors"
+              className="flex-1 text-center border border-white/15 text-gray-400 rounded-lg py-2.5 text-sm font-medium hover:bg-white/5 transition-colors"
             >
               Cancel
             </Link>
           </div>
         </form>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6 space-y-4">
           <div>
-            <p className="text-sm font-semibold text-gray-900">{userName} added</p>
+            <p className="text-sm font-semibold text-gray-100">{userName} added</p>
             <p className="text-xs text-gray-500 mt-0.5">
               Share the invite link below. It expires in 24 hours and is single-use.
             </p>
           </div>
 
-          <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
+          <div className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5">
             <div className="flex items-start gap-2">
-              <Link2 className="size-3.5 text-gray-400 shrink-0 mt-0.5" />
-              <span className="text-xs text-gray-600 font-mono break-all leading-relaxed">
+              <Link2 className="size-3.5 text-gray-500 shrink-0 mt-0.5" />
+              <span className="text-xs text-gray-300 font-mono break-all leading-relaxed">
                 {inviteUrl}
               </span>
             </div>
@@ -190,7 +194,7 @@ export default function NewUserPage() {
           <button
             type="button"
             onClick={copyLink}
-            className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-white/15 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 transition-colors"
           >
             <Copy className="size-3.5" /> Copy Invite Link
           </button>
@@ -199,13 +203,13 @@ export default function NewUserPage() {
             <button
               type="button"
               onClick={() => { setStep('form'); setError(null) }}
-              className="flex-1 border border-gray-200 text-gray-600 rounded-lg py-2.5 text-sm font-medium hover:bg-gray-50 transition-colors"
+              className="flex-1 border border-white/15 text-gray-400 rounded-lg py-2.5 text-sm font-medium hover:bg-white/5 transition-colors"
             >
               Add Another
             </button>
             <Link
               href="/settings/users"
-              className="flex-1 text-center bg-gray-900 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-gray-700 transition-colors"
+              className="flex-1 text-center bg-amber-500 text-gray-900 rounded-lg py-2.5 text-sm font-semibold hover:bg-amber-400 transition-colors"
             >
               Done
             </Link>
