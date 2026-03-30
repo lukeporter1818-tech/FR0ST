@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { MessageSquare, ListTodo } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ChatRoom } from '@/components/chat/ChatRoom'
@@ -29,7 +29,10 @@ export function ManagementLayout({
 }: ManagementLayoutProps) {
   const [tab, setTab] = useState<Tab>('chat')
 
-  const openCount = tasks.filter((t) => t.status !== 'DONE').length
+  const openCount = useMemo(
+    () => tasks.filter((t) => t.status !== 'DONE').length,
+    [tasks]
+  )
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] -m-6">

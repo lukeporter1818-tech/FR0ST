@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { Bot, Camera, MapPin, Phone, Send, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { addWorkOrderToBoard } from '@/lib/actions/board'
@@ -47,7 +47,7 @@ function renderInline(text: string): React.ReactNode {
 // Parts Finder and Photo Part responses.
 const AVAILABILITY_HEADER_RE = /^availability\s*\(likely\)\s*:/i
 
-function AssistantContent({ content }: { content: string }) {
+const AssistantContent = memo(function AssistantContent({ content }: { content: string }) {
   const lines = content.split('\n')
   // Mutable flag — safe because map() is synchronous and renders once per call
   let inAvailability = false
@@ -112,7 +112,7 @@ function AssistantContent({ content }: { content: string }) {
       })}
     </div>
   )
-}
+})
 
 function ConfidenceBadge({ confidence }: { confidence: 'high' | 'medium' | 'low' }) {
   const styles: Record<string, string> = {

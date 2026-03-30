@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Loader2, ImageDown, UserPlus, X, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -134,6 +134,12 @@ export function BoardClient({
 
   const isTechnician = currentUserRole === 'TECHNICIAN'
   const canManageRoster = !isTechnician
+
+  // Techs not already on the board — recompute only when allTechs or rows change
+  const availableToAdd = useMemo(
+    () => allTechs.filter((t) => !rows.some((r) => r.technicianId === t.id)),
+    [allTechs, rows]
+  )
 
   useEffect(() => {
     setRows(initialRows.map((r) => ({ ...r, dirty: false })))
@@ -395,7 +401,6 @@ export function BoardClient({
             </button>
           )}
           {canManageRoster && (() => {
-            const available = allTechs.filter((t) => !rows.some((r) => r.technicianId === t.id))
             const isAdding = !!addingTechId || addingManual
             return (
               <div className="relative" ref={addPickerRef}>
@@ -410,7 +415,7 @@ export function BoardClient({
                 </button>
                 {showAddPicker && (
                   <div className="absolute right-0 top-full mt-1 z-30 w-52 rounded-xl border border-white/15 bg-gray-900 shadow-2xl py-1 overflow-hidden">
-                    {available.map((tech) => (
+                    {availableToAdd.map((tech) => (
                       <button
                         key={tech.id}
                         onClick={() => handleAddTech(tech.id)}
@@ -419,7 +424,7 @@ export function BoardClient({
                         {tech.name}
                       </button>
                     ))}
-                    {available.length > 0 && (
+                    {availableToAdd.length > 0 && (
                       <div className="my-1 border-t border-white/10" />
                     )}
                     {showManualInput ? (

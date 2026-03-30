@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useMemo, useTransition } from 'react'
 import { Loader2, Plus, Trash2, Pencil, Check, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -362,9 +362,13 @@ function TaskRow({
 export function TaskList({ initialTasks, currentUserId, managementUsers }: TaskListProps) {
   const [tasks, setTasks] = useState<TaskData[]>(initialTasks)
 
-  const open       = tasks.filter((t) => t.status === 'OPEN')
-  const inProgress = tasks.filter((t) => t.status === 'IN_PROGRESS')
-  const done       = tasks.filter((t) => t.status === 'DONE')
+  // Recompute only when tasks array changes
+  const ordered = useMemo(() => {
+    const open       = tasks.filter((t) => t.status === 'OPEN')
+    const inProgress = tasks.filter((t) => t.status === 'IN_PROGRESS')
+    const done       = tasks.filter((t) => t.status === 'DONE')
+    return [...open, ...inProgress, ...done]
+  }, [tasks])
 
   function handleAdd(task: TaskData) {
     setTasks((prev) => [task, ...prev])
@@ -377,8 +381,6 @@ export function TaskList({ initialTasks, currentUserId, managementUsers }: TaskL
   function handleDelete(id: string) {
     setTasks((prev) => prev.filter((t) => t.id !== id))
   }
-
-  const ordered = [...open, ...inProgress, ...done]
 
   return (
     <div className="space-y-4">

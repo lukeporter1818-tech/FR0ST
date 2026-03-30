@@ -114,11 +114,17 @@ export default async function OverviewPage() {
 
   // ── Derived metrics ──────────────────────────────────────────────────────────
 
-  const totalRows     = boardEntries.length
-  const emergencyRows = boardEntries.filter((e) => e.isEmergency)
-  const completedCount = boardEntries.filter((e) => e.status === 'DONE').length
-  // "Active" = any row that is not fully done/out
-  const activeCount   = boardEntries.filter((e) => e.status !== 'DONE' && e.status !== 'OUT').length
+  const totalRows = boardEntries.length
+
+  // Single pass over entries — avoids 3 separate array iterations
+  const emergencyRows: typeof boardEntries = []
+  let completedCount = 0
+  let activeCount = 0
+  for (const e of boardEntries) {
+    if (e.isEmergency) emergencyRows.push(e)
+    if (e.status === 'DONE') completedCount++
+    else if (e.status !== 'OUT') activeCount++
+  }
 
   // Most active techs: non-DONE rows with an assignment, sorted by busyness
   const activeTechs = boardEntries

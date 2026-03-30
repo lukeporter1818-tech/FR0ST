@@ -43,7 +43,16 @@ export default async function SchedulePage({
     }),
     prisma.boardEntry.findMany({
       where: { date: exactDate },
-      include: { technician: true },
+      select: {
+        id: true,
+        technicianId: true,
+        manualName: true,
+        assignment: true,
+        note: true,
+        status: true,
+        orderIndex: true,
+        isEmergency: true,
+      },
     }),
   ])
 
