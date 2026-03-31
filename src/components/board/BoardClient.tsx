@@ -601,7 +601,7 @@ export function BoardClient({
 
       {/* Board */}
       <div
-        className="divide-y divide-white/8"
+        className="divide-y divide-white/[0.12]"
         onDragEnter={!isTechnician ? (e) => {
           if (Array.from(e.dataTransfer.types).includes('Files')) {
             dragEnterCount.current += 1
@@ -643,7 +643,7 @@ export function BoardClient({
               className={cn(
                 'flex items-center gap-2 py-1.5 min-h-[44px] px-0 rounded-sm transition-all duration-150 group',
                 clickable
-                  ? 'cursor-pointer hover:bg-white/5'
+                  ? 'cursor-pointer hover:bg-white/[0.07] active:bg-white/[0.12]'
                   : 'cursor-default opacity-40',
                 row.isEmergency && 'border-l-2 border-red-500 pl-2 bg-red-500/5',
                 !row.isEmergency && isOwnRow && 'border-l-2 border-amber-400 pl-2',
