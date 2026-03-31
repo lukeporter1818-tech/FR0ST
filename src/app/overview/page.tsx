@@ -41,6 +41,20 @@ function MetricCard({
   )
 }
 
+function ActivityStat({
+  label, value,
+}: {
+  label: string
+  value: number
+}) {
+  return (
+    <div className="flex items-center gap-2.5 rounded-lg border border-white/8 bg-white/[0.02] px-3 py-2.5">
+      <span className="text-lg font-bold text-gray-300 tabular-nums leading-none">{value}</span>
+      <span className="text-xs text-gray-500 leading-tight">{label}</span>
+    </div>
+  )
+}
+
 const STATUS_BADGE: Record<string, string> = {
   ASSIGNED: 'bg-blue-500/15  text-blue-300  ring-blue-500/30',
   EN_ROUTE: 'bg-amber-500/15 text-amber-300 ring-amber-500/30',
@@ -88,8 +102,8 @@ export default async function OverviewPage() {
 
   const { start, end } = todayUTCRange()
 
-  // Single parallel round-trip: board entries + management tasks + Frost count
-  const [boardEntries, openTasks, frostCount] = await Promise.all([
+  // Single parallel round-trip for all data
+  const [boardEntries, openTasks, frostCount, chatCount] = await Promise.all([
     prisma.boardEntry.findMany({
       where: { date: { gte: start, lte: end } },
       select: {
@@ -110,21 +124,29 @@ export default async function OverviewPage() {
     prisma.aIInteraction.count({
       where: { createdAt: { gte: start, lte: end } },
     }).catch(() => 0),
+    prisma.chatMessage.count({
+      where: { createdAt: { gte: start, lte: end } },
+    }).catch(() => 0),
   ])
 
   // ── Derived metrics ──────────────────────────────────────────────────────────
 
   const totalRows = boardEntries.length
 
-  // Single pass over entries — avoids 3 separate array iterations
+  // Single pass over entries — avoids multiple array iterations
   const emergencyRows: typeof boardEntries = []
   let completedCount = 0
   let activeCount = 0
+  let assignedCount = 0
   for (const e of boardEntries) {
     if (e.isEmergency) emergencyRows.push(e)
     if (e.status === 'DONE') completedCount++
     else if (e.status !== 'OUT') activeCount++
+    if (e.assignment && e.assignment.trim()) assignedCount++
   }
+
+  const unassignedCount = totalRows - assignedCount
+  const assignedPercent = totalRows > 0 ? Math.round((assignedCount / totalRows) * 100) : 0
 
   // Most active techs: non-DONE rows with an assignment, sorted by busyness
   const activeTechs = boardEntries
@@ -155,6 +177,39 @@ export default async function OverviewPage() {
         <MetricCard label="Completed"     value={completedCount}       accent="green" />
         <MetricCard label="Active"        value={activeCount}           accent="amber" />
         <MetricCard label="Open Tasks"    value={openTasks.length} />
+      </div>
+
+      {/* Assignment breakdown */}
+      {totalRows > 0 && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm">
+          <span>
+            <span className="font-bold text-white tabular-nums">{assignedCount}</span>
+            <span className="text-gray-500 ml-1">assigned</span>
+          </span>
+          <span className="text-gray-700 hidden sm:inline">·</span>
+          {unassignedCount > 0 ? (
+            <span>
+              <span className="font-bold text-amber-400 tabular-nums">{unassignedCount}</span>
+              <span className="text-gray-500 ml-1">unassigned</span>
+            </span>
+          ) : (
+            <span className="text-green-400 font-medium text-xs">All techs assigned ✓</span>
+          )}
+          <span className="text-gray-700 hidden sm:inline">·</span>
+          <span className="text-gray-500">{assignedPercent}% fill rate</span>
+        </div>
+      )}
+
+      {/* Today's activity */}
+      <div>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2.5">
+          Today&apos;s Activity
+        </h2>
+        <div className="grid grid-cols-3 gap-2">
+          <ActivityStat label="Frost queries" value={frostCount} />
+          <ActivityStat label="Chat messages" value={chatCount} />
+          <ActivityStat label="Board entries" value={assignedCount} />
+        </div>
       </div>
 
       {!hasAnyData ? (
@@ -264,13 +319,6 @@ export default async function OverviewPage() {
           )}
 
         </div>
-      )}
-
-      {/* Frost activity */}
-      {frostCount > 0 && (
-        <p className="text-xs text-gray-600 border-t border-white/5 pt-4">
-          {frostCount} Frost {frostCount === 1 ? 'query' : 'queries'} logged today
-        </p>
       )}
     </div>
   )
