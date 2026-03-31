@@ -86,7 +86,7 @@ function StatusText({ status }: { status: string | null }) {
   if (!status) return null
   return (
     <span className={cn(
-      'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset shrink-0',
+      'inline-flex items-center rounded-full px-1.5 py-px text-[10px] font-medium ring-1 ring-inset shrink-0',
       STATUS_BADGE[status] ?? 'bg-gray-500/10 text-gray-500 ring-gray-500/20'
     )}>
       {STATUS_LABELS[status]}
@@ -641,7 +641,7 @@ export function BoardClient({
               onDragLeave={canDropWO ? (e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverTechId(null) } : undefined}
               onDrop={canDropWO ? (e) => handleDrop(e, { id: row.id, technicianId: row.technicianId!, name: row.name }) : undefined}
               className={cn(
-                'flex items-baseline gap-2 sm:gap-5 py-3 min-h-[44px] px-1 rounded-md transition-all duration-150 group',
+                'flex items-center gap-3 py-2 min-h-[44px] px-1 rounded-md transition-all duration-150 group',
                 clickable
                   ? 'cursor-pointer hover:bg-white/5'
                   : 'cursor-default opacity-40',
@@ -653,7 +653,7 @@ export function BoardClient({
             >
               {/* Name */}
               <span className={cn(
-                'w-24 shrink-0 text-[15px] leading-none',
+                'w-[68px] shrink-0 text-sm leading-none',
                 isOwnRow ? 'font-bold text-white' : 'font-semibold text-gray-200'
               )}>
                 {row.name.split(' ')[0]}
@@ -714,7 +714,7 @@ export function BoardClient({
                       EMRG
                     </span>
                   )}
-                  <span className={cn('text-base font-bold leading-none tracking-wide', row.assignment ? 'text-gray-100' : 'text-gray-600')}>
+                  <span className={cn('text-[15px] font-bold leading-none tracking-tight', row.assignment ? 'text-gray-100' : 'text-gray-600')}>
                     {row.assignment || '—'}
                   </span>
                   {row.note && (
