@@ -642,7 +642,7 @@ export function BoardClient({
                     {row.assignment || '—'}
                   </span>
                   {row.note && (
-                    <span className="flex-1 text-xs text-gray-600 leading-none truncate">
+                    <span className="flex-1 min-w-0 text-xs text-gray-600 leading-none truncate">
                       {row.note}
                     </span>
                   )}
@@ -654,7 +654,7 @@ export function BoardClient({
                   )}
                   {canDropWO && !isDragTarget && !isDraggingFile && (
                     <ImageDown
-                      className="size-3.5 text-gray-700 opacity-0 group-hover:opacity-60 shrink-0 self-center transition-opacity pointer-events-none"
+                      className="hidden sm:block size-3.5 text-gray-700 opacity-0 group-hover:opacity-60 shrink-0 self-center transition-opacity pointer-events-none"
                       aria-label="Drop work order screenshot here"
                     />
                   )}
@@ -665,32 +665,34 @@ export function BoardClient({
                     <ImageDown className="size-3.5 text-amber-400 shrink-0 self-center animate-pulse" />
                   )}
                   {canManageRoster && !isDragTarget && (
-                    removingId === row.id ? (
-                      <Loader2 className="size-3.5 animate-spin text-gray-600 shrink-0 self-center" />
-                    ) : confirmRemoveId === row.id ? (
-                      <span className="flex items-center gap-1 shrink-0 self-center" onClick={(e) => e.stopPropagation()}>
+                    <div className="hidden sm:flex items-center shrink-0 self-center">
+                      {removingId === row.id ? (
+                        <Loader2 className="size-3.5 animate-spin text-gray-600" />
+                      ) : confirmRemoveId === row.id ? (
+                        <span className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => handleRemoveRow(row.id)}
+                            className="text-xs text-red-400 hover:text-red-300 font-medium transition-colors"
+                          >
+                            {row.technicianId ? 'Remove from roster' : 'Remove'}
+                          </button>
+                          <button
+                            onClick={() => setConfirmRemoveId(null)}
+                            className="text-gray-600 hover:text-gray-400 transition-colors"
+                          >
+                            <X className="size-3" />
+                          </button>
+                        </span>
+                      ) : (
                         <button
-                          onClick={() => handleRemoveRow(row.id)}
-                          className="text-xs text-red-400 hover:text-red-300 font-medium transition-colors"
+                          onClick={(e) => { e.stopPropagation(); setConfirmRemoveId(row.id) }}
+                          className="pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-40 hover:!opacity-100 text-gray-500 hover:text-red-400 transition-all touch-manipulation"
+                          aria-label={`Remove ${row.name} from schedule`}
                         >
-                          {row.technicianId ? 'Remove from roster' : 'Remove'}
+                          <Trash2 className="size-3.5" />
                         </button>
-                        <button
-                          onClick={() => setConfirmRemoveId(null)}
-                          className="text-gray-600 hover:text-gray-400 transition-colors"
-                        >
-                          <X className="size-3" />
-                        </button>
-                      </span>
-                    ) : (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setConfirmRemoveId(row.id) }}
-                        className="pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-40 hover:!opacity-100 text-gray-500 hover:text-red-400 shrink-0 self-center transition-all touch-manipulation"
-                        aria-label={`Remove ${row.name} from schedule`}
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
-                    )
+                      )}
+                    </div>
                   )}
                 </>
               )}

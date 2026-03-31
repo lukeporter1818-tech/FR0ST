@@ -117,7 +117,7 @@ export default async function SchedulePage({
   const rows = [...rosterRows, ...manualRows]
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-2xl overflow-x-hidden">
       <BoardClient
         rows={rows}
         allTechs={availableTechs}
