@@ -123,6 +123,12 @@ export function BoardClient({
   const [saving, setSaving] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
   const assignmentRef = useRef<HTMLInputElement>(null)
+  // Ref to the currently-editing row DOM element — used by the outside-tap dismissal effect
+  const editingRowRef = useRef<HTMLDivElement | null>(null)
+  // Ref mirror of editDraft so commitEdit can be stable (empty deps) and the
+  // outside-tap listener doesn't need to be re-registered on every keystroke
+  const editDraftRef = useRef(editDraft)
+  useEffect(() => { editDraftRef.current = editDraft }, [editDraft])
 
   // ── Roster management state ────────────────────────────────────────────────
   const [showAddPicker, setShowAddPicker] = useState(false)
@@ -179,16 +185,19 @@ export function BoardClient({
     setEditDraft({ assignment: row.assignment, note: row.note, status: row.status, isEmergency: row.isEmergency })
   }
 
+  // Stable commit — reads draft from ref so the outside-tap listener can be
+  // registered once per edit session, not re-registered on every keystroke.
   const commitEdit = useCallback((rowId: string) => {
+    const draft = editDraftRef.current
     setRows((prev) =>
       prev.map((r) => {
         if (r.id !== rowId) return r
-        const changed = r.assignment !== editDraft.assignment || r.note !== editDraft.note || r.status !== editDraft.status || r.isEmergency !== editDraft.isEmergency
-        return { ...r, assignment: editDraft.assignment, note: editDraft.note, status: editDraft.status, isEmergency: editDraft.isEmergency, dirty: r.dirty || changed }
+        const changed = r.assignment !== draft.assignment || r.note !== draft.note || r.status !== draft.status || r.isEmergency !== draft.isEmergency
+        return { ...r, assignment: draft.assignment, note: draft.note, status: draft.status, isEmergency: draft.isEmergency, dirty: r.dirty || changed }
       })
     )
     setEditingId(null)
-  }, [editDraft])
+  }, []) // stable — draft accessed via ref, not closure
 
   function handleRowKeyDown(e: React.KeyboardEvent, id: string) {
     if (e.key === 'Enter') { e.preventDefault(); commitEdit(id) }
@@ -285,6 +294,20 @@ export function BoardClient({
     document.addEventListener('mousedown', handleOutside)
     return () => document.removeEventListener('mousedown', handleOutside)
   }, [showAddPicker])
+
+  // Dismiss edit mode when the user taps/clicks outside the active editing row.
+  // Uses pointerdown (fires for both mouse and touch) so it works on mobile.
+  // commitEdit is stable ([] deps) so this listener is registered once per
+  // edit session, not on every keystroke.
+  useEffect(() => {
+    if (!editingId) return
+    function handlePointerDown(e: PointerEvent) {
+      if (editingRowRef.current?.contains(e.target as Node)) return
+      commitEdit(editingId!)
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [editingId, commitEdit])
 
   async function handleAddTech(techId: string) {
     if (addingTechId) return
@@ -635,6 +658,7 @@ export function BoardClient({
           return (
             <div
               key={row.id}
+              ref={isEditing ? editingRowRef : null}
               onClick={() => { if (!isEditing) startEdit(row) }}
               onKeyDown={(e) => isEditing && handleRowKeyDown(e, row.id)}
               onDragOver={canDropWO ? (e) => { e.preventDefault(); if (dragOverTechId !== row.id) setDragOverTechId(row.id) } : undefined}
@@ -679,7 +703,7 @@ export function BoardClient({
                     value={editDraft.note}
                     onChange={(e) => setEditDraft((d) => ({ ...d, note: e.target.value }))}
                     placeholder="Note"
-                    className="flex-1 text-sm text-gray-400 bg-transparent border-b border-white/15 outline-none placeholder:text-gray-600"
+                    className="flex-1 min-w-0 text-sm text-gray-400 bg-transparent border-b border-white/15 outline-none placeholder:text-gray-600"
                     onClick={(e) => e.stopPropagation()}
                   />
                   <select
