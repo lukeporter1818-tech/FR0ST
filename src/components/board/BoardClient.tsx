@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Loader2, ImageDown, UserPlus, X, Trash2 } from 'lucide-react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { Loader2, ImageDown, X, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { DateNav } from './DateNav'
-import { saveBoardEntries, updateMyRow, addWorkOrderToBoard, addTechToRoster, removeFromRoster, addManualNameToBoard, removeFromBoard } from '@/lib/actions/board'
+import { saveBoardEntries, updateMyRow, addWorkOrderToBoard, removeFromRoster, removeFromBoard } from '@/lib/actions/board'
 import type { WorkOrderExtraction } from '@/types/work-order'
 
 // ─── Drop state machine ───────────────────────────────────────────────────────
@@ -131,15 +131,8 @@ export function BoardClient({
   useEffect(() => { editDraftRef.current = editDraft }, [editDraft])
 
   // ── Roster management state ────────────────────────────────────────────────
-  const [showAddPicker, setShowAddPicker] = useState(false)
-  const [addingTechId, setAddingTechId] = useState<string | null>(null)
-  const [showManualInput, setShowManualInput] = useState(false)
-  const [manualNameDraft, setManualNameDraft] = useState('')
-  const [addingManual, setAddingManual] = useState(false)
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)  // uses row.id
   const [removingId, setRemovingId] = useState<string | null>(null)             // uses row.id
-  const addPickerRef = useRef<HTMLDivElement>(null)
-  const manualInputRef = useRef<HTMLInputElement>(null)
 
   // ── Drag-and-drop WO intake ────────────────────────────────────────────────
   const [dragOverTechId, setDragOverTechId] = useState<string | null>(null)
@@ -151,16 +144,9 @@ export function BoardClient({
   const isTechnician = currentUserRole === 'TECHNICIAN'
   const canManageRoster = !isTechnician
 
-  // Techs not already on the board — recompute only when allTechs or rows change
-  const availableToAdd = useMemo(
-    () => allTechs.filter((t) => !rows.some((r) => r.technicianId === t.id)),
-    [allTechs, rows]
-  )
-
   useEffect(() => {
     setRows(initialRows.map((r) => ({ ...r, dirty: false })))
     setEditingId(null)
-    setShowAddPicker(false)
     setConfirmRemoveId(null)
     setLastSavedAt(null)
   }, [date, initialRows])
@@ -283,18 +269,6 @@ export function BoardClient({
     }
   }, [dropState, date])
 
-  // Close add picker when clicking outside
-  useEffect(() => {
-    if (!showAddPicker) return
-    function handleOutside(e: MouseEvent) {
-      if (addPickerRef.current && !addPickerRef.current.contains(e.target as Node)) {
-        setShowAddPicker(false)
-      }
-    }
-    document.addEventListener('mousedown', handleOutside)
-    return () => document.removeEventListener('mousedown', handleOutside)
-  }, [showAddPicker])
-
   // Dismiss edit mode when the user taps/clicks outside the active editing row.
   //
   // Why two listeners:
@@ -329,43 +303,6 @@ export function BoardClient({
       document.removeEventListener('touchstart',  onTouchStart,  { capture: true })
     }
   }, [editingId, commitEdit])
-
-  async function handleAddTech(techId: string) {
-    if (addingTechId) return
-    setAddingTechId(techId)
-    setShowAddPicker(false)
-    try {
-      await addTechToRoster(techId)
-      const tech = allTechs.find((t) => t.id === techId)
-      if (tech) {
-        // Add as a virtual row then re-sort so the new tech lands in alphabetical position
-        const newRow: LocalRow = { id: `virtual:${tech.id}`, technicianId: tech.id, manualName: null, name: tech.name, assignment: '', note: '', status: null, isEmergency: false, orderIndex: 9999, dirty: false }
-        setRows((prev) => sortedRows([...prev, newRow]))
-      }
-    } catch {
-      toast.error('Failed to add technician.')
-    } finally {
-      setAddingTechId(null)
-    }
-  }
-
-  async function handleAddManual(e: React.FormEvent) {
-    e.preventDefault()
-    const name = manualNameDraft.trim()
-    if (!name || addingManual) return
-    setAddingManual(true)
-    try {
-      const { id } = await addManualNameToBoard(name, date)
-      setRows((prev) => [...prev, { id, technicianId: null, manualName: name, name, assignment: '', note: '', status: null, isEmergency: false, orderIndex: prev.length, dirty: false }])
-      setManualNameDraft('')
-      setShowManualInput(false)
-      setShowAddPicker(false)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to add name.')
-    } finally {
-      setAddingManual(false)
-    }
-  }
 
   async function handleRemoveRow(rowId: string) {
     if (removingId) return
@@ -443,10 +380,12 @@ export function BoardClient({
   }
 
   return (
-    <div>
+    <div className="overflow-x-hidden">
       {/* Top bar */}
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <DateNav date={date} />
+      <div className="flex items-center justify-between gap-2 mb-6">
+        <div className="min-w-0 flex-1">
+          <DateNav date={date} />
+        </div>
         <div className="flex items-center gap-2 shrink-0">
           {lastSavedAt && dirtyCount === 0 && (
             <span className="text-xs text-gray-600" title="Last saved">✓ {lastSavedAt}</span>
@@ -460,66 +399,6 @@ export function BoardClient({
               {saving ? 'Saving…' : `Save${dirtyCount > 1 ? ` (${dirtyCount})` : ''}`}
             </button>
           )}
-          {canManageRoster && (() => {
-            const isAdding = !!addingTechId || addingManual
-            return (
-              <div className="relative" ref={addPickerRef}>
-                <button
-                  onClick={() => { setShowAddPicker((v) => !v); setShowManualInput(false) }}
-                  disabled={isAdding}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/15 text-xs font-medium text-gray-400 hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  aria-label="Add technician to schedule"
-                >
-                  {isAdding ? <Loader2 className="size-3.5 animate-spin" /> : <UserPlus className="size-3.5" />}
-                  Add Tech
-                </button>
-                {showAddPicker && (
-                  <div className="absolute right-0 top-full mt-1 z-30 w-52 rounded-xl border border-white/15 bg-gray-900 shadow-2xl py-1 overflow-hidden">
-                    {availableToAdd.map((tech) => (
-                      <button
-                        key={tech.id}
-                        onClick={() => handleAddTech(tech.id)}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-white/8 transition-colors"
-                      >
-                        {tech.name}
-                      </button>
-                    ))}
-                    {availableToAdd.length > 0 && (
-                      <div className="my-1 border-t border-white/10" />
-                    )}
-                    {showManualInput ? (
-                      <form onSubmit={handleAddManual} className="px-3 py-2 flex items-center gap-1.5">
-                        <input
-                          ref={manualInputRef}
-                          autoFocus
-                          type="text"
-                          value={manualNameDraft}
-                          onChange={(e) => setManualNameDraft(e.target.value)}
-                          placeholder="Enter name"
-                          maxLength={100}
-                          className="flex-1 min-w-0 text-sm bg-white/5 border border-white/15 rounded px-2 py-1 text-gray-200 placeholder:text-gray-600 outline-none focus:border-amber-500/50"
-                        />
-                        <button
-                          type="submit"
-                          disabled={!manualNameDraft.trim() || addingManual}
-                          className="text-xs font-medium text-amber-400 hover:text-amber-300 disabled:opacity-40 transition-colors shrink-0"
-                        >
-                          Add
-                        </button>
-                      </form>
-                    ) : (
-                      <button
-                        onClick={() => { setShowManualInput(true); setTimeout(() => manualInputRef.current?.focus(), 0) }}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-500 hover:text-gray-300 hover:bg-white/8 transition-colors"
-                      >
-                        + Manual name…
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )
-          })()}
         </div>
       </div>
 
@@ -759,7 +638,7 @@ export function BoardClient({
                       EMRG
                     </span>
                   )}
-                  <span className={cn('text-[15px] font-bold leading-none tracking-tight', row.assignment ? 'text-gray-100' : 'text-gray-600')}>
+                  <span className={cn('min-w-0 truncate text-[15px] font-bold leading-none tracking-tight', row.assignment ? 'text-gray-100' : 'text-gray-600')}>
                     {row.assignment || '—'}
                   </span>
                   {row.note && (
