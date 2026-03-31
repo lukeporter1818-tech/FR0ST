@@ -394,7 +394,7 @@ export function BoardClient({
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-3 py-2 rounded-full text-xs font-semibold bg-amber-400 text-gray-900 hover:bg-amber-500 transition-colors disabled:opacity-40"
+              className="px-3 py-2 rounded-full text-xs font-semibold bg-amber-400 text-gray-900 hover:bg-amber-500 transition-colors disabled:opacity-40 touch-manipulation"
             >
               {saving ? 'Saving…' : `Save${dirtyCount > 1 ? ` (${dirtyCount})` : ''}`}
             </button>
@@ -565,7 +565,7 @@ export function BoardClient({
               onDragLeave={canDropWO ? (e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverTechId(null) } : undefined}
               onDrop={canDropWO ? (e) => handleDrop(e, { id: row.id, technicianId: row.technicianId!, name: row.name }) : undefined}
               className={cn(
-                'flex items-center gap-2 py-1.5 min-h-[44px] px-0 rounded-sm transition-all duration-150 group',
+                'flex items-center gap-2 py-1.5 min-h-[44px] px-0 rounded-sm transition-all duration-150 group touch-manipulation',
                 clickable
                   ? 'cursor-pointer hover:bg-white/[0.07] active:bg-white/[0.12]'
                   : 'cursor-default opacity-40',
@@ -654,7 +654,7 @@ export function BoardClient({
                   )}
                   {canDropWO && !isDragTarget && !isDraggingFile && (
                     <ImageDown
-                      className="size-3.5 text-gray-700 opacity-0 group-hover:opacity-60 shrink-0 self-center transition-opacity"
+                      className="size-3.5 text-gray-700 opacity-0 group-hover:opacity-60 shrink-0 self-center transition-opacity pointer-events-none"
                       aria-label="Drop work order screenshot here"
                     />
                   )}
@@ -685,7 +685,7 @@ export function BoardClient({
                     ) : (
                       <button
                         onClick={(e) => { e.stopPropagation(); setConfirmRemoveId(row.id) }}
-                        className="opacity-0 group-hover:opacity-40 hover:!opacity-100 text-gray-500 hover:text-red-400 shrink-0 self-center transition-all"
+                        className="pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-40 hover:!opacity-100 text-gray-500 hover:text-red-400 shrink-0 self-center transition-all touch-manipulation"
                         aria-label={`Remove ${row.name} from schedule`}
                       >
                         <Trash2 className="size-3.5" />
