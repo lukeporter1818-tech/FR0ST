@@ -86,8 +86,8 @@ function StatusText({ status }: { status: string | null }) {
   if (!status) return null
   return (
     <span className={cn(
-      'inline-flex items-center rounded-full px-1.5 py-px text-[10px] font-medium ring-1 ring-inset shrink-0',
-      STATUS_BADGE[status] ?? 'bg-gray-500/10 text-gray-500 ring-gray-500/20'
+      'inline-flex items-center rounded px-1.5 py-px text-[10px] font-medium shrink-0',
+      STATUS_BADGE[status] ?? 'bg-gray-500/10 text-gray-500'
     )}>
       {STATUS_LABELS[status]}
     </span>
@@ -641,7 +641,7 @@ export function BoardClient({
               onDragLeave={canDropWO ? (e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverTechId(null) } : undefined}
               onDrop={canDropWO ? (e) => handleDrop(e, { id: row.id, technicianId: row.technicianId!, name: row.name }) : undefined}
               className={cn(
-                'flex items-center gap-3 py-2 min-h-[44px] px-1 rounded-md transition-all duration-150 group',
+                'flex items-center gap-2 py-1.5 min-h-[44px] px-0 rounded-sm transition-all duration-150 group',
                 clickable
                   ? 'cursor-pointer hover:bg-white/5'
                   : 'cursor-default opacity-40',
@@ -653,8 +653,8 @@ export function BoardClient({
             >
               {/* Name */}
               <span className={cn(
-                'w-[68px] shrink-0 text-sm leading-none',
-                isOwnRow ? 'font-bold text-white' : 'font-semibold text-gray-200'
+                'w-[60px] shrink-0 text-sm leading-none',
+                isOwnRow ? 'font-bold text-white' : 'font-normal text-gray-400'
               )}>
                 {row.name.split(' ')[0]}
               </span>
@@ -718,7 +718,7 @@ export function BoardClient({
                     {row.assignment || '—'}
                   </span>
                   {row.note && (
-                    <span className="flex-1 text-sm text-gray-500 leading-none truncate italic">
+                    <span className="flex-1 text-xs text-gray-600 leading-none truncate">
                       {row.note}
                     </span>
                   )}
