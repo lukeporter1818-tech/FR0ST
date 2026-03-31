@@ -296,17 +296,38 @@ export function BoardClient({
   }, [showAddPicker])
 
   // Dismiss edit mode when the user taps/clicks outside the active editing row.
-  // Uses pointerdown (fires for both mouse and touch) so it works on mobile.
-  // commitEdit is stable ([] deps) so this listener is registered once per
-  // edit session, not on every keystroke.
+  //
+  // Why two listeners:
+  //   pointerdown { capture: true } — fires in the capture phase, before the
+  //     browser decides whether to begin a native scroll gesture. Without capture,
+  //     mobile browsers running a scrollable container (overflow-y-auto) can absorb
+  //     the touch in the scroll path and never fire pointerdown in the bubbling phase.
+  //   touchstart { capture: true, passive: true } — raw touch event, fires reliably
+  //     on iOS Safari where pointerdown on non-interactive surfaces can be unreliable.
+  //     passive: true keeps scroll performance safe (we never call preventDefault).
+  //
+  // The `handled` guard prevents both listeners from committing the same physical tap.
   useEffect(() => {
     if (!editingId) return
-    function handlePointerDown(e: PointerEvent) {
-      if (editingRowRef.current?.contains(e.target as Node)) return
+
+    let handled = false
+    function dismiss(target: EventTarget | null) {
+      if (handled) return
+      if (editingRowRef.current?.contains(target as Node)) return
+      handled = true
       commitEdit(editingId!)
     }
-    document.addEventListener('pointerdown', handlePointerDown)
-    return () => document.removeEventListener('pointerdown', handlePointerDown)
+
+    function onPointerDown(e: PointerEvent) { dismiss(e.target) }
+    function onTouchStart(e: TouchEvent)    { dismiss(e.touches[0]?.target ?? null) }
+
+    document.addEventListener('pointerdown', onPointerDown, { capture: true })
+    document.addEventListener('touchstart',  onTouchStart,  { capture: true, passive: true })
+
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown, { capture: true })
+      document.removeEventListener('touchstart',  onTouchStart,  { capture: true })
+    }
   }, [editingId, commitEdit])
 
   async function handleAddTech(techId: string) {
