@@ -144,11 +144,22 @@ export function BoardClient({
   const isTechnician = currentUserRole === 'TECHNICIAN'
   const canManageRoster = !isTechnician
 
+  // ── Mobile bottom-sheet edit state ────────────────────────────────────────
+  // On narrow viewports the horizontal inline edit row is too cramped for the
+  // iPhone keyboard. We use a stacked sheet panel instead, while keeping the
+  // desktop inline edit untouched.
+  const [mobileSheet, setMobileSheet] = useState<{
+    row: LocalRow
+    draft: { assignment: string; note: string; status: string | null; isEmergency: boolean }
+  } | null>(null)
+  const [sheetBottom, setSheetBottom] = useState(0)
+
   useEffect(() => {
     setRows(initialRows.map((r) => ({ ...r, dirty: false })))
     setEditingId(null)
     setConfirmRemoveId(null)
     setLastSavedAt(null)
+    setMobileSheet(null)
   }, [date, initialRows])
 
   useEffect(() => {
@@ -164,10 +175,7 @@ export function BoardClient({
     return () => cancelAnimationFrame(rafId)
   }, [editingId])
 
-  // Re-scroll the editing row whenever the visual viewport shrinks (iOS keyboard
-  // animating open). AppShell drives the outer container height from vv.height via
-  // useVisualViewport, so the overflow-y-auto main shrinks as the keyboard appears.
-  // Without this, the editing row can slip below the new visible bottom boundary.
+  // Re-scroll the desktop editing row when the visual viewport shrinks.
   useEffect(() => {
     if (!editingId) return
     const vv = typeof window !== 'undefined' ? window.visualViewport : null
@@ -181,6 +189,27 @@ export function BoardClient({
     return () => vv.removeEventListener('resize', onResize)
   }, [editingId])
 
+  // Track keyboard height for the mobile sheet. Runs only while sheet is open.
+  // Using a boolean derived from mobileSheet so draft changes don't re-register
+  // the listeners on every keystroke.
+  const sheetOpen = mobileSheet !== null
+  useEffect(() => {
+    if (!sheetOpen) { setSheetBottom(0); return }
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null
+    if (!vv) return
+    function update() {
+      // keyboard height = space between visual viewport bottom and screen bottom
+      setSheetBottom(Math.max(0, window.innerHeight - (vv!.offsetTop + vv!.height)))
+    }
+    update()
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+    }
+  }, [sheetOpen])
+
   const dirtyCount = rows.filter((r) => r.dirty).length
 
   function canEditRow(row: LocalRow): boolean {
@@ -192,9 +221,32 @@ export function BoardClient({
 
   function startEdit(row: LocalRow) {
     if (!canEditRow(row)) return
-    if (editingId && editingId !== row.id) commitEdit(editingId)
-    setEditingId(row.id)
-    setEditDraft({ assignment: row.assignment, note: row.note, status: row.status, isEmergency: row.isEmergency })
+    // Mobile (< 640 px): open the stacked sheet editor that lives above the keyboard.
+    // Desktop: keep the existing horizontal inline edit row.
+    if (typeof window !== 'undefined' && window.innerWidth < 640) {
+      setMobileSheet({ row, draft: { assignment: row.assignment, note: row.note, status: row.status, isEmergency: row.isEmergency } })
+    } else {
+      if (editingId && editingId !== row.id) commitEdit(editingId)
+      setEditingId(row.id)
+      setEditDraft({ assignment: row.assignment, note: row.note, status: row.status, isEmergency: row.isEmergency })
+    }
+  }
+
+  function commitMobileSheet() {
+    if (!mobileSheet) return
+    const { row, draft } = mobileSheet
+    setRows((prev) =>
+      prev.map((r) => {
+        if (r.id !== row.id) return r
+        const changed = r.assignment !== draft.assignment || r.note !== draft.note || r.status !== draft.status || r.isEmergency !== draft.isEmergency
+        return { ...r, ...draft, dirty: r.dirty || changed }
+      })
+    )
+    setMobileSheet(null)
+  }
+
+  function cancelMobileSheet() {
+    setMobileSheet(null)
   }
 
   // Stable commit — reads draft from ref so the outside-tap listener can be
@@ -360,27 +412,34 @@ export function BoardClient({
         // Technicians update only their own row — saveBoardEntries requires DISPATCHER
         const myRow = rows.find((r) => r.technicianId === currentTechnicianId)
         if (!myRow) return
-        const note = editingId === myRow.id ? editDraft.note : myRow.note
-        const status = editingId === myRow.id ? editDraft.status : myRow.status
+        // Merge whichever editor is open (desktop inline or mobile sheet)
+        const sheetIsMyRow = mobileSheet?.row.id === myRow.id
+        const inlineIsMyRow = editingId === myRow.id
+        const note   = sheetIsMyRow ? mobileSheet!.draft.note   : inlineIsMyRow ? editDraft.note   : myRow.note
+        const status = sheetIsMyRow ? mobileSheet!.draft.status : inlineIsMyRow ? editDraft.status : myRow.status
         if (editingId) setEditingId(null)
+        if (mobileSheet) setMobileSheet(null)
         await updateMyRow(currentTechnicianId, date, status, note)
       } else {
-        // Compute rows to save synchronously, merging any open edit draft inline.
-        // We cannot call commitEdit() then read `rows` because setRows is async —
-        // `rows` in this closure would still be the pre-edit value, silently
-        // dropping whatever the dispatcher was typing when they hit Save.
-        const rowsToSave = rows.map((r) =>
-          editingId && r.id === editingId
-            ? { ...r, assignment: editDraft.assignment, note: editDraft.note, status: editDraft.status }
-            : r
-        )
+        // Compute rows to save synchronously, merging any open draft (desktop inline
+        // OR mobile sheet) so we never silently drop what the user was typing.
+        const rowsToSave = rows.map((r) => {
+          if (editingId && r.id === editingId)
+            return { ...r, assignment: editDraft.assignment, note: editDraft.note, status: editDraft.status }
+          if (mobileSheet && r.id === mobileSheet.row.id)
+            return { ...r, ...mobileSheet.draft }
+          return r
+        })
         setEditingId(null)
-        // Also reflect the merged edit in local state so the UI matches immediately
-        setRows((prev) => prev.map((r) =>
-          editingId && r.id === editingId
-            ? { ...r, assignment: editDraft.assignment, note: editDraft.note, status: editDraft.status }
-            : r
-        ))
+        setMobileSheet(null)
+        // Also reflect the merged edits in local state so the UI matches immediately
+        setRows((prev) => prev.map((r) => {
+          if (editingId && r.id === editingId)
+            return { ...r, assignment: editDraft.assignment, note: editDraft.note, status: editDraft.status }
+          if (mobileSheet && r.id === mobileSheet.row.id)
+            return { ...r, ...mobileSheet.draft }
+          return r
+        }))
         // Exclude virtual rows that were never edited — they have no DB entry yet
         // and saving them blank would create noise. Only persist rows that either
         // have a real DB id or were actually touched (dirty).
@@ -548,6 +607,103 @@ export function BoardClient({
                 </>
               )}
 
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Mobile edit sheet ───────────────────────────────────────────────
+           Fixed panel that lives above the iOS keyboard. The `bottom` value is
+           driven by visualViewport so it tracks the keyboard as it animates.
+           All four fields are stacked vertically — no horizontal cramming that
+           breaks at 375px. The sheet is only ever mounted when innerWidth < 640.
+      ─────────────────────────────────────────────────────────────────────── */}
+      {mobileSheet && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/40"
+            onClick={cancelMobileSheet}
+          />
+          <div
+            className="fixed left-0 right-0 z-50 bg-[#181d2c] rounded-t-2xl shadow-2xl ring-1 ring-white/10"
+            style={{ bottom: sheetBottom }}
+          >
+            {/* drag handle */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-9 h-1 rounded-full bg-white/20" />
+            </div>
+
+            <div className="px-4 pb-4 pt-2 space-y-2.5">
+              {/* Row name */}
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 pb-0.5">
+                {mobileSheet.row.name}
+              </p>
+
+              {/* Assignment — dispatchers/admins only */}
+              {!isTechnician && (
+                <input
+                  type="text"
+                  autoFocus
+                  value={mobileSheet.draft.assignment}
+                  onChange={(e) => setMobileSheet((s) => s && { ...s, draft: { ...s.draft, assignment: e.target.value } })}
+                  placeholder="Assignment"
+                  className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-100 outline-none focus:border-white/35 placeholder:text-gray-600 placeholder:font-normal"
+                />
+              )}
+
+              {/* Note */}
+              <input
+                type="text"
+                autoFocus={isTechnician}
+                value={mobileSheet.draft.note}
+                onChange={(e) => setMobileSheet((s) => s && { ...s, draft: { ...s.draft, note: e.target.value } })}
+                placeholder="Note"
+                className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2.5 text-sm text-gray-300 outline-none focus:border-white/35 placeholder:text-gray-600"
+              />
+
+              {/* Status */}
+              <select
+                value={mobileSheet.draft.status ?? ''}
+                onChange={(e) => setMobileSheet((s) => s && { ...s, draft: { ...s.draft, status: e.target.value || null } })}
+                className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2.5 text-sm text-gray-300 outline-none focus:border-white/35 appearance-none"
+              >
+                {STATUS_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value} className="bg-[#181d2c]">{o.label}</option>
+                ))}
+              </select>
+
+              {/* Emergency toggle — dispatchers/admins only */}
+              {!isTechnician && (
+                <button
+                  type="button"
+                  onClick={() => setMobileSheet((s) => s && { ...s, draft: { ...s.draft, isEmergency: !s.draft.isEmergency } })}
+                  className={cn(
+                    'w-full flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors',
+                    mobileSheet.draft.isEmergency
+                      ? 'bg-red-500/15 border-red-500/30 text-red-400'
+                      : 'bg-white/[0.04] border-white/15 text-gray-400'
+                  )}
+                >
+                  <span className={cn('w-2.5 h-2.5 rounded-full shrink-0', mobileSheet.draft.isEmergency ? 'bg-red-500' : 'bg-gray-600')} />
+                  {mobileSheet.draft.isEmergency ? 'Emergency' : 'Normal priority'}
+                </button>
+              )}
+
+              {/* Done / Cancel */}
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={commitMobileSheet}
+                  className="flex-1 rounded-xl bg-amber-500 py-3 text-sm font-semibold text-gray-900 active:bg-amber-400 transition-colors"
+                >
+                  Done
+                </button>
+                <button
+                  onClick={cancelMobileSheet}
+                  className="flex-1 rounded-xl border border-white/15 py-3 text-sm text-gray-400 active:bg-white/5 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </>
