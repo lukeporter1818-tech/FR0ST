@@ -35,7 +35,7 @@ export function ManagementLayout({
   )
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-4rem)] -m-6">
+    <div className="flex-1 flex flex-col min-h-0">
       {/* Tab bar */}
       <div className="shrink-0 flex border-b border-white/10 bg-gray-950 px-4">
         <TabButton

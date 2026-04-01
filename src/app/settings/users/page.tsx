@@ -121,8 +121,8 @@ function UserTable({
   if (users.length === 0) return null
 
   return (
-    <div className="rounded-xl border border-white/10 overflow-hidden">
-      <table className="w-full text-sm">
+    <div className="rounded-xl border border-white/10 overflow-x-auto">
+      <table className="w-full min-w-[560px] text-sm">
         <thead>
           <tr className="border-b border-white/10 bg-white/[0.03]">
             <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">Name</th>

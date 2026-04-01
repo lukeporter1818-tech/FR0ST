@@ -118,7 +118,10 @@
 }
 
 @layer base {
-  html { @apply antialiased; }
+  /* Hard-lock horizontal scroll at the document root.
+     Any element that accidentally overflows will be clipped here
+     before it can widen the page and create a swipe-left gesture. */
+  html { @apply antialiased overflow-x-hidden; }
   * { @apply border-border; }
-  body { @apply bg-[#0f1117] text-gray-100; }
+  body { @apply bg-[#0f1117] text-gray-100 overflow-x-hidden; }
 }

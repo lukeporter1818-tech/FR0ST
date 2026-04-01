@@ -30,8 +30,8 @@ export function TopBar({
         <span className="sr-only">Toggle sidebar</span>
       </button>
 
-      {/* Page title */}
-      <h1 className="text-base font-semibold text-white">{title}</h1>
+      {/* Page title — flex-1 min-w-0 lets it shrink instead of pushing the right rail off screen */}
+      <h1 className="flex-1 min-w-0 truncate text-base font-semibold text-white">{title}</h1>
 
       {/* Right side */}
       <div className="ml-auto flex items-center gap-2">

@@ -47,9 +47,9 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-[100dvh] antialiased dark`}
+      className={`${geistSans.variable} ${geistMono.variable} h-[100dvh] overflow-x-hidden antialiased dark`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col overflow-x-hidden">
         {session?.user ? (
           <AppShell
             userName={session.user.name ?? ''}
