@@ -93,7 +93,7 @@ function AddTaskForm({
           onFocus={() => setExpanded(true)}
           placeholder="Add a task…"
           disabled={pending}
-          className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:opacity-50"
+          className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-base md:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:opacity-50"
         />
         <button
           type="submit"
@@ -115,7 +115,7 @@ function AddTaskForm({
               onChange={(e) => setLocation(e.target.value)}
               placeholder="e.g. Store #14"
               disabled={pending}
-              className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:opacity-50"
+              className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-base md:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:opacity-50"
             />
           </div>
           <div>
@@ -125,7 +125,7 @@ function AddTaskForm({
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
               disabled={pending}
-              className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:opacity-50"
+              className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-base md:text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:opacity-50"
             />
           </div>
           <div className="col-span-2">
@@ -136,7 +136,7 @@ function AddTaskForm({
               placeholder="Optional details…"
               rows={2}
               disabled={pending}
-              className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:opacity-50 resize-none"
+              className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-base md:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:opacity-50 resize-none"
             />
           </div>
           {managementUsers.length > 0 && (
@@ -146,7 +146,7 @@ function AddTaskForm({
                 value={assignedToId}
                 onChange={(e) => setAssignedToId(e.target.value)}
                 disabled={pending}
-                className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:opacity-50"
+                className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-base md:text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:opacity-50"
               >
                 <option value="">— Unassigned —</option>
                 {managementUsers.map((u) => (
@@ -229,7 +229,7 @@ function TaskRow({
           type="text"
           value={draft.title}
           onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base md:text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
           autoFocus
         />
         <div className="grid grid-cols-2 gap-3">
@@ -239,7 +239,7 @@ function TaskRow({
               type="text"
               value={draft.location}
               onChange={(e) => setDraft((d) => ({ ...d, location: e.target.value }))}
-              className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
           <div>
@@ -248,7 +248,7 @@ function TaskRow({
               type="date"
               value={draft.dueDate}
               onChange={(e) => setDraft((d) => ({ ...d, dueDate: e.target.value }))}
-              className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
           <div className="col-span-2">
@@ -257,7 +257,7 @@ function TaskRow({
               value={draft.notes}
               onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value }))}
               rows={2}
-              className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
+              className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
             />
           </div>
           {managementUsers.length > 0 && (
@@ -266,7 +266,7 @@ function TaskRow({
               <select
                 value={draft.assignedToId}
                 onChange={(e) => setDraft((d) => ({ ...d, assignedToId: e.target.value }))}
-                className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
               >
                 <option value="">— Unassigned —</option>
                 {managementUsers.map((u) => (
