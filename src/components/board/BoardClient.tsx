@@ -144,18 +144,11 @@ export function BoardClient({
   const isTechnician = currentUserRole === 'TECHNICIAN'
   const canManageRoster = !isTechnician
 
-  // ── Mobile bottom sheet state ──────────────────────────────────────────────
-  const [isMobile, setIsMobile] = useState(false)
-  const [mobileSheetRow, setMobileSheetRow] = useState<LocalRow | null>(null)
-  const [mobileSheetDraft, setMobileSheetDraft] = useState<{ assignment: string; note: string; status: string | null; isEmergency: boolean }>({ assignment: '', note: '', status: null, isEmergency: false })
-  const [sheetBottomOffset, setSheetBottomOffset] = useState(0)
-
   useEffect(() => {
     setRows(initialRows.map((r) => ({ ...r, dirty: false })))
     setEditingId(null)
     setConfirmRemoveId(null)
     setLastSavedAt(null)
-    setMobileSheetRow(null)
   }, [date, initialRows])
 
   useEffect(() => {
@@ -171,32 +164,22 @@ export function BoardClient({
     return () => cancelAnimationFrame(rafId)
   }, [editingId])
 
-  // Detect mobile breakpoint
+  // Re-scroll the editing row whenever the visual viewport shrinks (iOS keyboard
+  // animating open). AppShell drives the outer container height from vv.height via
+  // useVisualViewport, so the overflow-y-auto main shrinks as the keyboard appears.
+  // Without this, the editing row can slip below the new visible bottom boundary.
   useEffect(() => {
-    function check() { setIsMobile(window.innerWidth < 640) }
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
-
-  // Keep mobile sheet above the iOS keyboard by tracking visualViewport
-  useEffect(() => {
-    if (!mobileSheetRow) return
+    if (!editingId) return
     const vv = typeof window !== 'undefined' ? window.visualViewport : null
     if (!vv) return
-    function update() {
-      const offset = window.innerHeight - (vv!.offsetTop + vv!.height)
-      setSheetBottomOffset(Math.max(0, offset))
+    function onResize() {
+      requestAnimationFrame(() => {
+        editingRowRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      })
     }
-    update()
-    vv.addEventListener('resize', update)
-    vv.addEventListener('scroll', update)
-    return () => {
-      vv.removeEventListener('resize', update)
-      vv.removeEventListener('scroll', update)
-      setSheetBottomOffset(0)
-    }
-  }, [mobileSheetRow])
+    vv.addEventListener('resize', onResize)
+    return () => vv.removeEventListener('resize', onResize)
+  }, [editingId])
 
   const dirtyCount = rows.filter((r) => r.dirty).length
 
@@ -209,31 +192,9 @@ export function BoardClient({
 
   function startEdit(row: LocalRow) {
     if (!canEditRow(row)) return
-    if (isMobile) {
-      setMobileSheetRow(row)
-      setMobileSheetDraft({ assignment: row.assignment, note: row.note, status: row.status, isEmergency: row.isEmergency })
-    } else {
-      if (editingId && editingId !== row.id) commitEdit(editingId)
-      setEditingId(row.id)
-      setEditDraft({ assignment: row.assignment, note: row.note, status: row.status, isEmergency: row.isEmergency })
-    }
-  }
-
-  function commitMobileSheet() {
-    if (!mobileSheetRow) return
-    const draft = mobileSheetDraft
-    setRows((prev) =>
-      prev.map((r) => {
-        if (r.id !== mobileSheetRow.id) return r
-        const changed = r.assignment !== draft.assignment || r.note !== draft.note || r.status !== draft.status || r.isEmergency !== draft.isEmergency
-        return { ...r, assignment: draft.assignment, note: draft.note, status: draft.status, isEmergency: draft.isEmergency, dirty: r.dirty || changed }
-      })
-    )
-    setMobileSheetRow(null)
-  }
-
-  function cancelMobileSheet() {
-    setMobileSheetRow(null)
+    if (editingId && editingId !== row.id) commitEdit(editingId)
+    setEditingId(row.id)
+    setEditDraft({ assignment: row.assignment, note: row.note, status: row.status, isEmergency: row.isEmergency })
   }
 
   // Stable commit — reads draft from ref so the outside-tap listener can be
@@ -445,7 +406,12 @@ export function BoardClient({
   }
 
   return (
-    <div className="overflow-x-hidden">
+    // paddingBottom: env(safe-area-inset-bottom) ensures the last row sits above
+    // the iPhone home indicator. With viewport-fit:cover the page extends under
+    // the home indicator; this compensates when the keyboard is closed (~34px).
+    // When the keyboard is open iOS zeroes the safe-area-inset-bottom so the
+    // keyboard itself provides the boundary — no double-padding occurs.
+    <div className="overflow-x-hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       {/* Top bar */}
       <div className="flex items-center justify-between gap-2 mb-6">
         <div className="min-w-0 flex-1">
@@ -582,104 +548,6 @@ export function BoardClient({
                 </>
               )}
 
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Mobile edit sheet */}
-      {mobileSheetRow && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/50 touch-none"
-            onClick={cancelMobileSheet}
-          />
-          <div
-            className="fixed left-0 right-0 z-50 bg-gray-900 ring-1 ring-white/10 rounded-t-2xl px-4 pt-4 pb-2 shadow-2xl"
-            style={{ bottom: sheetBottomOffset }}
-          >
-            {/* Handle */}
-            <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-4" />
-
-            {/* Name header */}
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
-              {mobileSheetRow.name}
-            </p>
-
-            <div className="space-y-3">
-              {/* Assignment — dispatchers/admins only */}
-              {!isTechnician && (
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Assignment</label>
-                  <input
-                    type="text"
-                    autoFocus
-                    value={mobileSheetDraft.assignment}
-                    onChange={(e) => setMobileSheetDraft((d) => ({ ...d, assignment: e.target.value }))}
-                    placeholder="Work order / job"
-                    className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2.5 text-sm text-gray-100 outline-none focus:border-white/30 placeholder:text-gray-600"
-                  />
-                </div>
-              )}
-
-              {/* Note */}
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Note</label>
-                <input
-                  type="text"
-                  value={mobileSheetDraft.note}
-                  onChange={(e) => setMobileSheetDraft((d) => ({ ...d, note: e.target.value }))}
-                  placeholder="Optional note"
-                  className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2.5 text-sm text-gray-400 outline-none focus:border-white/30 placeholder:text-gray-600"
-                />
-              </div>
-
-              {/* Status */}
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Status</label>
-                <select
-                  value={mobileSheetDraft.status ?? ''}
-                  onChange={(e) => setMobileSheetDraft((d) => ({ ...d, status: e.target.value || null }))}
-                  className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2.5 text-sm text-gray-300 outline-none focus:border-white/30 appearance-none"
-                >
-                  {STATUS_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value} className="bg-gray-900">{o.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Emergency toggle — dispatchers/admins only */}
-              {!isTechnician && (
-                <button
-                  type="button"
-                  onClick={() => setMobileSheetDraft((d) => ({ ...d, isEmergency: !d.isEmergency }))}
-                  className={cn(
-                    'w-full flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors',
-                    mobileSheetDraft.isEmergency
-                      ? 'bg-red-500/15 border-red-500/30 text-red-400'
-                      : 'bg-white/5 border-white/15 text-gray-400'
-                  )}
-                >
-                  <span className={cn('w-2.5 h-2.5 rounded-full shrink-0', mobileSheetDraft.isEmergency ? 'bg-red-500' : 'bg-gray-600')} />
-                  {mobileSheetDraft.isEmergency ? 'Emergency Priority' : 'Normal Priority'}
-                </button>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-3 mt-4 mb-2">
-              <button
-                onClick={commitMobileSheet}
-                className="flex-1 rounded-xl bg-amber-500 py-3 text-sm font-semibold text-gray-900 hover:bg-amber-400 transition-colors"
-              >
-                Done
-              </button>
-              <button
-                onClick={cancelMobileSheet}
-                className="flex-1 rounded-xl border border-white/15 py-3 text-sm text-gray-400 hover:bg-white/5 transition-colors"
-              >
-                Cancel
-              </button>
             </div>
           </div>
         </>
