@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
@@ -49,6 +49,46 @@ export function AppShell({
   const toggleSidebar = useCallback(() => setSidebarOpen((prev) => !prev), []);
 
   const title = resolveTitle(pathname);
+
+  // ── Mobile keyboard auto-settling ────────────────────────────────────────
+  // Problem: when the keyboard opens on iOS, Safari scrolls window.scrollY
+  // to bring the focused input "into view" — standard browser behaviour that
+  // works for normal pages but is wrong for a position:fixed; inset:0 shell.
+  // The page scroll shifts the visual viewport DOWN past the fixed shell:
+  // the user sees blank space and the entire UI is above the visible area.
+  // They must manually scroll UP to re-align — this is the settling bug.
+  //
+  // Fix: whenever window.scrollY becomes non-zero (visual viewport has
+  // drifted from the fixed shell), reset it to 0 immediately.
+  // Since AppShell is fixed inset-0, the correct scroll position is always 0.
+  // Any non-zero value is iOS "helping" with a focused input — always wrong.
+  //
+  // We listen to visualViewport.scroll (fires when offsetTop changes due to
+  // page scroll) AND visualViewport.resize (keyboard open/close animation,
+  // where iOS sometimes adjusts scrollY mid-animation as a safety net).
+  //
+  // Android: does not scroll window.scrollY on keyboard open — scrollY stays 0,
+  // the guard `scrollY !== 0` is always false, scrollTo is never called. Safe.
+  //
+  // Desktop: keyboard never opens, events don't fire for scroll. Safe.
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+
+    const resetScroll = () => {
+      if (window.scrollY !== 0) {
+        window.scrollTo(0, 0)
+      }
+    }
+
+    vv.addEventListener('scroll', resetScroll)
+    vv.addEventListener('resize', resetScroll)
+
+    return () => {
+      vv.removeEventListener('scroll', resetScroll)
+      vv.removeEventListener('resize', resetScroll)
+    }
+  }, [])
 
   return (
     <div
