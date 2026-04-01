@@ -20,6 +20,12 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
   const [sending, setSending] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  // containerRef + containerHeight: drive the ChatRoom's height directly from
+  // window.visualViewport.height so it always fits the real visible area above
+  // the keyboard on iOS (where dvh / fixed-inset-0 CSS-only fixes are unreliable
+  // across iOS 13–15.3 because the layout viewport does not shrink with the keyboard).
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerHeight, setContainerHeight] = useState<number | null>(null)
   const channelRef = useRef<RealtimeChannel | null>(null)
   const channelReadyRef = useRef(false)
   // Synchronous in-flight guard — prevents double-send race where two rapid
@@ -44,6 +50,30 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
   useEffect(() => {
     scrollToBottom()
   }, [messages, scrollToBottom])
+
+  // ── Visual viewport: keep ChatRoom height = real visible area above keyboard ─
+  // On iOS, the layout viewport does NOT shrink when the keyboard opens.
+  // CSS units (dvh, vh) and position:fixed stay full-screen. iOS pans the
+  // visual viewport over the layout to show the focused input, scrolling the
+  // message list above the visible window. window.visualViewport.height is the
+  // only value that reflects the actual available height above the keyboard.
+  //
+  // We measure containerRef.top (= TopBar height) from the real DOM so we do
+  // not need to hard-code any pixel values, and apply an explicit height +
+  // flex:none to take the container out of the flex chain while keeping its
+  // internal flex-column layout intact.
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const update = () => {
+      if (!containerRef.current) return
+      const top = containerRef.current.getBoundingClientRect().top
+      setContainerHeight(Math.max(0, Math.round(vv.height - top)))
+    }
+    update()
+    vv.addEventListener('resize', update)
+    return () => vv.removeEventListener('resize', update)
+  }, [])
 
   // ── Real-time: Supabase Broadcast ─────────────────────────────────────────
   // When this client successfully saves a message it broadcasts the full
@@ -174,7 +204,11 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
 
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#0f1117]">
+    <div
+      ref={containerRef}
+      className="flex-1 flex flex-col min-h-0 bg-[#0f1117]"
+      style={containerHeight !== null ? { height: `${containerHeight}px`, flex: 'none' } : undefined}
+    >
       {/* Messages area — flex-1 min-h-0 so it can shrink when keyboard opens */}
       <div
         ref={scrollRef}
