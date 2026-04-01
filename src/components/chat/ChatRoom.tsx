@@ -20,12 +20,10 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
   const [sending, setSending] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  // containerRef + containerHeight: drive the ChatRoom's height directly from
-  // window.visualViewport.height so it always fits the real visible area above
-  // the keyboard on iOS (where dvh / fixed-inset-0 CSS-only fixes are unreliable
-  // across iOS 13–15.3 because the layout viewport does not shrink with the keyboard).
+  // containerRef: used by the visualViewport useEffect to directly set the
+  // ChatRoom's height via DOM style mutation (bypassing React state so there
+  // is no re-render cascade during the keyboard-open animation).
   const containerRef = useRef<HTMLDivElement>(null)
-  const [containerHeight, setContainerHeight] = useState<number | null>(null)
   const channelRef = useRef<RealtimeChannel | null>(null)
   const channelReadyRef = useRef(false)
   // Synchronous in-flight guard — prevents double-send race where two rapid
@@ -52,24 +50,47 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
   }, [messages, scrollToBottom])
 
   // ── Visual viewport: keep ChatRoom height = real visible area above keyboard ─
-  // On iOS, the layout viewport does NOT shrink when the keyboard opens.
-  // CSS units (dvh, vh) and position:fixed stay full-screen. iOS pans the
-  // visual viewport over the layout to show the focused input, scrolling the
-  // message list above the visible window. window.visualViewport.height is the
-  // only value that reflects the actual available height above the keyboard.
   //
-  // We measure containerRef.top (= TopBar height) from the real DOM so we do
-  // not need to hard-code any pixel values, and apply an explicit height +
-  // flex:none to take the container out of the flex chain while keeping its
-  // internal flex-column layout intact.
+  // Problem: On iOS < 15.4, position:fixed uses the layout viewport (full screen).
+  // When the keyboard opens the layout viewport does NOT shrink, so the ChatRoom
+  // remains full-screen tall and the composer sits behind the keyboard.
+  // On Android, the visual viewport shrinks correctly but we still need an
+  // explicit height so the composer stays pinned above the keyboard rather than
+  // relying on a flex chain that may not receive the updated height signal.
+  //
+  // Fix: read window.visualViewport.height (the only reliable cross-platform
+  // measurement of the visible area above the keyboard) and set the ChatRoom's
+  // height directly via DOM style mutation.
+  //
+  // Why DOM mutation (not React setState):
+  //   vv.resize fires on every animation frame during the keyboard slide
+  //   (~60 fps). React setState → re-render → reconcile → commit each frame
+  //   creates a cascade that causes jank and intermediate layout flashes.
+  //   Direct el.style mutation is synchronous and paint-safe.
+  //
+  // Why topOffset is snapshotted at mount (not re-read on each event):
+  //   topOffset = TopBar height — it never changes. Re-measuring during
+  //   animation risks a stale getBoundingClientRect mid-repaint where the
+  //   previously committed height is still in-progress, producing jitter.
+  //
+  // Android safety: on Android, vv.height already reflects available space.
+  //   height = vv.height - topOffset is identical to what a correct flex chain
+  //   would produce. No double-correction, no overcorrection.
   useEffect(() => {
     const vv = window.visualViewport
-    if (!vv) return
+    const el = containerRef.current
+    if (!vv || !el) return
+
+    // Snapshot TopBar height once at mount — stable, never changes.
+    const topOffset = el.getBoundingClientRect().top
+
     const update = () => {
       if (!containerRef.current) return
-      const top = containerRef.current.getBoundingClientRect().top
-      setContainerHeight(Math.max(0, Math.round(vv.height - top)))
+      const height = Math.max(0, Math.round(vv.height - topOffset))
+      containerRef.current.style.height = `${height}px`
+      containerRef.current.style.flex = 'none'
     }
+
     update()
     vv.addEventListener('resize', update)
     return () => vv.removeEventListener('resize', update)
@@ -207,7 +228,6 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
     <div
       ref={containerRef}
       className="flex-1 flex flex-col min-h-0 bg-[#0f1117]"
-      style={containerHeight !== null ? { height: `${containerHeight}px`, flex: 'none' } : undefined}
     >
       {/* Messages area — flex-1 min-h-0 so it can shrink when keyboard opens */}
       <div
