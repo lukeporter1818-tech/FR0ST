@@ -767,7 +767,7 @@ export function AIAssistant() {
       {/* Messages area */}
       <div
         ref={scrollRef}
-        className="relative flex-1 min-h-0 overflow-y-auto bg-[#0f1117] px-4 py-4 sm:px-6"
+        className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-[#0f1117] px-4 py-4 sm:px-6"
         onDragOver={(e) => { e.preventDefault(); if (!isDragOver) setIsDragOver(true) }}
         onDragLeave={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false)
@@ -802,7 +802,7 @@ export function AIAssistant() {
               <div
                 key={message.id}
                 className={cn(
-                  'flex flex-col gap-1',
+                  'flex flex-col gap-1 w-full min-w-0',
                   message.role === 'user' ? 'items-end' : 'items-start',
                 )}
               >
@@ -1056,7 +1056,7 @@ export function AIAssistant() {
         className="shrink-0 border-t border-white/10 bg-gray-950 px-4 pt-3 sm:px-6"
         style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
       >
-        <div className="flex items-end gap-2">
+        <div className="flex items-end gap-2 min-w-0">
           {/* Camera button — no file inputs anywhere in this subtree */}
           <div className="shrink-0">
             <button

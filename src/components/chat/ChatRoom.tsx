@@ -178,7 +178,7 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
       {/* Messages area — flex-1 min-h-0 so it can shrink when keyboard opens */}
       <div
         ref={scrollRef}
-        className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4 bg-[#0f1117]"
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-5 py-4 space-y-4 bg-[#0f1117]"
       >
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center">
@@ -194,7 +194,7 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
             return (
               <div
                 key={msg.id}
-                className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}
+                className={`flex flex-col w-full min-w-0 ${isOwn ? 'items-end' : 'items-start'}`}
               >
                 {!isOwn && (
                   <span className="text-xs text-gray-500 font-medium mb-1 px-1">
@@ -227,7 +227,7 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
         className="shrink-0 bg-gray-950 border-t border-white/10 px-4 pt-3"
         style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           <input
             ref={inputRef}
             type="text"
