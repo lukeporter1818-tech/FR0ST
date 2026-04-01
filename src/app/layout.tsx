@@ -18,20 +18,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "FR0ST",
   description: "Field Operations Platform",
-  // PWA / home-screen icon wiring.
-  // apple-touch-icon is the one iOS reads when the user taps "Add to Home Screen".
-  // manifest provides the icon set for Android / Chrome PWA installs.
-  // Next.js injects these as <link> tags in <head> automatically.
-  icons: {
-    icon: [
-      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
-      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
-    ],
-    apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-    ],
-  },
+  // Icon strategy — Next.js App Router file-based convention (most reliable):
+  //   src/app/apple-icon.png  →  <link rel="apple-touch-icon" href="/_next/static/media/apple-icon.HASH.png">
+  //   src/app/icon.png        →  <link rel="icon"             href="/_next/static/media/icon.HASH.png">
+  // The HASH changes whenever the file changes, so iOS cannot serve a stale cached icon.
+  // manifest covers Android PWA installs and Chrome's install prompt.
   manifest: '/manifest.json',
 };
 
