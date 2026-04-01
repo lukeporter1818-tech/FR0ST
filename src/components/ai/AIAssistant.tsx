@@ -742,7 +742,7 @@ export function AIAssistant() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex-1 flex flex-col min-h-0">
       {/*
         Hidden file input — lives at the component root, completely outside the
         camera button and its wrapper. accept/capture are set dynamically by
@@ -767,7 +767,7 @@ export function AIAssistant() {
       {/* Messages area */}
       <div
         ref={scrollRef}
-        className="relative flex-1 overflow-y-auto bg-[#0f1117] px-4 py-4 sm:px-6"
+        className="relative flex-1 min-h-0 overflow-y-auto bg-[#0f1117] px-4 py-4 sm:px-6"
         onDragOver={(e) => { e.preventDefault(); if (!isDragOver) setIsDragOver(true) }}
         onDragLeave={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false)

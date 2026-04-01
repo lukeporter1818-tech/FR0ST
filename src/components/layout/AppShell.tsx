@@ -64,7 +64,7 @@ export function AppShell({
       )}
 
       {/* Main content area */}
-      <div className="flex flex-1 flex-col overflow-hidden pl-0 lg:pl-60">
+      <div className="flex flex-1 flex-col overflow-hidden min-h-0 pl-0 lg:pl-60">
         <TopBar
           title={title}
           onToggleSidebar={toggleSidebar}
@@ -74,14 +74,17 @@ export function AppShell({
         />
 
         {/*
-          Full-height pages (/chat, /ai) manage their own scroll context:
-          they need overflow-hidden so their inner flex layout can pin the
-          input bar to the bottom and resize correctly when the iOS keyboard opens.
+          Full-height pages (/chat, /ai) must be a flex column so the
+          flex-1 chain is unbroken all the way to the input bar.
+          min-h-0 at every level lets each node shrink when dvh updates
+          (keyboard opens on iOS). Without min-h-0, min-height:auto stops
+          the shrink at the messages area and the input bar stays hidden
+          under the keyboard.
           All other pages get the standard scrollable padded container.
         */}
         <main className={
           pathname === '/chat' || pathname === '/ai'
-            ? 'flex-1 overflow-hidden'
+            ? 'flex-1 flex flex-col overflow-hidden min-h-0'
             : 'flex-1 overflow-y-auto p-6'
         }>
           {children}
