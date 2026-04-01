@@ -152,7 +152,32 @@ export function BoardClient({
   }, [date, initialRows])
 
   useEffect(() => {
-    if (editingId) assignmentRef.current?.focus()
+    if (!editingId) return
+    assignmentRef.current?.focus()
+    // After React renders the expanded edit row (inputs, select, buttons), scroll
+    // the *entire* editing row into the visible area of the overflow-y-auto container.
+    // focus() alone only ensures the focused <input> is on-screen; the status select
+    // and emergency toggle that trail it can still be clipped at the bottom edge.
+    const rafId = requestAnimationFrame(() => {
+      editingRowRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    })
+    return () => cancelAnimationFrame(rafId)
+  }, [editingId])
+
+  // Re-scroll the editing row into view whenever the iOS keyboard opens or resizes.
+  // When the keyboard animates open the visualViewport shrinks, which drives the
+  // AppShell height inline-style down.  The overflow-y-auto scroll container (main)
+  // shrinks with it.  Without this effect, the editing row can slip below the new
+  // visible boundary and the edit controls appear clipped at the bottom of the screen.
+  useEffect(() => {
+    if (!editingId) return
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null
+    if (!vv) return
+    function onVVResize() {
+      editingRowRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    }
+    vv.addEventListener('resize', onVVResize)
+    return () => vv.removeEventListener('resize', onVVResize)
   }, [editingId])
 
   const dirtyCount = rows.filter((r) => r.dirty).length
