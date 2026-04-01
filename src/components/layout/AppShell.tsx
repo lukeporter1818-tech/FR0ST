@@ -4,7 +4,6 @@ import { useCallback, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
-import { useVisualViewport } from "@/hooks/useVisualViewport";
 
 const pageTitles: Record<string, string> = {
   "/ai": "Frost",
@@ -46,11 +45,6 @@ export function AppShell({
 }: AppShellProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  // Real visible-area height from the Visual Viewport API.
-  // On iOS Safari this shrinks immediately when the keyboard opens,
-  // before dvh/100vh are updated. Driving the outer shell height from
-  // this value keeps the input bar above the keyboard on all iOS versions.
-  const vpHeight = useVisualViewport();
 
   const toggleSidebar = useCallback(() => setSidebarOpen((prev) => !prev), []);
 
@@ -59,7 +53,6 @@ export function AppShell({
   return (
     <div
       className="flex h-[100dvh] overflow-hidden bg-[#0f1117]"
-      style={vpHeight !== null ? { height: `${vpHeight}px` } : undefined}
     >
       <Sidebar userRole={userRole} userName={userName} userInitials={userInitials} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 

@@ -66,7 +66,7 @@ export function ManagementLayout({
         </div>
 
         {/* Tasks — always mounted so local state is preserved */}
-        <div className={cn('h-full overflow-y-auto overflow-x-hidden px-6 py-5', tab !== 'tasks' && 'hidden')}>
+        <div className={cn('h-full overflow-y-auto px-6 py-5', tab !== 'tasks' && 'hidden')}>
           <div className="max-w-2xl mx-auto">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-semibold text-gray-100">Management Tasks</h2>

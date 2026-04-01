@@ -151,52 +151,9 @@ export function BoardClient({
     setLastSavedAt(null)
   }, [date, initialRows])
 
-  // Scroll the editing row into the visible area of the <main> scroll container by
-  // manipulating scrollTop directly. We do NOT use scrollIntoView() because iOS
-  // Safari does not reliably invoke it on overflow-y:auto elements when overflow:hidden
-  // ancestors exist above them in the flex chain (AppShell outer + inner column).
-  // Direct scrollTop manipulation bypasses that ancestor-walk entirely.
-  function scrollEditRowIntoView() {
-    const row = editingRowRef.current
-    if (!row) return
-    const container = row.closest('main') as HTMLElement | null
-    if (!container) return
-    const rowRect = row.getBoundingClientRect()
-    const cRect   = container.getBoundingClientRect()
-    if (rowRect.bottom > cRect.bottom - 8) {
-      container.scrollTop += (rowRect.bottom - cRect.bottom) + 16
-    } else if (rowRect.top < cRect.top + 8) {
-      container.scrollTop -= (cRect.top - rowRect.top) + 16
-    }
-  }
-
   useEffect(() => {
-    if (!editingId) return
-    assignmentRef.current?.focus()
-    // Scroll after render so the expanded edit row (inputs, select, toggle) is
-    // fully laid out before we measure its bounding rect.
-    const id = requestAnimationFrame(scrollEditRowIntoView)
-    return () => cancelAnimationFrame(id)
-  }, [editingId]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // When the <main> scroll container shrinks (iOS keyboard opening causes AppShell
-  // to shrink via useVisualViewport → re-render → flex chain shortens <main>), the
-  // editing row may slip below the new visible bottom.
-  //
-  // ResizeObserver on <main> fires AFTER the browser has finished the layout pass
-  // that reflects React's DOM update — unlike vv.resize which fires before React's
-  // setState has re-rendered the container to its new height. By the time our callback
-  // runs, container.getBoundingClientRect() returns the correct shrunken rect.
-  useEffect(() => {
-    if (!editingId) return
-    const row = editingRowRef.current
-    if (!row) return
-    const container = row.closest('main') as HTMLElement | null
-    if (!container) return
-    const ro = new ResizeObserver(() => requestAnimationFrame(scrollEditRowIntoView))
-    ro.observe(container)
-    return () => ro.disconnect()
-  }, [editingId]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (editingId) assignmentRef.current?.focus()
+  }, [editingId])
 
   const dirtyCount = rows.filter((r) => r.dirty).length
 
@@ -423,12 +380,7 @@ export function BoardClient({
   }
 
   return (
-    // paddingBottom: env(safe-area-inset-bottom) ensures the last row sits above
-    // the iPhone home indicator. With viewport-fit:cover the page extends under
-    // the home indicator; this compensates when the keyboard is closed (~34px).
-    // When the keyboard is open iOS zeroes the safe-area-inset-bottom so the
-    // keyboard itself provides the boundary — no double-padding occurs.
-    <div className="overflow-x-hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <div className="overflow-x-hidden">
       {/* Top bar */}
       <div className="flex items-center justify-between gap-2 mb-6">
         <div className="min-w-0 flex-1">
@@ -569,7 +521,6 @@ export function BoardClient({
           </div>
         </>
       )}
-
 
       {/* Board */}
       <div
