@@ -248,6 +248,11 @@ export function AIAssistant() {
   // Single file input — accept/capture are set dynamically before .click()
   // so there is never a `capture` input sitting in the DOM near the camera button
   const fileInputRef = useRef<HTMLInputElement>(null)
+  // containerRef: same visualViewport height pattern as ChatRoom.
+  // AIAssistant is a full-height flex column (same as ChatRoom) but had no
+  // vv.resize handler — the outer div stayed at layout viewport height on
+  // iOS < 15.4, leaving the composer behind the keyboard.
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // Scroll to bottom when messages update
   const scrollToBottom = useCallback(() => {
@@ -255,6 +260,33 @@ export function AIAssistant() {
   }, [])
 
   useEffect(() => { scrollToBottom() }, [messages, loading, scrollToBottom])
+
+  // ── Visual viewport: keep AIAssistant height = real visible area above keyboard ─
+  // Identical pattern to ChatRoom. On iOS < 15.4, layout viewport does not
+  // shrink when keyboard opens. Without this fix the AIAssistant container
+  // stays full-screen and the composer sits behind the keyboard.
+  // Direct DOM mutation (not setState) avoids re-render cascade on every
+  // animation frame. topOffset is snapshotted once at mount (= TopBar height,
+  // stable). Works on Android too: vv.height already reflects available space,
+  // so height = vv.height - topOffset matches what flex-1 would give naturally.
+  useEffect(() => {
+    const vv = window.visualViewport
+    const el = containerRef.current
+    if (!vv || !el) return
+
+    const topOffset = el.getBoundingClientRect().top
+
+    const update = () => {
+      if (!containerRef.current) return
+      const height = Math.max(0, Math.round(vv.height - topOffset))
+      containerRef.current.style.height = `${height}px`
+      containerRef.current.style.flex = 'none'
+    }
+
+    update()
+    vv.addEventListener('resize', update)
+    return () => vv.removeEventListener('resize', update)
+  }, [])
 
   // Load technician list once on mount for name-matching
   useEffect(() => {
@@ -742,7 +774,7 @@ export function AIAssistant() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex-1 flex flex-col min-h-0">
+    <div ref={containerRef} className="flex-1 flex flex-col min-h-0">
       {/*
         Hidden file input — lives at the component root, completely outside the
         camera button and its wrapper. accept/capture are set dynamically by
