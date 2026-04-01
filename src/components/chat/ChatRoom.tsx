@@ -291,7 +291,7 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             disabled={sending}
-            className="flex-1 border border-white/15 bg-white/5 rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 border border-white/15 bg-white/5 rounded-lg px-3 py-2.5 text-base md:text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <button
             onClick={handleSend}

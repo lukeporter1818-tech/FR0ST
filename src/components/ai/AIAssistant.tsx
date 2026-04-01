@@ -892,19 +892,19 @@ export function AIAssistant() {
                           placeholder="Issue summary (optional)"
                           value={fixForm.issueSummary}
                           onChange={(e) => setFixForm((f) => ({ ...f, issueSummary: e.target.value }))}
-                          className="w-full text-xs border border-white/15 bg-white/5 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500/50 text-gray-100 placeholder:text-gray-600"
+                          className="w-full text-base md:text-xs border border-white/15 bg-white/5 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500/50 text-gray-100 placeholder:text-gray-600"
                         />
                         <textarea
                           placeholder="What fixed it *"
                           value={fixForm.actualFix}
                           onChange={(e) => setFixForm((f) => ({ ...f, actualFix: e.target.value }))}
                           rows={2}
-                          className="w-full text-xs border border-white/15 bg-white/5 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500/50 text-gray-100 placeholder:text-gray-600 resize-none"
+                          className="w-full text-base md:text-xs border border-white/15 bg-white/5 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500/50 text-gray-100 placeholder:text-gray-600 resize-none"
                         />
                         <select
                           value={fixForm.systemType}
                           onChange={(e) => setFixForm((f) => ({ ...f, systemType: e.target.value }))}
-                          className="w-full text-xs border border-white/15 bg-gray-800 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500/50 text-gray-300"
+                          className="w-full text-base md:text-xs border border-white/15 bg-gray-800 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500/50 text-gray-300"
                         >
                           <option value="">System type (optional)</option>
                           <option value="Rack">Rack</option>
@@ -1144,7 +1144,7 @@ export function AIAssistant() {
             rows={1}
             disabled={loading || intakeStep === 'confirming'}
             className={cn(
-              'flex-1 resize-none rounded-xl bg-white/5 px-4 py-3 text-sm text-gray-100',
+              'flex-1 resize-none rounded-xl bg-white/5 px-4 py-3 text-base md:text-sm text-gray-100',
               'placeholder:text-gray-600 outline-none',
               'focus:bg-white/8 focus:ring-2 focus:ring-amber-500/50',
               'transition-colors max-h-32 leading-relaxed',
