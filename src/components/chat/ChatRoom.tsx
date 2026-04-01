@@ -178,7 +178,8 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
       {/* Messages area — flex-1 min-h-0 so it can shrink when keyboard opens */}
       <div
         ref={scrollRef}
-        className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4 bg-[#0f1117]"
+        className="min-h-0 overflow-y-auto px-5 py-4 space-y-4 bg-[#0f1117]"
+        style={{ flex: '1 1 0' }}
       >
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center">
