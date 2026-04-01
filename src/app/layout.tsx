@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
@@ -18,6 +18,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "FR0ST",
   description: "Field Operations Platform",
+};
+
+// viewport-fit=cover enables env(safe-area-inset-*) on iPhone notch/home-bar devices.
+// Without it, safe-area values are always 0 and the input bar overlaps the home indicator.
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 };
 
 function getInitials(name: string): string {

@@ -73,7 +73,17 @@ export function AppShell({
           userInitials={userInitials}
         />
 
-        <main className="flex-1 overflow-y-auto p-6">
+        {/*
+          Full-height pages (/chat, /ai) manage their own scroll context:
+          they need overflow-hidden so their inner flex layout can pin the
+          input bar to the bottom and resize correctly when the iOS keyboard opens.
+          All other pages get the standard scrollable padded container.
+        */}
+        <main className={
+          pathname === '/chat' || pathname === '/ai'
+            ? 'flex-1 overflow-hidden'
+            : 'flex-1 overflow-y-auto p-6'
+        }>
           {children}
         </main>
       </div>

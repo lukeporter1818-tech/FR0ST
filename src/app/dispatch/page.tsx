@@ -93,7 +93,7 @@ export default async function DispatchPage({
   })
 
   return (
-    <div className="h-[calc(100vh-3.5rem)]">
+    <div className="h-[calc(100dvh-3.5rem)]">
       <DispatchBoard
         date={dateParam}
         technicians={techData}

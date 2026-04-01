@@ -27,12 +27,10 @@ export default async function TeamChatPage() {
   }))
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-4rem)] -m-6">
-      <ChatRoom
-        initialMessages={messages}
-        userId={session?.user?.id ?? ''}
-        userName={session?.user?.name ?? 'Unknown'}
-      />
-    </div>
+    <ChatRoom
+      initialMessages={messages}
+      userId={session?.user?.id ?? ''}
+      userName={session?.user?.name ?? 'Unknown'}
+    />
   )
 }

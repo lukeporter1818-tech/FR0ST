@@ -742,7 +742,7 @@ export function AIAssistant() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-4rem)] -m-6">
+    <div className="flex flex-col h-full">
       {/*
         Hidden file input — lives at the component root, completely outside the
         camera button and its wrapper. accept/capture are set dynamically by
