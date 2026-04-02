@@ -51,15 +51,10 @@ interface BoardClientProps {
 }
 
 const STATUS_OPTIONS = [
-  { value: '', label: '—' },
-  { value: 'ASSIGNED', label: 'WO' },
-  { value: 'EN_ROUTE', label: 'En Route' },
-  { value: 'ON_SITE', label: 'On Site' },
-  { value: 'WAITING', label: 'Waiting' },
-  { value: 'PARTS', label: 'Parts' },
-  { value: 'PM', label: 'PM' },
-  { value: 'DONE', label: 'Done' },
-  { value: 'OUT', label: 'Out' },
+  { value: '',         label: '—'   },
+  { value: 'ASSIGNED', label: 'WO'  },
+  { value: 'PM',       label: 'PM'  },
+  { value: 'OUT',      label: 'Out' },
 ]
 
 // ─── Status badge pills ────────────────────────────────────────────────────────
