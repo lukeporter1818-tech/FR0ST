@@ -41,7 +41,7 @@ export const technicianCreateSchema = z.object({
 
 // ─── Board ───────────────────────────────────────────────────────────────────
 
-const boardStatusEnum = z.enum(['ASSIGNED', 'EN_ROUTE', 'ON_SITE', 'WAITING', 'PARTS', 'DONE', 'OUT'])
+const boardStatusEnum = z.enum(['ASSIGNED', 'EN_ROUTE', 'ON_SITE', 'WAITING', 'PARTS', 'PM', 'DONE', 'OUT'])
 
 export const boardRowSchema = z.object({
   technicianId: z.string().min(1).max(100),

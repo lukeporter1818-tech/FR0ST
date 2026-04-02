@@ -57,19 +57,21 @@ const STATUS_OPTIONS = [
   { value: 'ON_SITE', label: 'On Site' },
   { value: 'WAITING', label: 'Waiting' },
   { value: 'PARTS', label: 'Parts' },
+  { value: 'PM', label: 'PM' },
   { value: 'DONE', label: 'Done' },
   { value: 'OUT', label: 'Out' },
 ]
 
 // ─── Status badge pills ────────────────────────────────────────────────────────
 const STATUS_BADGE: Record<string, string> = {
-  ASSIGNED:  'bg-blue-500/15  text-blue-300  ring-blue-500/30',
-  EN_ROUTE:  'bg-amber-500/15 text-amber-300 ring-amber-500/30',
-  ON_SITE:   'bg-green-500/15 text-green-300 ring-green-500/30',
+  ASSIGNED:  'bg-blue-500/15   text-blue-300   ring-blue-500/30',
+  EN_ROUTE:  'bg-amber-500/15  text-amber-300  ring-amber-500/30',
+  ON_SITE:   'bg-green-500/15  text-green-300  ring-green-500/30',
   WAITING:   'bg-yellow-500/15 text-yellow-300 ring-yellow-500/30',
   PARTS:     'bg-orange-500/15 text-orange-300 ring-orange-500/30',
-  DONE:      'bg-gray-500/10  text-gray-500  ring-gray-500/20',
-  OUT:       'bg-red-500/15   text-red-300   ring-red-500/30',
+  PM:        'bg-purple-500/15 text-purple-300 ring-purple-500/30',
+  DONE:      'bg-gray-500/10   text-gray-500   ring-gray-500/20',
+  OUT:       'bg-red-500/15    text-red-300    ring-red-500/30',
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -78,6 +80,7 @@ const STATUS_LABELS: Record<string, string> = {
   ON_SITE:  'On Site',
   WAITING:  'Waiting',
   PARTS:    'Parts',
+  PM:       'PM',
   DONE:     'Done',
   OUT:      'Out',
 }

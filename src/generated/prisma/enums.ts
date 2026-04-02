@@ -100,6 +100,7 @@ export const BoardStatus = {
   ON_SITE: 'ON_SITE',
   WAITING: 'WAITING',
   PARTS: 'PARTS',
+  PM: 'PM',
   DONE: 'DONE',
   OUT: 'OUT'
 } as const

@@ -226,6 +226,7 @@ enum BoardStatus {
   ON_SITE
   WAITING
   PARTS
+  PM
   DONE
   OUT
 }
