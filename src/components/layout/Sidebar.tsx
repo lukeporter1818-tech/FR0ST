@@ -10,7 +10,6 @@ import {
   Users,
   Settings,
   Shield,
-  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +18,6 @@ const primaryNavItems = [
   { label: "Team Chat",  href: "/chat",        icon: MessageSquare, roles: null },
   { label: "Management", href: "/management",  icon: Shield,        roles: ["DISPATCHER", "ADMIN"] as string[] },
   { label: "FR0ST",      href: "/ai",          icon: Bot,           roles: null },
-  { label: "Overview",   href: "/overview",    icon: Activity,      roles: ["DISPATCHER", "ADMIN"] as string[] },
 ];
 
 const secondaryNavItems = [
