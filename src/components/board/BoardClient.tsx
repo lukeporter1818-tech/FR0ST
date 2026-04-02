@@ -152,7 +152,43 @@ export function BoardClient({
   }, [date, initialRows])
 
   useEffect(() => {
-    if (editingId) assignmentRef.current?.focus()
+    if (!editingId) return
+
+    assignmentRef.current?.focus()
+
+    // ── Mobile: scroll editing row into visible area above keyboard ───────────
+    // When a row is tapped, focus opens the keyboard, which shrinks vv.height.
+    // The Schedule's scroll owner is <main overflow-y-auto> (not window) so the
+    // AppShell window.scrollY reset doesn't help here. The active row can now be
+    // below the top of the keyboard with no automatic repositioning.
+    //
+    // Fix: on visualViewport.resize (keyboard open/close), walk up the DOM to
+    // <main>, then scroll it so the editing row lands at ~25% from the top of
+    // the visual viewport — safely above the keyboard on all screen sizes.
+    //
+    // We also call once immediately so switching between rows while the keyboard
+    // is already open also repositions correctly (no resize event in that case).
+    const vv = window.visualViewport
+    if (!vv) return
+
+    const scrollToEditingRow = () => {
+      const row = editingRowRef.current
+      if (!row) return
+      // Walk up to <main> — the overflow-y-auto scroll container for Schedule
+      let el: HTMLElement | null = row.parentElement
+      while (el && el.tagName !== 'MAIN') el = el.parentElement
+      if (!el) return
+      // Row's top edge in the visual viewport
+      const rowTop = row.getBoundingClientRect().top
+      // Target: upper quarter of the visible area (above keyboard on all devices)
+      const targetTop = vv.height * 0.25
+      el.scrollTop += rowTop - targetTop
+    }
+
+    // Immediate call: handles already-open keyboard (row switch)
+    scrollToEditingRow()
+    vv.addEventListener('resize', scrollToEditingRow)
+    return () => vv.removeEventListener('resize', scrollToEditingRow)
   }, [editingId])
 
   const dirtyCount = rows.filter((r) => r.dirty).length
@@ -603,13 +639,13 @@ export function BoardClient({
                     value={editDraft.note}
                     onChange={(e) => setEditDraft((d) => ({ ...d, note: e.target.value }))}
                     placeholder="Note"
-                    className="flex-1 min-w-0 text-sm text-gray-400 bg-transparent border-b border-white/15 outline-none placeholder:text-gray-600"
+                    className="flex-1 min-w-0 text-base md:text-sm text-gray-400 bg-transparent border-b border-white/15 outline-none placeholder:text-gray-600"
                     onClick={(e) => e.stopPropagation()}
                   />
                   <select
                     value={editDraft.status ?? ''}
                     onChange={(e) => setEditDraft((d) => ({ ...d, status: e.target.value || null }))}
-                    className="text-xs text-gray-400 bg-transparent outline-none border-b border-white/15 cursor-pointer"
+                    className="text-base md:text-xs text-gray-400 bg-transparent outline-none border-b border-white/15 cursor-pointer"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {STATUS_OPTIONS.map((o) => (
