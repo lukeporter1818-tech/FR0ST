@@ -15,6 +15,10 @@ export async function PATCH(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  // Auth first — require at minimum an authenticated session before parsing input
+  const session = await requireApiSession()
+  if (!session) return unauthorized()
+
   const { id } = await context.params
 
   let raw: unknown
@@ -31,7 +35,7 @@ export async function PATCH(
 
   const { feedback, actualFix, issueSummary, systemType, approved } = result.data
 
-  // Approval requires ADMIN
+  // Approval requires ADMIN — re-check for elevated role
   if (approved !== undefined) {
     const adminSession = await requireApiRole('ADMIN')
     if (!adminSession) return forbidden()
@@ -43,9 +47,7 @@ export async function PATCH(
     return Response.json({ ok: true })
   }
 
-  // Feedback/fix requires any authenticated session + ownership
-  const session = await requireApiSession()
-  if (!session) return unauthorized()
+  // Feedback/fix: session already verified above — just enforce ownership
 
   const interaction = await prisma.aIInteraction.findUnique({
     where: { id },

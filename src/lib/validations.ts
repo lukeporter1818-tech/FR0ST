@@ -120,7 +120,6 @@ export const aiAssistantSchema = z.object({
     .min(1)
     .max(20), // client sends at most 10 (slice(-9) + 1 new); 20 gives headroom without accepting huge payloads
   imageBase64: z.string().max(7_000_000).optional(), // ~5MB base64
-  emergency: z.boolean().optional(),
 })
 
 export const extractWorkOrderSchema = z.object({

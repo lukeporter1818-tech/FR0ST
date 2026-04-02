@@ -1,6 +1,8 @@
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, Inbox } from 'lucide-react'
 import { prisma } from '@/lib/db'
+import { auth } from '@/lib/auth'
 import type { Prisma } from '@/generated/prisma'
 import { JobStatus, Priority, Trade } from '@/generated/prisma'
 import { StatusBadge } from '@/components/jobs/StatusBadge'
@@ -13,7 +15,9 @@ export default async function JobsPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const params = await searchParams
+  const [params, session] = await Promise.all([searchParams, auth()])
+  if (!session?.user?.id) redirect('/login')
+
   const statusFilter = typeof params.status === 'string' ? params.status : undefined
   const priorityFilter = typeof params.priority === 'string' ? params.priority : undefined
   const tradeFilter = typeof params.trade === 'string' ? params.trade : undefined

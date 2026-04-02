@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { auth } from '@/lib/auth'
 import { ChatRoom } from '@/components/chat/ChatRoom'
@@ -17,6 +18,8 @@ export default async function TeamChatPage() {
     }),
     auth(),
   ])
+
+  if (!session?.user?.id) redirect('/login')
 
   const messages: ChatMessageData[] = rawMessages.map((m) => ({
     id: m.id,

@@ -1,6 +1,8 @@
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, Users } from 'lucide-react'
 import { prisma } from '@/lib/db'
+import { auth } from '@/lib/auth'
 import { TechCard } from '@/components/technicians/TechCard'
 import { TechListFilter } from '@/components/technicians/TechListFilter'
 
@@ -9,7 +11,8 @@ export default async function TechniciansPage({
 }: {
   searchParams: Promise<{ filter?: string }>
 }) {
-  const { filter } = await searchParams
+  const [{ filter }, session] = await Promise.all([searchParams, auth()])
+  if (!session?.user?.id) redirect('/login')
 
   const technicians = await prisma.technician.findMany({
     where: filter === 'inactive' ? { active: false } : { active: true },

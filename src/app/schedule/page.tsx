@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { auth } from '@/lib/auth'
 import { BoardClient } from '@/components/board/BoardClient'
@@ -19,6 +20,8 @@ export default async function SchedulePage({
     searchParams,
     auth(),
   ])
+
+  if (!session?.user?.id) redirect('/login')
 
   const date =
     typeof params.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(params.date)
