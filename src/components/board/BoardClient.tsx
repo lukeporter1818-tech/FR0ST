@@ -52,7 +52,7 @@ interface BoardClientProps {
 
 const STATUS_OPTIONS = [
   { value: '', label: '—' },
-  { value: 'ASSIGNED', label: 'Assigned' },
+  { value: 'ASSIGNED', label: 'WO' },
   { value: 'EN_ROUTE', label: 'En Route' },
   { value: 'ON_SITE', label: 'On Site' },
   { value: 'WAITING', label: 'Waiting' },
@@ -75,7 +75,7 @@ const STATUS_BADGE: Record<string, string> = {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  ASSIGNED: 'Assigned',
+  ASSIGNED: 'WO',
   EN_ROUTE: 'En Route',
   ON_SITE:  'On Site',
   WAITING:  'Waiting',
