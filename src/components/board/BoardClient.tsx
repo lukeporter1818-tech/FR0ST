@@ -125,10 +125,26 @@ export function BoardClient({
   const assignmentRef = useRef<HTMLInputElement>(null)
   // Ref to the currently-editing row DOM element — used by the outside-tap dismissal effect
   const editingRowRef = useRef<HTMLDivElement | null>(null)
+  // Ref to the mobile edit panel — excluded from the outside-tap dismiss so
+  // tapping panel controls doesn't immediately dismiss the panel.
+  const panelRef = useRef<HTMLDivElement | null>(null)
   // Ref mirror of editDraft so commitEdit can be stable (empty deps) and the
   // outside-tap listener doesn't need to be re-registered on every keystroke
   const editDraftRef = useRef(editDraft)
   useEffect(() => { editDraftRef.current = editDraft }, [editDraft])
+
+  // ── Mobile viewport detection ─────────────────────────────────────────────
+  // Determines whether to use the mobile bottom panel (< md, 768px) or the
+  // existing desktop inline editing. Initialises false (SSR-safe); the
+  // matchMedia runs after hydration, before any user interaction.
+  const [isMobileView, setIsMobileView] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    setIsMobileView(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setIsMobileView(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   // ── Roster management state ────────────────────────────────────────────────
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)  // uses row.id
@@ -151,45 +167,50 @@ export function BoardClient({
     setLastSavedAt(null)
   }, [date, initialRows])
 
+  // ── Focus: desktop only ───────────────────────────────────────────────────
+  // On desktop, focus the assignment field when a row opens for editing.
+  // On mobile, the panel renders and the user taps the field they want — no
+  // programmatic focus to avoid opening the keyboard before the panel settles.
   useEffect(() => {
-    if (!editingId) return
+    if (editingId && !isMobileView) {
+      assignmentRef.current?.focus()
+    }
+  }, [editingId, isMobileView])
 
-    assignmentRef.current?.focus()
-
-    // ── Mobile: scroll editing row into visible area above keyboard ───────────
-    // When a row is tapped, focus opens the keyboard, which shrinks vv.height.
-    // The Schedule's scroll owner is <main overflow-y-auto> (not window) so the
-    // AppShell window.scrollY reset doesn't help here. The active row can now be
-    // below the top of the keyboard with no automatic repositioning.
-    //
-    // Fix: on visualViewport.resize (keyboard open/close), walk up the DOM to
-    // <main>, then scroll it so the editing row lands at ~25% from the top of
-    // the visual viewport — safely above the keyboard on all screen sizes.
-    //
-    // We also call once immediately so switching between rows while the keyboard
-    // is already open also repositions correctly (no resize event in that case).
+  // ── Mobile panel: float above keyboard via visualViewport ─────────────────
+  // The panel is position:fixed; bottom:0 by default. When the keyboard opens,
+  // iOS does not shrink fixed elements — they stay at layout-viewport bottom,
+  // behind the keyboard. We read the keyboard height from visualViewport and
+  // apply it as the panel's `bottom` offset so the panel floats above it.
+  //
+  // Formula: keyboardHeight = window.innerHeight - (vv.offsetTop + vv.height)
+  //   On iOS:    vv.offsetTop = 0 (AppShell resets window.scrollY), vv.height
+  //              shrinks by keyboard amount → keyboardHeight = correct value.
+  //   On Android: vv.height already excludes keyboard; offsetTop ≈ 0 → same.
+  //   Desktop:   no keyboard → keyboardHeight ≈ 0 → bottom stays 0.
+  //
+  // Why this works for any row position: the panel is fixed to the viewport,
+  // not to the row. It doesn't matter where the row is in the list — the panel
+  // always sits directly above the keyboard.
+  useEffect(() => {
+    if (!editingId || !isMobileView) return
     const vv = window.visualViewport
-    if (!vv) return
+    const panel = panelRef.current
+    if (!vv || !panel) return
 
-    const scrollToEditingRow = () => {
-      const row = editingRowRef.current
-      if (!row) return
-      // Walk up to <main> — the overflow-y-auto scroll container for Schedule
-      let el: HTMLElement | null = row.parentElement
-      while (el && el.tagName !== 'MAIN') el = el.parentElement
-      if (!el) return
-      // Row's top edge in the visual viewport
-      const rowTop = row.getBoundingClientRect().top
-      // Target: upper quarter of the visible area (above keyboard on all devices)
-      const targetTop = vv.height * 0.25
-      el.scrollTop += rowTop - targetTop
+    const update = () => {
+      const keyboardHeight = Math.max(0, window.innerHeight - (vv.offsetTop + vv.height))
+      panel.style.bottom = `${keyboardHeight}px`
     }
 
-    // Immediate call: handles already-open keyboard (row switch)
-    scrollToEditingRow()
-    vv.addEventListener('resize', scrollToEditingRow)
-    return () => vv.removeEventListener('resize', scrollToEditingRow)
-  }, [editingId])
+    update()
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+    }
+  }, [editingId, isMobileView])
 
   const dirtyCount = rows.filter((r) => r.dirty).length
 
@@ -305,7 +326,8 @@ export function BoardClient({
     }
   }, [dropState, date])
 
-  // Dismiss edit mode when the user taps/clicks outside the active editing row.
+  // Dismiss edit mode when the user taps/clicks outside the active editing row
+  // or outside the mobile edit panel.
   //
   // Why two listeners:
   //   pointerdown { capture: true } — fires in the capture phase, before the
@@ -323,7 +345,10 @@ export function BoardClient({
     let handled = false
     function dismiss(target: EventTarget | null) {
       if (handled) return
+      // Desktop: tapping within the editing row keeps it open
       if (editingRowRef.current?.contains(target as Node)) return
+      // Mobile: tapping within the floating edit panel keeps it open
+      if (panelRef.current?.contains(target as Node)) return
       handled = true
       commitEdit(editingId!)
     }
@@ -414,6 +439,9 @@ export function BoardClient({
       setSaving(false)
     }
   }
+
+  // The row currently open in the mobile panel
+  const editingRow = editingId ? rows.find((r) => r.id === editingId) ?? null : null
 
   return (
     <div className="overflow-x-hidden">
@@ -596,7 +624,7 @@ export function BoardClient({
               key={row.id}
               ref={isEditing ? editingRowRef : null}
               onClick={() => { if (!isEditing) startEdit(row) }}
-              onKeyDown={(e) => isEditing && handleRowKeyDown(e, row.id)}
+              onKeyDown={(e) => isEditing && !isMobileView && handleRowKeyDown(e, row.id)}
               onDragOver={canDropWO ? (e) => { e.preventDefault(); if (dragOverTechId !== row.id) setDragOverTechId(row.id) } : undefined}
               onDragLeave={canDropWO ? (e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverTechId(null) } : undefined}
               onDrop={canDropWO ? (e) => handleDrop(e, { id: row.id, technicianId: row.technicianId!, name: row.name }) : undefined}
@@ -605,6 +633,8 @@ export function BoardClient({
                 clickable
                   ? 'cursor-pointer hover:bg-white/[0.07] active:bg-white/[0.12]'
                   : 'cursor-default opacity-40',
+                // Highlight selected row on mobile so user knows which row is open
+                isEditing && isMobileView && 'bg-white/[0.07]',
                 row.isEmergency && 'border-l-2 border-red-500 pl-2 bg-red-500/5',
                 !row.isEmergency && isOwnRow && 'border-l-2 border-amber-400 pl-2',
                 isDropZone && 'bg-amber-500/5 outline outline-1 outline-amber-500/25 outline-offset-[-1px]',
@@ -619,7 +649,8 @@ export function BoardClient({
                 {row.name.split(' ')[0]}
               </span>
 
-              {isEditing ? (
+              {/* Desktop inline editing — hidden on mobile (panel used instead) */}
+              {isEditing && !isMobileView ? (
                 <>
                   {/* Technicians editing their own row: no assignment field */}
                   {!isTechnician && (
@@ -639,13 +670,13 @@ export function BoardClient({
                     value={editDraft.note}
                     onChange={(e) => setEditDraft((d) => ({ ...d, note: e.target.value }))}
                     placeholder="Note"
-                    className="flex-1 min-w-0 text-base md:text-sm text-gray-400 bg-transparent border-b border-white/15 outline-none placeholder:text-gray-600"
+                    className="flex-1 min-w-0 text-sm text-gray-400 bg-transparent border-b border-white/15 outline-none placeholder:text-gray-600"
                     onClick={(e) => e.stopPropagation()}
                   />
                   <select
                     value={editDraft.status ?? ''}
                     onChange={(e) => setEditDraft((d) => ({ ...d, status: e.target.value || null }))}
-                    className="text-base md:text-xs text-gray-400 bg-transparent outline-none border-b border-white/15 cursor-pointer"
+                    className="text-xs text-gray-400 bg-transparent outline-none border-b border-white/15 cursor-pointer"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {STATUS_OPTIONS.map((o) => (
@@ -668,6 +699,7 @@ export function BoardClient({
                   )}
                 </>
               ) : (
+                // Read-only display — shown always on mobile, on desktop when not editing
                 <>
                   {row.isEmergency && (
                     <span className="shrink-0 self-center text-[10px] font-bold uppercase tracking-wide text-red-400 bg-red-500/15 border border-red-500/30 rounded px-1.5 leading-5">
@@ -736,6 +768,120 @@ export function BoardClient({
           )
         })}
       </div>
+
+      {/* ── Mobile edit panel ────────────────────────────────────────────────────
+          Rendered only on mobile (isMobileView) when a row is being edited.
+          Uses position:fixed anchored to the bottom of the layout viewport.
+          The visualViewport useEffect shifts `bottom` to float above the keyboard
+          regardless of which row was tapped or where it sits in the list.
+          All inputs use text-base (16px) to prevent Safari auto-zoom.
+      */}
+      {editingId && isMobileView && editingRow && (
+        <>
+          {/* Backdrop — commits draft when tapped (same as desktop outside-tap) */}
+          <div
+            className="fixed inset-0 z-40 bg-black/50"
+            onPointerDown={() => commitEdit(editingId)}
+          />
+
+          {/* Panel */}
+          <div
+            ref={panelRef}
+            className="fixed inset-x-0 bottom-0 z-50 bg-gray-900 border-t border-white/10 rounded-t-2xl shadow-2xl"
+            style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+          >
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-white/20" />
+            </div>
+
+            {/* Header: tech name + Cancel */}
+            <div className="flex items-center justify-between px-4 py-3">
+              <p className="text-base font-semibold text-white">{editingRow.name}</p>
+              <button
+                type="button"
+                onClick={() => setEditingId(null)}
+                className="text-sm text-gray-400 hover:text-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+
+            {/* Fields */}
+            <div className="px-4 space-y-3">
+              {/* Assignment — dispatchers/admins only */}
+              {!isTechnician && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Assignment</label>
+                  <input
+                    ref={assignmentRef}
+                    type="text"
+                    value={editDraft.assignment}
+                    onChange={(e) => setEditDraft((d) => ({ ...d, assignment: e.target.value }))}
+                    placeholder="Assignment"
+                    className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-base font-semibold text-gray-100 placeholder:text-gray-600 placeholder:font-normal outline-none focus:ring-2 focus:ring-amber-500/40"
+                  />
+                </div>
+              )}
+
+              {/* Note */}
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Note</label>
+                <input
+                  ref={(isTechnician && !editingRow.manualName) ? assignmentRef : undefined}
+                  type="text"
+                  value={editDraft.note}
+                  onChange={(e) => setEditDraft((d) => ({ ...d, note: e.target.value }))}
+                  placeholder="Note"
+                  className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-base text-gray-100 placeholder:text-gray-600 outline-none focus:ring-2 focus:ring-amber-500/40"
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
+                <select
+                  value={editDraft.status ?? ''}
+                  onChange={(e) => setEditDraft((d) => ({ ...d, status: e.target.value || null }))}
+                  className="w-full bg-gray-800 border border-white/15 rounded-lg px-3 py-2.5 text-base text-gray-100 outline-none focus:ring-2 focus:ring-amber-500/40"
+                >
+                  {STATUS_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Emergency toggle — dispatchers/admins only */}
+              {!isTechnician && (
+                <button
+                  type="button"
+                  onClick={() => setEditDraft((d) => ({ ...d, isEmergency: !d.isEmergency }))}
+                  className={cn(
+                    'w-full flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors',
+                    editDraft.isEmergency
+                      ? 'bg-red-500/15 border-red-500/30 text-red-400'
+                      : 'bg-white/5 border-white/15 text-gray-400 hover:text-gray-200'
+                  )}
+                >
+                  <span className={cn('w-2.5 h-2.5 rounded-full shrink-0', editDraft.isEmergency ? 'bg-red-500' : 'bg-gray-600')} />
+                  {editDraft.isEmergency ? 'Emergency Priority' : 'Normal Priority'}
+                </button>
+              )}
+            </div>
+
+            {/* Done button — commits draft to dirty state (same as outside-tap) */}
+            <div className="px-4 pt-4 pb-2">
+              <button
+                type="button"
+                onClick={() => commitEdit(editingId)}
+                className="w-full rounded-lg bg-amber-500 py-3 text-sm font-semibold text-gray-950 hover:bg-amber-400 active:bg-amber-600 transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
