@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma migrate deploy && prisma generate && node scripts/recreate-prisma-index.js && next build",
-    "vercel-build": "prisma migrate deploy && prisma generate && node scripts/recreate-prisma-index.js && next build",
+    "build": "prisma generate && node scripts/recreate-prisma-index.js && next build",
+    "vercel-build": "prisma generate && node scripts/recreate-prisma-index.js && next build",
     "start": "next start",
     "lint": "eslint",
     "db:seed": "npx tsx prisma/seed.ts",
