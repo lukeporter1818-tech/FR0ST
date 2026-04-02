@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { auth } from "@/lib/auth";
 import "./globals.css";
 
@@ -64,7 +65,12 @@ export default async function RootLayout({
             userRole={session.user.role ?? 'DISPATCHER'}
             userInitials={getInitials(session.user.name ?? 'U')}
           >
-            {children}
+            {/* ErrorBoundary catches unexpected render errors in any page
+                component, logs them via /api/telemetry, and shows a minimal
+                recovery UI instead of crashing the whole shell. */}
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
           </AppShell>
         ) : (
           children

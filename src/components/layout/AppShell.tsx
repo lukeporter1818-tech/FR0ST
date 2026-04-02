@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
+import { logPageView } from "@/lib/client-telemetry";
 
 const pageTitles: Record<string, string> = {
   "/ai": "Frost",
@@ -48,6 +49,21 @@ export function AppShell({
   const toggleSidebar = useCallback(() => setSidebarOpen((prev) => !prev), []);
 
   const title = resolveTitle(pathname);
+
+  // ── Page-view telemetry ───────────────────────────────────────────────────
+  // Log which core screen the user is on whenever the pathname changes.
+  // Only fires for the four primary operational surfaces — not every sub-route.
+  // Deduplication in logPageView prevents duplicate fires on re-renders.
+  useEffect(() => {
+    const SCREENS: Record<string, string> = {
+      '/schedule':   'schedule',
+      '/chat':       'chat',
+      '/management': 'management',
+      '/ai':         'frost',
+    }
+    const screen = SCREENS[pathname]
+    if (screen) logPageView(screen)
+  }, [pathname])
 
   // ── Mobile keyboard auto-settling ────────────────────────────────────────
   // Problem: when the keyboard opens on iOS, Safari scrolls window.scrollY
