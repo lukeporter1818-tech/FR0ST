@@ -1,8 +1,7 @@
 import Link from 'next/link'
-import { Plus, UserX, Shield, Truck, Headphones, Mail, User } from 'lucide-react'
+import { Plus, UserX, Shield, Truck, Headphones, User } from 'lucide-react'
 import { prisma } from '@/lib/db'
 import { requireAdminSession } from '@/lib/actions/users'
-import { InviteModalWrapper, InviteModalTriggerButton } from '@/components/invite-modal/InviteModalWrapper'
 import { DeleteUserButton } from '@/components/users/DeleteUserButton'
 
 /** Strip internal placeholder domains so the UI shows only the visible login. */
@@ -50,28 +49,20 @@ export default async function UsersPage() {
 
   return (
     <div className="space-y-8 max-w-4xl">
-      <InviteModalWrapper>
-        {/* Header */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-100">User Management</h1>
-            <p className="text-sm text-gray-500 mt-0.5">{active.length} active · {inactive.length} inactive</p>
-          </div>
-          <div className="flex gap-2 sm:shrink-0">
-            <InviteModalTriggerButton>
-              <Mail className="size-4" />
-              Invite Technician
-            </InviteModalTriggerButton>
-            <Link
-              href="/settings/users/new"
-              className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/8 px-4 py-2 text-sm font-medium text-gray-200 hover:bg-white/15 transition-colors"
-            >
-              <Plus className="size-4" />
-              Add Admin
-            </Link>
-          </div>
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-gray-100">User Management</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{active.length} active · {inactive.length} inactive</p>
         </div>
-      </InviteModalWrapper>
+        <Link
+          href="/settings/users/new"
+          className="inline-flex items-center gap-2 rounded-lg bg-amber-400 text-gray-900 px-4 py-2 text-sm font-medium hover:bg-amber-500 transition-colors sm:shrink-0"
+        >
+          <Plus className="size-4" />
+          Add User
+        </Link>
+      </div>
 
       {/* Office Users — Admins & Dispatchers */}
       {officeUsers.length > 0 && (

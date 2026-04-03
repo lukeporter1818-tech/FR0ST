@@ -65,12 +65,9 @@ export default function NewUserPage() {
           <ChevronLeft className="size-4" />
           Back to users
         </Link>
-        <h1 className="text-xl font-semibold text-gray-100">Add Admin / Dispatcher</h1>
+        <h1 className="text-xl font-semibold text-gray-100">Add User</h1>
         <p className="text-sm text-gray-500 mt-0.5">
-          Create an office account — the user sets their own password via invite link.
-        </p>
-        <p className="text-xs text-gray-600 mt-1.5">
-          For field technicians, use <Link href="/settings/users" className="text-amber-400 hover:text-amber-300">Invite Technician</Link> instead.
+          Create an account — the user sets their own password via invite link.
         </p>
       </div>
 
@@ -115,10 +112,11 @@ export default function NewUserPage() {
               <label className="block text-xs font-medium text-gray-400 mb-1.5">Role</label>
               <select
                 name="role"
-                defaultValue="DISPATCHER"
+                defaultValue="TECHNICIAN"
                 disabled={loading}
                 className="w-full border border-white/15 rounded-lg px-3 py-2 text-sm text-gray-100 bg-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-500/50 disabled:opacity-50"
               >
+                <option value="TECHNICIAN">Technician</option>
                 <option value="DISPATCHER">Dispatcher</option>
                 <option value="ADMIN">Admin</option>
               </select>

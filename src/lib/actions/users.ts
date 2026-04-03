@@ -46,27 +46,43 @@ export async function createUserWithInvite(formData: FormData): Promise<{ invite
   // Placeholder hash — cannot be used to log in (account inactive until activated)
   const placeholderHash = await hash(randomBytes(32).toString('hex'), 12)
 
-  const user = await prisma.user.create({
-    data: {
-      name,
-      email,
-      passwordHash: placeholderHash,
-      role: role as 'ADMIN' | 'DISPATCHER' | 'TECHNICIAN',
-      phone,
-      active: true,
-      isActivated: false,
-      inviteTokenHash: tokenHash,
-      inviteExpiresAt: expiresAt,
-    },
-    select: { id: true },
-  })
-
-  if (technicianId) {
-    await prisma.technician.update({
-      where: { id: technicianId },
-      data: { userId: user.id },
+  const user = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        name,
+        email,
+        passwordHash: placeholderHash,
+        role: role as 'ADMIN' | 'DISPATCHER' | 'TECHNICIAN',
+        phone,
+        active: true,
+        isActivated: false,
+        inviteTokenHash: tokenHash,
+        inviteExpiresAt: expiresAt,
+      },
+      select: { id: true },
     })
-  }
+
+    if (technicianId) {
+      // Link to an existing unlinked technician profile
+      await tx.technician.update({
+        where: { id: technicianId },
+        data: { userId: user.id },
+      })
+    } else if (role === 'TECHNICIAN') {
+      // Auto-create a technician profile for new technician accounts
+      await tx.technician.create({
+        data: {
+          userId: user.id,
+          name,
+          phone: phone ?? '',
+          status: 'ACTIVE',
+          active: true,
+        },
+      })
+    }
+
+    return user
+  })
 
   auditLog({
     action: 'invite.send',
