@@ -1,3 +1,5 @@
+import { redirect } from 'next/navigation'
+import { auth } from '@/lib/auth'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import {
@@ -61,7 +63,8 @@ export default async function TechnicianDetailPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = await params
+  const [session, { id }] = await Promise.all([auth(), params])
+  if (!session?.user?.id) redirect('/login')
 
   const technician = await prisma.technician.findUnique({
     where: { id },

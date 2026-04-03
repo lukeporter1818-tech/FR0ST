@@ -1,3 +1,6 @@
+import { redirect } from 'next/navigation'
+import { auth } from '@/lib/auth'
+import { hasRole } from '@/lib/auth-guard'
 import { prisma } from '@/lib/db'
 import { DispatchBoard } from '@/components/dispatch/DispatchBoard'
 import type { TechData } from '@/components/dispatch/TechColumn'
@@ -14,7 +17,9 @@ export default async function DispatchPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const params = await searchParams
+  const [session, params] = await Promise.all([auth(), searchParams])
+  if (!session?.user?.id) redirect('/login')
+  if (!hasRole(session.user.role, 'DISPATCHER')) redirect('/')
   const dateParam =
     typeof params.date === 'string' ? params.date : getTomorrow()
   const scheduleDate = new Date(dateParam + 'T00:00:00.000Z')
