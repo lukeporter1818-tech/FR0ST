@@ -108,21 +108,21 @@ export default function NewUserPage() {
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Role</label>
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">Access Level</label>
               <select
                 name="role"
                 defaultValue="TECHNICIAN"
                 disabled={loading}
                 className="w-full border border-white/15 rounded-lg px-3 py-2 text-sm text-gray-100 bg-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-500/50 disabled:opacity-50"
               >
-                <option value="TECHNICIAN">Technician</option>
-                <option value="DISPATCHER">Dispatcher</option>
-                <option value="ADMIN">Admin</option>
+                <option value="TECHNICIAN">Field Technician — Schedule, FR0ST AI, Team Chat</option>
+                <option value="DISPATCHER">Office Staff — Schedule, FR0ST AI, Team Chat + Management</option>
+                <option value="ADMIN">Admin — Full access including User Management</option>
               </select>
             </div>
 
-            <div>
+            <div className="col-span-2">
               <label className="block text-xs font-medium text-gray-400 mb-1.5">Phone (optional)</label>
               <input
                 name="phone"
