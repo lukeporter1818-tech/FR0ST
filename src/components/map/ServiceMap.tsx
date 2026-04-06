@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import L from 'leaflet'
 
 export type JobPin = {
   id: string
@@ -16,56 +18,27 @@ export type JobPin = {
   scheduleEntry: { status: string } | null
 }
 
-// ─── US projection ────────────────────────────────────────────────────────────
-// Equirectangular projection bounded to the continental US.
+// ─── Icon cache ──────────────────────────────────────────────────────────────
 
-const W = 800
-const H = 500
-const LNG_MIN = -125.0
-const LNG_MAX = -66.9
-const LAT_MIN = 24.5
-const LAT_MAX = 49.4
+const iconCache = new Map<string, L.DivIcon>()
 
-function project(lat: number, lng: number): [number, number] {
-  const x = ((lng - LNG_MIN) / (LNG_MAX - LNG_MIN)) * W
-  const y = (1 - (lat - LAT_MIN) / (LAT_MAX - LAT_MIN)) * H
-  return [x, y]
-}
-
-// ─── Approximate CONUS outline ────────────────────────────────────────────────
-// Simplified polygon tracing the rough boundary of the lower-48 states.
-// Coordinates are [lat, lng] pairs; projected at render time.
-
-const CONUS: [number, number][] = [
-  // Northwest coast → north border
-  [48.5, -124.7], [49.0, -123.3], [49.0, -117.0], [49.0, -110.0],
-  [49.0, -105.0], [49.0, -100.0], [49.0, -95.2],  [49.4, -95.2],
-  // Great Lakes notch (rough)
-  [48.0, -88.0],  [46.5, -84.5],  [45.0, -83.0],  [42.5, -82.7],
-  // Northeast coast
-  [45.0, -71.5],  [44.8, -66.9],
-  // East coast south
-  [41.3, -70.9],  [40.5, -74.0],  [38.9, -75.5],
-  [37.0, -76.3],  [35.1, -75.5],  [34.0, -77.9],
-  [32.0, -80.9],  [30.3, -81.4],  [29.9, -81.3],
-  [25.8, -80.2],  [25.0, -80.9],  [25.6, -82.0],
-  [28.7, -82.8],  [29.9, -85.0],  [30.0, -88.0],
-  [29.0, -89.0],  [29.2, -90.2],  [29.7, -93.8],
-  // Texas / Gulf
-  [26.0, -97.2],  [25.9, -97.1],  [26.0, -98.0],
-  [29.8, -100.0], [29.7, -103.3], [32.0, -106.6],
-  [31.7, -106.5], [31.3, -111.0], [32.7, -117.1],
-  // West coast north
-  [33.0, -117.3], [34.4, -120.5], [37.8, -122.5],
-  [38.0, -123.7], [40.8, -124.3], [42.0, -124.5],
-  [46.2, -124.1], [48.5, -124.7],
-]
-
-function conusPath(): string {
-  return CONUS.map(([lat, lng], i) => {
-    const [x, y] = project(lat, lng)
-    return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
-  }).join(' ') + ' Z'
+function buildIcon(color: string, active: boolean): L.DivIcon {
+  const key = `${color}:${active}`
+  if (!iconCache.has(key)) {
+    const size = active ? 16 : 13
+    const half = size / 2
+    iconCache.set(
+      key,
+      L.divIcon({
+        html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.85);box-shadow:0 1px 6px rgba(0,0,0,.55)${active ? ';outline:3px solid ' + color + ';outline-offset:2px' : ''}"></div>`,
+        className: '',
+        iconSize:    [size, size],
+        iconAnchor:  [half, half],
+        popupAnchor: [0, -half - 4],
+      }),
+    )
+  }
+  return iconCache.get(key)!
 }
 
 // ─── Marker color ────────────────────────────────────────────────────────────
@@ -78,6 +51,16 @@ function markerColor(job: JobPin): string {
   if (job.status === 'IN_PROGRESS') return '#f59e0b'
   if (job.status === 'SCHEDULED')   return '#818cf8'
   return '#6b7280'
+}
+
+// ─── Fly-to controller ───────────────────────────────────────────────────────
+
+function FlyController({ target }: { target: { lat: number; lng: number; key: number } | null }) {
+  const map = useMap()
+  useEffect(() => {
+    if (target) map.flyTo([target.lat, target.lng], 15, { duration: 0.8 })
+  }, [target, map])
+  return null
 }
 
 // ─── Status labels ───────────────────────────────────────────────────────────
@@ -99,7 +82,7 @@ const JOB_STATUS_LABEL: Record<string, string> = {
   CANCELLED:   'Cancelled',
 }
 
-// ─── Job list item ────────────────────────────────────────────────────────────
+// ─── Shared job list item ────────────────────────────────────────────────────
 
 function JobListItem({
   job,
@@ -136,51 +119,20 @@ function JobListItem({
   )
 }
 
-// ─── Detail card ─────────────────────────────────────────────────────────────
+// ─── Map skeleton ────────────────────────────────────────────────────────────
 
-function DetailCard({ job, onClose }: { job: JobPin; onClose: () => void }) {
-  const statusLabel = job.scheduleEntry?.status
-    ? (SCHED_LABEL[job.scheduleEntry.status] ?? job.scheduleEntry.status)
-    : (JOB_STATUS_LABEL[job.status] ?? job.status)
-
+function MapSkeleton() {
   return (
-    <div className="absolute bottom-3 left-1/2 z-10 w-56 -translate-x-1/2 rounded-xl border border-white/10 bg-gray-900/95 p-3 shadow-xl backdrop-blur-sm">
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-xs font-semibold text-gray-100 leading-snug">{job.customerName}</p>
-        <button
-          onClick={onClose}
-          className="shrink-0 rounded p-0.5 text-gray-500 hover:text-gray-300"
-          aria-label="Close"
-        >
-          <svg className="size-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={2}>
-            <path d="M1 1l10 10M11 1L1 11" />
-          </svg>
-        </button>
+    <div className="flex h-full w-full items-center justify-center bg-gray-950">
+      <div className="text-center">
+        <div className="mx-auto h-5 w-5 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
+        <p className="mt-3 text-xs text-gray-500">Loading map…</p>
       </div>
-      <p className="mt-0.5 text-[10px] text-gray-500 leading-snug">
-        {job.address}{job.city ? `, ${job.city}` : ''}{job.state ? ` ${job.state}` : ''}
-      </p>
-      <div className="mt-2 grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 text-[10px]">
-        <span className="text-gray-500">Tech</span>
-        <span className="text-gray-300">{job.assignedTech?.name ?? '—'}</span>
-        <span className="text-gray-500">Status</span>
-        <span className="text-gray-300">{statusLabel}</span>
-        <span className="text-gray-500">Priority</span>
-        <span className="text-gray-300 capitalize">{job.priority.toLowerCase()}</span>
-      </div>
-      <a
-        href={`/jobs/${job.id}`}
-        className="mt-2.5 inline-block text-[10px] text-amber-400 hover:text-amber-300"
-      >
-        View job →
-      </a>
     </div>
   )
 }
 
 // ─── Main component ──────────────────────────────────────────────────────────
-
-const PATH = conusPath()
 
 export default function ServiceMap({
   jobs,
@@ -189,17 +141,47 @@ export default function ServiceMap({
   jobs: JobPin[]
   unmappedCount: number
 }) {
-  const [activeId,   setActiveId]   = useState<string | null>(null)
-  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [flyTarget,   setFlyTarget]   = useState<{ lat: number; lng: number; key: number } | null>(null)
+  const [flyKey,      setFlyKey]      = useState(0)
+  const [activeId,    setActiveId]    = useState<string | null>(null)
+  const [drawerOpen,  setDrawerOpen]  = useState(false)
 
-  const activeJob = jobs.find((j) => j.id === activeId) ?? null
+  // ── Explicit pixel height for MapContainer ───────────────────────────────
+  // height:'100%' on MapContainer can silently resolve to 0 if the parent
+  // flex-height isn't yet committed when Leaflet initialises.
+  // We use a ResizeObserver so MapContainer always receives real pixels.
+  const mapPanelRef                   = useRef<HTMLDivElement>(null)
+  const [mapHeight,   setMapHeight]   = useState<number>(0)
 
-  function handleSelect(job: JobPin) {
-    setActiveId((prev) => (prev === job.id ? null : job.id))
+  useEffect(() => {
+    const el = mapPanelRef.current
+    if (!el) return
+    const measure = () => {
+      const h = el.getBoundingClientRect().height
+      if (h > 0) setMapHeight(h)
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const center: [number, number] = jobs.length > 0
+    ? [jobs[0].lat, jobs[0].lng]
+    : [39.5, -98.35]
+  const zoom = jobs.length > 0 ? 12 : 4
+
+  function handleListClick(job: JobPin) {
+    const key = flyKey + 1
+    setFlyKey(key)
+    setFlyTarget({ lat: job.lat, lng: job.lng, key })
+    setActiveId(job.id)
   }
 
   return (
     <div className="flex flex-col" style={{ height: '100%' }}>
+
+      {/* ── Main body: sidebar (desktop) + map ── */}
       <div className="flex flex-1 min-h-0">
 
         {/* ── Desktop sidebar ── */}
@@ -225,7 +207,7 @@ export default function ServiceMap({
                     key={job.id}
                     job={job}
                     active={activeId === job.id}
-                    onClick={() => handleSelect(job)}
+                    onClick={() => handleListClick(job)}
                   />
                 ))}
               </ul>
@@ -243,68 +225,76 @@ export default function ServiceMap({
         </div>
 
         {/* ── Map panel ── */}
-        <div className="relative flex-1 min-h-0 bg-gray-950">
+        <div ref={mapPanelRef} className="relative flex-1 min-h-0">
 
-          {/* SVG dot map */}
-          <svg
-            viewBox={`0 0 ${W} ${H}`}
-            className="h-full w-full"
-            preserveAspectRatio="xMidYMid meet"
-          >
-            {/* Ocean / background */}
-            <rect width={W} height={H} fill="#0b0f1a" />
-
-            {/* CONUS land fill */}
-            <path d={PATH} fill="#1a2035" stroke="#2d3a55" strokeWidth={1} />
-
-            {/* Job dots */}
-            {jobs.map((job) => {
-              const [x, y] = project(job.lat, job.lng)
-              const color  = markerColor(job)
-              const isActive = job.id === activeId
-              return (
-                <g
+          {mapHeight === 0 ? (
+            <MapSkeleton />
+          ) : (
+            <MapContainer
+              center={center}
+              zoom={zoom}
+              style={{ height: mapHeight, width: '100%' }}
+              scrollWheelZoom
+              zoomControl
+            >
+              <TileLayer
+                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                maxZoom={19}
+              />
+              <FlyController target={flyTarget} />
+              {jobs.map((job) => (
+                <Marker
                   key={job.id}
-                  onClick={() => handleSelect(job)}
-                  style={{ cursor: 'pointer' }}
+                  position={[job.lat, job.lng]}
+                  icon={buildIcon(markerColor(job), job.id === activeId)}
+                  eventHandlers={{ click: () => setActiveId(job.id) }}
                 >
-                  {isActive && (
-                    <circle cx={x} cy={y} r={10} fill={color} opacity={0.25} />
-                  )}
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r={isActive ? 6 : 5}
-                    fill={color}
-                    stroke="rgba(255,255,255,0.75)"
-                    strokeWidth={1.5}
-                  />
-                </g>
-              )
-            })}
-
-            {/* Empty state text */}
-            {jobs.length === 0 && (
-              <text
-                x={W / 2}
-                y={H / 2}
-                textAnchor="middle"
-                fill="#4b5563"
-                fontSize={14}
-                fontFamily="system-ui, sans-serif"
-              >
-                No active jobs with coordinates yet
-              </text>
-            )}
-          </svg>
-
-          {/* Detail card for selected job */}
-          {activeJob && (
-            <DetailCard job={activeJob} onClose={() => setActiveId(null)} />
+                  <Popup>
+                    <div style={{ minWidth: 180 }}>
+                      <p style={{ fontWeight: 600, fontSize: 13, margin: '0 0 2px' }}>
+                        {job.customerName}
+                      </p>
+                      <p style={{ fontSize: 11, color: '#666', margin: '0 0 8px' }}>
+                        {job.address}
+                        {job.city  ? `, ${job.city}`  : ''}
+                        {job.state ? ` ${job.state}` : ''}
+                      </p>
+                      <table style={{ fontSize: 11, borderCollapse: 'collapse', width: '100%' }}>
+                        <tbody>
+                          <tr>
+                            <td style={{ color: '#888', paddingRight: 6, paddingBottom: 2 }}>Tech</td>
+                            <td style={{ fontWeight: 500 }}>{job.assignedTech?.name ?? '—'}</td>
+                          </tr>
+                          <tr>
+                            <td style={{ color: '#888', paddingRight: 6, paddingBottom: 2 }}>Status</td>
+                            <td>
+                              {job.scheduleEntry?.status
+                                ? (SCHED_LABEL[job.scheduleEntry.status] ?? job.scheduleEntry.status)
+                                : (JOB_STATUS_LABEL[job.status] ?? job.status)}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style={{ color: '#888', paddingRight: 6 }}>Priority</td>
+                            <td style={{ textTransform: 'capitalize' }}>{job.priority.toLowerCase()}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <a
+                        href={`/jobs/${job.id}`}
+                        style={{ display: 'inline-block', marginTop: 8, fontSize: 11, color: '#d97706' }}
+                      >
+                        View job →
+                      </a>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
           )}
 
-          {/* ── Mobile: floating pill button ── */}
-          <div className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 md:hidden">
+          {/* ── Mobile: floating Jobs pill button ── */}
+          <div className="absolute bottom-6 left-1/2 z-[1000] -translate-x-1/2 md:hidden">
             <button
               onClick={() => setDrawerOpen(true)}
               className="flex items-center gap-2 rounded-full border border-white/15 bg-gray-900/90 px-4 py-2 text-xs font-medium text-gray-200 shadow-lg backdrop-blur-sm"
@@ -320,10 +310,10 @@ export default function ServiceMap({
           {drawerOpen && (
             <>
               <div
-                className="absolute inset-0 z-20 bg-black/40 md:hidden"
+                className="absolute inset-0 z-[1001] bg-black/40 md:hidden"
                 onClick={() => setDrawerOpen(false)}
               />
-              <div className="absolute inset-x-0 bottom-0 z-30 flex max-h-[60%] flex-col rounded-t-2xl border-t border-white/10 bg-gray-950 md:hidden">
+              <div className="absolute inset-x-0 bottom-0 z-[1002] flex max-h-[60%] flex-col rounded-t-2xl border-t border-white/10 bg-gray-950 md:hidden">
                 <div className="flex shrink-0 justify-center pb-1 pt-2">
                   <div className="h-1 w-8 rounded-full bg-white/20" />
                 </div>
@@ -362,7 +352,7 @@ export default function ServiceMap({
                           job={job}
                           active={activeId === job.id}
                           onClick={() => {
-                            handleSelect(job)
+                            handleListClick(job)
                             setDrawerOpen(false)
                           }}
                         />

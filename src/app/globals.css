@@ -126,3 +126,22 @@
   body { @apply bg-[#0f1117] text-gray-100 overflow-x-hidden; }
 }
 
+/* ─── Leaflet / Tailwind v4 compatibility ────────────────────────────────────
+   Tailwind Preflight (in @layer base) sets:
+     img { max-width: 100%; height: auto; display: block; }
+   Leaflet tile <img> elements are absolutely positioned and sized by inline
+   JS (256×256px). The max-width:100% constraint collapses tile widths to 0
+   when the containing block is narrow during Leaflet's init phase, producing
+   an all-grey map.
+   Using !important ensures these rules win regardless of CSS bundle order or
+   any Tailwind v4 cascade processing that may reorder unlayered rules. */
+.leaflet-tile {
+  max-width: none !important;
+  display: inline-block !important;
+}
+
+/* Prevent the tile pane from ever being transparent */
+.leaflet-tile-pane {
+  opacity: 1 !important;
+}
+
