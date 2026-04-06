@@ -19,6 +19,7 @@ import { PriorityBadge } from '@/components/jobs/PriorityBadge'
 import { TradeBadge } from '@/components/jobs/TradeBadge'
 import { JobDetailActions } from '@/components/jobs/JobDetailActions'
 import { DispatchRecommend } from '@/components/jobs/DispatchRecommend'
+import { AddNoteForm } from '@/components/jobs/AddNoteForm'
 
 function formatEnum(val: string) {
   return val
@@ -172,12 +173,12 @@ export default async function JobDetailPage({
             </div>
           )}
 
-          {/* Notes / chat log */}
-          {job.notes.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-100">
-                <h2 className="text-sm font-semibold text-gray-900">Activity</h2>
-              </div>
+          {/* Activity log + add note */}
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div className="px-6 py-4 border-b border-gray-100">
+              <h2 className="text-sm font-semibold text-gray-900">Activity</h2>
+            </div>
+            {job.notes.length > 0 ? (
               <div className="px-6 py-2 divide-y divide-gray-100">
                 {job.notes.map((note: Note & { createdBy: UserModel }) => (
                   <div key={note.id} className="py-4">
@@ -198,8 +199,13 @@ export default async function JobDetailPage({
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="px-6 py-6 text-center">
+                <p className="text-sm text-gray-400">No notes yet.</p>
+              </div>
+            )}
+            <AddNoteForm jobId={job.id} />
+          </div>
         </div>
 
         {/* Right column */}
