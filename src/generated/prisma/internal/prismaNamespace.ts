@@ -1254,6 +1254,8 @@ export const JobScalarFieldEnum = {
   aiTradeGuess: 'aiTradeGuess',
   aiFollowUpQuestions: 'aiFollowUpQuestions',
   aiRiskFlags: 'aiRiskFlags',
+  lat: 'lat',
+  lng: 'lng',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1517,6 +1519,20 @@ export type ListEnumJobStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Pr
 
 
 /**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+/**
  * Reference to a field of type 'Int'
  */
 export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -1583,20 +1599,6 @@ export type EnumMgmtTaskStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$P
  * Reference to a field of type 'MgmtTaskStatus[]'
  */
 export type ListEnumMgmtTaskStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MgmtTaskStatus[]'>
-    
-
-
-/**
- * Reference to a field of type 'Float'
- */
-export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
-    
-
-
-/**
- * Reference to a field of type 'Float[]'
- */
-export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
 /**

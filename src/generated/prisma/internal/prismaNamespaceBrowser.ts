@@ -141,6 +141,8 @@ export const JobScalarFieldEnum = {
   aiTradeGuess: 'aiTradeGuess',
   aiFollowUpQuestions: 'aiFollowUpQuestions',
   aiRiskFlags: 'aiRiskFlags',
+  lat: 'lat',
+  lng: 'lng',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

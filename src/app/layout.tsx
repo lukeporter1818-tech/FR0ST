@@ -5,9 +5,6 @@ import { AppShell } from "@/components/layout/AppShell";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { auth } from "@/lib/auth";
 import "./globals.css";
-// Leaflet CSS in the root layout guarantees it lands in the main CSS bundle,
-// not a dynamic chunk that may load after Tailwind resets are applied.
-import "leaflet/dist/leaflet.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

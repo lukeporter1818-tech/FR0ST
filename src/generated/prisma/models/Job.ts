@@ -20,8 +20,20 @@ export type JobModel = runtime.Types.Result.DefaultSelection<Prisma.$JobPayload>
 
 export type AggregateJob = {
   _count: JobCountAggregateOutputType | null
+  _avg: JobAvgAggregateOutputType | null
+  _sum: JobSumAggregateOutputType | null
   _min: JobMinAggregateOutputType | null
   _max: JobMaxAggregateOutputType | null
+}
+
+export type JobAvgAggregateOutputType = {
+  lat: number | null
+  lng: number | null
+}
+
+export type JobSumAggregateOutputType = {
+  lat: number | null
+  lng: number | null
 }
 
 export type JobMinAggregateOutputType = {
@@ -45,6 +57,8 @@ export type JobMinAggregateOutputType = {
   aiSummary: string | null
   aiUrgency: string | null
   aiTradeGuess: $Enums.Trade | null
+  lat: number | null
+  lng: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -70,6 +84,8 @@ export type JobMaxAggregateOutputType = {
   aiSummary: string | null
   aiUrgency: string | null
   aiTradeGuess: $Enums.Trade | null
+  lat: number | null
+  lng: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -98,11 +114,23 @@ export type JobCountAggregateOutputType = {
   aiTradeGuess: number
   aiFollowUpQuestions: number
   aiRiskFlags: number
+  lat: number
+  lng: number
   createdAt: number
   updatedAt: number
   _all: number
 }
 
+
+export type JobAvgAggregateInputType = {
+  lat?: true
+  lng?: true
+}
+
+export type JobSumAggregateInputType = {
+  lat?: true
+  lng?: true
+}
 
 export type JobMinAggregateInputType = {
   id?: true
@@ -125,6 +153,8 @@ export type JobMinAggregateInputType = {
   aiSummary?: true
   aiUrgency?: true
   aiTradeGuess?: true
+  lat?: true
+  lng?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -150,6 +180,8 @@ export type JobMaxAggregateInputType = {
   aiSummary?: true
   aiUrgency?: true
   aiTradeGuess?: true
+  lat?: true
+  lng?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -178,6 +210,8 @@ export type JobCountAggregateInputType = {
   aiTradeGuess?: true
   aiFollowUpQuestions?: true
   aiRiskFlags?: true
+  lat?: true
+  lng?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -221,6 +255,18 @@ export type JobAggregateArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: JobAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: JobSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: JobMinAggregateInputType
@@ -251,6 +297,8 @@ export type JobGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs
   take?: number
   skip?: number
   _count?: JobCountAggregateInputType | true
+  _avg?: JobAvgAggregateInputType
+  _sum?: JobSumAggregateInputType
   _min?: JobMinAggregateInputType
   _max?: JobMaxAggregateInputType
 }
@@ -279,9 +327,13 @@ export type JobGroupByOutputType = {
   aiTradeGuess: $Enums.Trade | null
   aiFollowUpQuestions: string[]
   aiRiskFlags: string[]
+  lat: number | null
+  lng: number | null
   createdAt: Date
   updatedAt: Date
   _count: JobCountAggregateOutputType | null
+  _avg: JobAvgAggregateOutputType | null
+  _sum: JobSumAggregateOutputType | null
   _min: JobMinAggregateOutputType | null
   _max: JobMaxAggregateOutputType | null
 }
@@ -328,6 +380,8 @@ export type JobWhereInput = {
   aiTradeGuess?: Prisma.EnumTradeNullableFilter<"Job"> | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.StringNullableListFilter<"Job">
   aiRiskFlags?: Prisma.StringNullableListFilter<"Job">
+  lat?: Prisma.FloatNullableFilter<"Job"> | number | null
+  lng?: Prisma.FloatNullableFilter<"Job"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Job"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Job"> | Date | string
   assignedTech?: Prisma.XOR<Prisma.TechnicianNullableScalarRelationFilter, Prisma.TechnicianWhereInput> | null
@@ -361,6 +415,8 @@ export type JobOrderByWithRelationInput = {
   aiTradeGuess?: Prisma.SortOrderInput | Prisma.SortOrder
   aiFollowUpQuestions?: Prisma.SortOrder
   aiRiskFlags?: Prisma.SortOrder
+  lat?: Prisma.SortOrderInput | Prisma.SortOrder
+  lng?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   assignedTech?: Prisma.TechnicianOrderByWithRelationInput
@@ -397,6 +453,8 @@ export type JobWhereUniqueInput = Prisma.AtLeast<{
   aiTradeGuess?: Prisma.EnumTradeNullableFilter<"Job"> | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.StringNullableListFilter<"Job">
   aiRiskFlags?: Prisma.StringNullableListFilter<"Job">
+  lat?: Prisma.FloatNullableFilter<"Job"> | number | null
+  lng?: Prisma.FloatNullableFilter<"Job"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Job"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Job"> | Date | string
   assignedTech?: Prisma.XOR<Prisma.TechnicianNullableScalarRelationFilter, Prisma.TechnicianWhereInput> | null
@@ -430,11 +488,15 @@ export type JobOrderByWithAggregationInput = {
   aiTradeGuess?: Prisma.SortOrderInput | Prisma.SortOrder
   aiFollowUpQuestions?: Prisma.SortOrder
   aiRiskFlags?: Prisma.SortOrder
+  lat?: Prisma.SortOrderInput | Prisma.SortOrder
+  lng?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.JobCountOrderByAggregateInput
+  _avg?: Prisma.JobAvgOrderByAggregateInput
   _max?: Prisma.JobMaxOrderByAggregateInput
   _min?: Prisma.JobMinOrderByAggregateInput
+  _sum?: Prisma.JobSumOrderByAggregateInput
 }
 
 export type JobScalarWhereWithAggregatesInput = {
@@ -464,6 +526,8 @@ export type JobScalarWhereWithAggregatesInput = {
   aiTradeGuess?: Prisma.EnumTradeNullableWithAggregatesFilter<"Job"> | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.StringNullableListFilter<"Job">
   aiRiskFlags?: Prisma.StringNullableListFilter<"Job">
+  lat?: Prisma.FloatNullableWithAggregatesFilter<"Job"> | number | null
+  lng?: Prisma.FloatNullableWithAggregatesFilter<"Job"> | number | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Job"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Job"> | Date | string
 }
@@ -491,6 +555,8 @@ export type JobCreateInput = {
   aiTradeGuess?: $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobCreateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobCreateaiRiskFlagsInput | string[]
+  lat?: number | null
+  lng?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   assignedTech?: Prisma.TechnicianCreateNestedOneWithoutJobsInput
@@ -524,6 +590,8 @@ export type JobUncheckedCreateInput = {
   aiTradeGuess?: $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobCreateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobCreateaiRiskFlagsInput | string[]
+  lat?: number | null
+  lng?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   scheduleEntry?: Prisma.ScheduleEntryUncheckedCreateNestedOneWithoutJobInput
@@ -555,6 +623,8 @@ export type JobUpdateInput = {
   aiTradeGuess?: Prisma.NullableEnumTradeFieldUpdateOperationsInput | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobUpdateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobUpdateaiRiskFlagsInput | string[]
+  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   assignedTech?: Prisma.TechnicianUpdateOneWithoutJobsNestedInput
@@ -588,6 +658,8 @@ export type JobUncheckedUpdateInput = {
   aiTradeGuess?: Prisma.NullableEnumTradeFieldUpdateOperationsInput | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobUpdateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobUpdateaiRiskFlagsInput | string[]
+  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   scheduleEntry?: Prisma.ScheduleEntryUncheckedUpdateOneWithoutJobNestedInput
@@ -620,6 +692,8 @@ export type JobCreateManyInput = {
   aiTradeGuess?: $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobCreateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobCreateaiRiskFlagsInput | string[]
+  lat?: number | null
+  lng?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -647,6 +721,8 @@ export type JobUpdateManyMutationInput = {
   aiTradeGuess?: Prisma.NullableEnumTradeFieldUpdateOperationsInput | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobUpdateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobUpdateaiRiskFlagsInput | string[]
+  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -675,6 +751,8 @@ export type JobUncheckedUpdateManyInput = {
   aiTradeGuess?: Prisma.NullableEnumTradeFieldUpdateOperationsInput | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobUpdateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobUpdateaiRiskFlagsInput | string[]
+  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -713,8 +791,15 @@ export type JobCountOrderByAggregateInput = {
   aiTradeGuess?: Prisma.SortOrder
   aiFollowUpQuestions?: Prisma.SortOrder
   aiRiskFlags?: Prisma.SortOrder
+  lat?: Prisma.SortOrder
+  lng?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type JobAvgOrderByAggregateInput = {
+  lat?: Prisma.SortOrder
+  lng?: Prisma.SortOrder
 }
 
 export type JobMaxOrderByAggregateInput = {
@@ -738,6 +823,8 @@ export type JobMaxOrderByAggregateInput = {
   aiSummary?: Prisma.SortOrder
   aiUrgency?: Prisma.SortOrder
   aiTradeGuess?: Prisma.SortOrder
+  lat?: Prisma.SortOrder
+  lng?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -763,8 +850,15 @@ export type JobMinOrderByAggregateInput = {
   aiSummary?: Prisma.SortOrder
   aiUrgency?: Prisma.SortOrder
   aiTradeGuess?: Prisma.SortOrder
+  lat?: Prisma.SortOrder
+  lng?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type JobSumOrderByAggregateInput = {
+  lat?: Prisma.SortOrder
+  lng?: Prisma.SortOrder
 }
 
 export type JobScalarRelationFilter = {
@@ -862,6 +956,14 @@ export type JobUpdateaiRiskFlagsInput = {
   push?: string | string[]
 }
 
+export type NullableFloatFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type JobCreateNestedOneWithoutScheduleEntryInput = {
   create?: Prisma.XOR<Prisma.JobCreateWithoutScheduleEntryInput, Prisma.JobUncheckedCreateWithoutScheduleEntryInput>
   connectOrCreate?: Prisma.JobCreateOrConnectWithoutScheduleEntryInput
@@ -947,6 +1049,8 @@ export type JobCreateWithoutAssignedTechInput = {
   aiTradeGuess?: $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobCreateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobCreateaiRiskFlagsInput | string[]
+  lat?: number | null
+  lng?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   scheduleEntry?: Prisma.ScheduleEntryCreateNestedOneWithoutJobInput
@@ -978,6 +1082,8 @@ export type JobUncheckedCreateWithoutAssignedTechInput = {
   aiTradeGuess?: $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobCreateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobCreateaiRiskFlagsInput | string[]
+  lat?: number | null
+  lng?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   scheduleEntry?: Prisma.ScheduleEntryUncheckedCreateNestedOneWithoutJobInput
@@ -1039,6 +1145,8 @@ export type JobScalarWhereInput = {
   aiTradeGuess?: Prisma.EnumTradeNullableFilter<"Job"> | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.StringNullableListFilter<"Job">
   aiRiskFlags?: Prisma.StringNullableListFilter<"Job">
+  lat?: Prisma.FloatNullableFilter<"Job"> | number | null
+  lng?: Prisma.FloatNullableFilter<"Job"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Job"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Job"> | Date | string
 }
@@ -1066,6 +1174,8 @@ export type JobCreateWithoutScheduleEntryInput = {
   aiTradeGuess?: $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobCreateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobCreateaiRiskFlagsInput | string[]
+  lat?: number | null
+  lng?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   assignedTech?: Prisma.TechnicianCreateNestedOneWithoutJobsInput
@@ -1098,6 +1208,8 @@ export type JobUncheckedCreateWithoutScheduleEntryInput = {
   aiTradeGuess?: $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobCreateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobCreateaiRiskFlagsInput | string[]
+  lat?: number | null
+  lng?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   smsMessages?: Prisma.SmsMessageUncheckedCreateNestedManyWithoutJobInput
@@ -1144,6 +1256,8 @@ export type JobUpdateWithoutScheduleEntryInput = {
   aiTradeGuess?: Prisma.NullableEnumTradeFieldUpdateOperationsInput | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobUpdateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobUpdateaiRiskFlagsInput | string[]
+  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   assignedTech?: Prisma.TechnicianUpdateOneWithoutJobsNestedInput
@@ -1176,6 +1290,8 @@ export type JobUncheckedUpdateWithoutScheduleEntryInput = {
   aiTradeGuess?: Prisma.NullableEnumTradeFieldUpdateOperationsInput | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobUpdateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobUpdateaiRiskFlagsInput | string[]
+  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   smsMessages?: Prisma.SmsMessageUncheckedUpdateManyWithoutJobNestedInput
@@ -1206,6 +1322,8 @@ export type JobCreateWithoutSmsMessagesInput = {
   aiTradeGuess?: $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobCreateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobCreateaiRiskFlagsInput | string[]
+  lat?: number | null
+  lng?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   assignedTech?: Prisma.TechnicianCreateNestedOneWithoutJobsInput
@@ -1238,6 +1356,8 @@ export type JobUncheckedCreateWithoutSmsMessagesInput = {
   aiTradeGuess?: $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobCreateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobCreateaiRiskFlagsInput | string[]
+  lat?: number | null
+  lng?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   scheduleEntry?: Prisma.ScheduleEntryUncheckedCreateNestedOneWithoutJobInput
@@ -1284,6 +1404,8 @@ export type JobUpdateWithoutSmsMessagesInput = {
   aiTradeGuess?: Prisma.NullableEnumTradeFieldUpdateOperationsInput | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobUpdateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobUpdateaiRiskFlagsInput | string[]
+  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   assignedTech?: Prisma.TechnicianUpdateOneWithoutJobsNestedInput
@@ -1316,6 +1438,8 @@ export type JobUncheckedUpdateWithoutSmsMessagesInput = {
   aiTradeGuess?: Prisma.NullableEnumTradeFieldUpdateOperationsInput | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobUpdateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobUpdateaiRiskFlagsInput | string[]
+  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   scheduleEntry?: Prisma.ScheduleEntryUncheckedUpdateOneWithoutJobNestedInput
@@ -1346,6 +1470,8 @@ export type JobCreateWithoutNotesInput = {
   aiTradeGuess?: $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobCreateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobCreateaiRiskFlagsInput | string[]
+  lat?: number | null
+  lng?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   assignedTech?: Prisma.TechnicianCreateNestedOneWithoutJobsInput
@@ -1378,6 +1504,8 @@ export type JobUncheckedCreateWithoutNotesInput = {
   aiTradeGuess?: $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobCreateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobCreateaiRiskFlagsInput | string[]
+  lat?: number | null
+  lng?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   scheduleEntry?: Prisma.ScheduleEntryUncheckedCreateNestedOneWithoutJobInput
@@ -1424,6 +1552,8 @@ export type JobUpdateWithoutNotesInput = {
   aiTradeGuess?: Prisma.NullableEnumTradeFieldUpdateOperationsInput | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobUpdateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobUpdateaiRiskFlagsInput | string[]
+  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   assignedTech?: Prisma.TechnicianUpdateOneWithoutJobsNestedInput
@@ -1456,6 +1586,8 @@ export type JobUncheckedUpdateWithoutNotesInput = {
   aiTradeGuess?: Prisma.NullableEnumTradeFieldUpdateOperationsInput | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobUpdateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobUpdateaiRiskFlagsInput | string[]
+  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   scheduleEntry?: Prisma.ScheduleEntryUncheckedUpdateOneWithoutJobNestedInput
@@ -1486,6 +1618,8 @@ export type JobCreateWithoutAiInteractionsInput = {
   aiTradeGuess?: $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobCreateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobCreateaiRiskFlagsInput | string[]
+  lat?: number | null
+  lng?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   assignedTech?: Prisma.TechnicianCreateNestedOneWithoutJobsInput
@@ -1518,6 +1652,8 @@ export type JobUncheckedCreateWithoutAiInteractionsInput = {
   aiTradeGuess?: $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobCreateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobCreateaiRiskFlagsInput | string[]
+  lat?: number | null
+  lng?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   scheduleEntry?: Prisma.ScheduleEntryUncheckedCreateNestedOneWithoutJobInput
@@ -1564,6 +1700,8 @@ export type JobUpdateWithoutAiInteractionsInput = {
   aiTradeGuess?: Prisma.NullableEnumTradeFieldUpdateOperationsInput | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobUpdateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobUpdateaiRiskFlagsInput | string[]
+  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   assignedTech?: Prisma.TechnicianUpdateOneWithoutJobsNestedInput
@@ -1596,6 +1734,8 @@ export type JobUncheckedUpdateWithoutAiInteractionsInput = {
   aiTradeGuess?: Prisma.NullableEnumTradeFieldUpdateOperationsInput | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobUpdateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobUpdateaiRiskFlagsInput | string[]
+  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   scheduleEntry?: Prisma.ScheduleEntryUncheckedUpdateOneWithoutJobNestedInput
@@ -1626,6 +1766,8 @@ export type JobCreateManyAssignedTechInput = {
   aiTradeGuess?: $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobCreateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobCreateaiRiskFlagsInput | string[]
+  lat?: number | null
+  lng?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1653,6 +1795,8 @@ export type JobUpdateWithoutAssignedTechInput = {
   aiTradeGuess?: Prisma.NullableEnumTradeFieldUpdateOperationsInput | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobUpdateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobUpdateaiRiskFlagsInput | string[]
+  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   scheduleEntry?: Prisma.ScheduleEntryUpdateOneWithoutJobNestedInput
@@ -1684,6 +1828,8 @@ export type JobUncheckedUpdateWithoutAssignedTechInput = {
   aiTradeGuess?: Prisma.NullableEnumTradeFieldUpdateOperationsInput | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobUpdateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobUpdateaiRiskFlagsInput | string[]
+  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   scheduleEntry?: Prisma.ScheduleEntryUncheckedUpdateOneWithoutJobNestedInput
@@ -1715,6 +1861,8 @@ export type JobUncheckedUpdateManyWithoutAssignedTechInput = {
   aiTradeGuess?: Prisma.NullableEnumTradeFieldUpdateOperationsInput | $Enums.Trade | null
   aiFollowUpQuestions?: Prisma.JobUpdateaiFollowUpQuestionsInput | string[]
   aiRiskFlags?: Prisma.JobUpdateaiRiskFlagsInput | string[]
+  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1792,6 +1940,8 @@ export type JobSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = ru
   aiTradeGuess?: boolean
   aiFollowUpQuestions?: boolean
   aiRiskFlags?: boolean
+  lat?: boolean
+  lng?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   assignedTech?: boolean | Prisma.Job$assignedTechArgs<ExtArgs>
@@ -1826,6 +1976,8 @@ export type JobSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extension
   aiTradeGuess?: boolean
   aiFollowUpQuestions?: boolean
   aiRiskFlags?: boolean
+  lat?: boolean
+  lng?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   assignedTech?: boolean | Prisma.Job$assignedTechArgs<ExtArgs>
@@ -1855,6 +2007,8 @@ export type JobSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extension
   aiTradeGuess?: boolean
   aiFollowUpQuestions?: boolean
   aiRiskFlags?: boolean
+  lat?: boolean
+  lng?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   assignedTech?: boolean | Prisma.Job$assignedTechArgs<ExtArgs>
@@ -1884,11 +2038,13 @@ export type JobSelectScalar = {
   aiTradeGuess?: boolean
   aiFollowUpQuestions?: boolean
   aiRiskFlags?: boolean
+  lat?: boolean
+  lng?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type JobOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "customerName" | "customerPhone" | "address" | "city" | "state" | "zip" | "issueDescription" | "jobType" | "tradeClassification" | "priority" | "status" | "scheduledDate" | "timeWindow" | "assignedTechId" | "dispatcherNotes" | "internalNotes" | "tags" | "aiSummary" | "aiUrgency" | "aiTradeGuess" | "aiFollowUpQuestions" | "aiRiskFlags" | "createdAt" | "updatedAt", ExtArgs["result"]["job"]>
+export type JobOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "customerName" | "customerPhone" | "address" | "city" | "state" | "zip" | "issueDescription" | "jobType" | "tradeClassification" | "priority" | "status" | "scheduledDate" | "timeWindow" | "assignedTechId" | "dispatcherNotes" | "internalNotes" | "tags" | "aiSummary" | "aiUrgency" | "aiTradeGuess" | "aiFollowUpQuestions" | "aiRiskFlags" | "lat" | "lng" | "createdAt" | "updatedAt", ExtArgs["result"]["job"]>
 export type JobInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   assignedTech?: boolean | Prisma.Job$assignedTechArgs<ExtArgs>
   scheduleEntry?: boolean | Prisma.Job$scheduleEntryArgs<ExtArgs>
@@ -1937,6 +2093,8 @@ export type $JobPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
     aiTradeGuess: $Enums.Trade | null
     aiFollowUpQuestions: string[]
     aiRiskFlags: string[]
+    lat: number | null
+    lng: number | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["job"]>
@@ -2390,6 +2548,8 @@ export interface JobFieldRefs {
   readonly aiTradeGuess: Prisma.FieldRef<"Job", 'Trade'>
   readonly aiFollowUpQuestions: Prisma.FieldRef<"Job", 'String[]'>
   readonly aiRiskFlags: Prisma.FieldRef<"Job", 'String[]'>
+  readonly lat: Prisma.FieldRef<"Job", 'Float'>
+  readonly lng: Prisma.FieldRef<"Job", 'Float'>
   readonly createdAt: Prisma.FieldRef<"Job", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Job", 'DateTime'>
 }
