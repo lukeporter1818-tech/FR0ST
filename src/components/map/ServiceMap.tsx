@@ -63,12 +63,29 @@ function FlyController({ target }: { target: { lat: number; lng: number; key: nu
   return null
 }
 
-// ─── Resize handler ──────────────────────────────────────────────────────────
-// After the one-shot initial height is committed, this component keeps Leaflet
-// in sync with any subsequent container size changes (window resize, layout
-// shifts) by calling invalidateSize rather than recreating MapContainer.
+// ─── Invalidate size on mount ────────────────────────────────────────────────
+// After the dynamic-import resolves and React flushes the layout, Leaflet may
+// have been initialised against a zero-sized container (if flex layout hadn't
+// committed). This runs once, after the first paint, to force a correct repaint.
 
-function InvalidateSizeOnResize({ panelRef }: { panelRef: React.RefObject<HTMLDivElement | null> }) {
+function MapReadyHandler() {
+  const map = useMap()
+  useEffect(() => {
+    const t = setTimeout(() => map.invalidateSize({ pan: false }), 150)
+    return () => clearTimeout(t)
+  }, [map])
+  return null
+}
+
+// ─── Invalidate size on resize ───────────────────────────────────────────────
+// The absolute-fill shell tracks its positioned ancestor automatically in CSS,
+// but Leaflet's internal tile layout needs invalidateSize when the shell changes.
+
+function InvalidateSizeOnResize({
+  panelRef,
+}: {
+  panelRef: React.RefObject<HTMLDivElement | null>
+}) {
   const map = useMap()
   useEffect(() => {
     const el = panelRef.current
@@ -136,19 +153,6 @@ function JobListItem({
   )
 }
 
-// ─── Map skeleton ────────────────────────────────────────────────────────────
-
-function MapSkeleton() {
-  return (
-    <div className="flex h-full w-full items-center justify-center bg-gray-950">
-      <div className="text-center">
-        <div className="mx-auto h-5 w-5 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
-        <p className="mt-3 text-xs text-gray-500">Loading map…</p>
-      </div>
-    </div>
-  )
-}
-
 // ─── Main component ──────────────────────────────────────────────────────────
 
 export default function ServiceMap({
@@ -163,32 +167,9 @@ export default function ServiceMap({
   const [activeId,   setActiveId]   = useState<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
-  // ── One-shot pixel height for MapContainer ───────────────────────────────
-  // height:'100%' on MapContainer resolves to 0 when the parent flex-height
-  // isn't yet a CSS-definite value at Leaflet's init time.
-  // Strategy: measure once (lock after first valid reading) so MapContainer
-  // always gets real pixels on first mount. Subsequent resizes are handled
-  // by InvalidateSizeOnResize inside the map rather than recreating it.
-  const mapPanelRef  = useRef<HTMLDivElement>(null)
-  const heightLocked = useRef(false)
-  const [mapHeight,  setMapHeight]  = useState<number>(0)
-
-  useEffect(() => {
-    const el = mapPanelRef.current
-    if (!el) return
-    const tryMeasure = () => {
-      if (heightLocked.current) return
-      const h = el.getBoundingClientRect().height
-      if (h > 0) {
-        setMapHeight(h)
-        heightLocked.current = true
-      }
-    }
-    tryMeasure()
-    const ro = new ResizeObserver(tryMeasure)
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
+  // mapPanelRef is used only by InvalidateSizeOnResize — no JS height
+  // measurement here. Layout is handled entirely via CSS (see below).
+  const mapPanelRef = useRef<HTMLDivElement>(null)
 
   const center: [number, number] = jobs.length > 0
     ? [jobs[0].lat, jobs[0].lng]
@@ -248,16 +229,21 @@ export default function ServiceMap({
           )}
         </div>
 
-        {/* ── Map panel ── */}
+        {/* ── Map panel ──────────────────────────────────────────────────────
+             position:relative creates the containing block.
+             The child `absolute inset-0` div fills it exactly, giving
+             MapContainer a CSS-definite height without any JS measurement.
+             This avoids the percentage-height-against-flex-item problem that
+             caused the blank map in previous deployments.
+        ── */}
         <div ref={mapPanelRef} className="relative flex-1 min-h-0">
 
-          {mapHeight === 0 ? (
-            <MapSkeleton />
-          ) : (
+          {/* Absolute fill shell — MapContainer always gets real dimensions */}
+          <div className="absolute inset-0">
             <MapContainer
               center={center}
               zoom={zoom}
-              style={{ height: mapHeight, width: '100%' }}
+              style={{ height: '100%', width: '100%' }}
               scrollWheelZoom
               zoomControl
             >
@@ -266,6 +252,7 @@ export default function ServiceMap({
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                 maxZoom={19}
               />
+              <MapReadyHandler />
               <FlyController target={flyTarget} />
               <InvalidateSizeOnResize panelRef={mapPanelRef} />
               {jobs.map((job) => (
@@ -316,7 +303,7 @@ export default function ServiceMap({
                 </Marker>
               ))}
             </MapContainer>
-          )}
+          </div>
 
           {/* ── Mobile: floating Jobs pill button ── */}
           <div className="absolute bottom-6 left-1/2 z-[1000] -translate-x-1/2 md:hidden">
