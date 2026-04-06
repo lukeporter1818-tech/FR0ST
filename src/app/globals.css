@@ -125,3 +125,23 @@
   * { @apply border-border; }
   body { @apply bg-[#0f1117] text-gray-100 overflow-x-hidden; }
 }
+
+/* ─── Leaflet / Tailwind v4 compatibility ────────────────────────────────────
+   Tailwind Preflight lives in @layer base and applies:
+     img { max-width: 100%; height: auto; display: block; }
+   Leaflet tiles are <img> elements sized by inline JS (256×256). When
+   max-width:100% resolves against a narrow containing block during init,
+   tiles collapse to 0 width and nothing renders.
+   Unlayered rules always win over @layer base in the CSS cascade —
+   these selectors restore the expected tile geometry without !important. */
+.leaflet-tile {
+  max-width: none;
+  width: auto;
+  height: auto;
+}
+
+/* Ensure tile pane sits above the map background and is never invisible */
+.leaflet-tile-pane {
+  opacity: 1;
+  z-index: 200;
+}

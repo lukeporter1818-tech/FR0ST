@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
 
 export type JobPin = {
   id: string
@@ -66,8 +65,11 @@ function FlyController({ target }: { target: { lat: number; lng: number; key: nu
 function InvalidateSizeOnMount() {
   const map = useMap()
   useEffect(() => {
-    const t = setTimeout(() => map.invalidateSize(), 60)
-    return () => clearTimeout(t)
+    // Two passes: first at 100ms catches most cases; second at 500ms catches
+    // slow dynamic-import + font-load layout shifts that delay final sizing.
+    const t1 = setTimeout(() => map.invalidateSize(), 100)
+    const t2 = setTimeout(() => map.invalidateSize(), 500)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [map])
   return null
 }
