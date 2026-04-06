@@ -155,6 +155,12 @@ function JobListItem({
 
 // ─── Main component ──────────────────────────────────────────────────────────
 
+// ─── Top-bar height constant ──────────────────────────────────────────────────
+// Must stay in sync with TopBar's h-16 (64px). Used to derive explicit pixel
+// height for the map container, bypassing the `height:100%` → flex-item
+// resolution ambiguity that causes blank maps on some browsers / build configs.
+const TOP_BAR_H = 64
+
 export default function ServiceMap({
   jobs,
   unmappedCount,
@@ -167,8 +173,17 @@ export default function ServiceMap({
   const [activeId,   setActiveId]   = useState<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
-  // mapPanelRef is used only by InvalidateSizeOnResize — no JS height
-  // measurement here. Layout is handled entirely via CSS (see below).
+  // Explicit pixel height — eliminates the `height:100%` against flex-derived
+  // parent ambiguity. Measured once after mount and updated on window resize.
+  const [mapH, setMapH] = useState(0)
+  useEffect(() => {
+    const measure = () => setMapH(window.innerHeight - TOP_BAR_H)
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
+
+  // mapPanelRef is used only by InvalidateSizeOnResize
   const mapPanelRef = useRef<HTMLDivElement>(null)
 
   const center: [number, number] = jobs.length > 0
@@ -184,7 +199,13 @@ export default function ServiceMap({
   }
 
   return (
-    <div className="flex flex-col" style={{ height: '100%' }}>
+    // flex-1 min-h-0 keeps this div in the flex chain so it fills <main>
+    // even before mapH is measured. Once measured the explicit pixel height
+    // takes over and guarantees Leaflet always has a non-zero, non-flex height.
+    <div
+      className="flex-1 min-h-0 flex flex-col"
+      style={mapH > 0 ? { height: `${mapH}px` } : undefined}
+    >
 
       {/* ── Main body: sidebar (desktop) + map ── */}
       <div className="flex flex-1 min-h-0">

@@ -136,10 +136,13 @@
    !important is required so these beat both @layer base and any unlayered rules
    that Tailwind v4 may emit after this file. */
 
-/* Ensure the Leaflet root fills whatever sized shell we give it */
+/* Ensure the Leaflet root fills whatever sized shell we give it.
+   min-height acts as an absolute floor — if the CSS height chain ever
+   resolves to 0 the map still renders at a usable size. */
 .leaflet-container {
-  height: 100% !important;
-  width:  100% !important;
+  height:     100% !important;
+  min-height: 300px !important;
+  width:      100% !important;
 }
 
 /* Neutralise all global img resets inside the Leaflet container */
