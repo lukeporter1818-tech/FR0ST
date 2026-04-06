@@ -63,6 +63,23 @@ function FlyController({ target }: { target: { lat: number; lng: number; key: nu
   return null
 }
 
+// ─── Resize handler ──────────────────────────────────────────────────────────
+// After the one-shot initial height is committed, this component keeps Leaflet
+// in sync with any subsequent container size changes (window resize, layout
+// shifts) by calling invalidateSize rather than recreating MapContainer.
+
+function InvalidateSizeOnResize({ panelRef }: { panelRef: React.RefObject<HTMLDivElement | null> }) {
+  const map = useMap()
+  useEffect(() => {
+    const el = panelRef.current
+    if (!el) return
+    const ro = new ResizeObserver(() => map.invalidateSize({ pan: false }))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [map, panelRef])
+  return null
+}
+
 // ─── Status labels ───────────────────────────────────────────────────────────
 
 const SCHED_LABEL: Record<string, string> = {
@@ -141,27 +158,34 @@ export default function ServiceMap({
   jobs: JobPin[]
   unmappedCount: number
 }) {
-  const [flyTarget,   setFlyTarget]   = useState<{ lat: number; lng: number; key: number } | null>(null)
-  const [flyKey,      setFlyKey]      = useState(0)
-  const [activeId,    setActiveId]    = useState<string | null>(null)
-  const [drawerOpen,  setDrawerOpen]  = useState(false)
+  const [flyTarget,  setFlyTarget]  = useState<{ lat: number; lng: number; key: number } | null>(null)
+  const [flyKey,     setFlyKey]     = useState(0)
+  const [activeId,   setActiveId]   = useState<string | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
-  // ── Explicit pixel height for MapContainer ───────────────────────────────
-  // height:'100%' on MapContainer can silently resolve to 0 if the parent
-  // flex-height isn't yet committed when Leaflet initialises.
-  // We use a ResizeObserver so MapContainer always receives real pixels.
-  const mapPanelRef                   = useRef<HTMLDivElement>(null)
-  const [mapHeight,   setMapHeight]   = useState<number>(0)
+  // ── One-shot pixel height for MapContainer ───────────────────────────────
+  // height:'100%' on MapContainer resolves to 0 when the parent flex-height
+  // isn't yet a CSS-definite value at Leaflet's init time.
+  // Strategy: measure once (lock after first valid reading) so MapContainer
+  // always gets real pixels on first mount. Subsequent resizes are handled
+  // by InvalidateSizeOnResize inside the map rather than recreating it.
+  const mapPanelRef  = useRef<HTMLDivElement>(null)
+  const heightLocked = useRef(false)
+  const [mapHeight,  setMapHeight]  = useState<number>(0)
 
   useEffect(() => {
     const el = mapPanelRef.current
     if (!el) return
-    const measure = () => {
+    const tryMeasure = () => {
+      if (heightLocked.current) return
       const h = el.getBoundingClientRect().height
-      if (h > 0) setMapHeight(h)
+      if (h > 0) {
+        setMapHeight(h)
+        heightLocked.current = true
+      }
     }
-    measure()
-    const ro = new ResizeObserver(measure)
+    tryMeasure()
+    const ro = new ResizeObserver(tryMeasure)
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
@@ -238,11 +262,12 @@ export default function ServiceMap({
               zoomControl
             >
               <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                 maxZoom={19}
               />
               <FlyController target={flyTarget} />
+              <InvalidateSizeOnResize panelRef={mapPanelRef} />
               {jobs.map((job) => (
                 <Marker
                   key={job.id}
@@ -255,7 +280,7 @@ export default function ServiceMap({
                       <p style={{ fontWeight: 600, fontSize: 13, margin: '0 0 2px' }}>
                         {job.customerName}
                       </p>
-                      <p style={{ fontSize: 11, color: '#666', margin: '0 0 8px' }}>
+                      <p style={{ fontSize: 11, color: '#888', margin: '0 0 8px' }}>
                         {job.address}
                         {job.city  ? `, ${job.city}`  : ''}
                         {job.state ? ` ${job.state}` : ''}
@@ -263,11 +288,11 @@ export default function ServiceMap({
                       <table style={{ fontSize: 11, borderCollapse: 'collapse', width: '100%' }}>
                         <tbody>
                           <tr>
-                            <td style={{ color: '#888', paddingRight: 6, paddingBottom: 2 }}>Tech</td>
+                            <td style={{ color: '#aaa', paddingRight: 6, paddingBottom: 2 }}>Tech</td>
                             <td style={{ fontWeight: 500 }}>{job.assignedTech?.name ?? '—'}</td>
                           </tr>
                           <tr>
-                            <td style={{ color: '#888', paddingRight: 6, paddingBottom: 2 }}>Status</td>
+                            <td style={{ color: '#aaa', paddingRight: 6, paddingBottom: 2 }}>Status</td>
                             <td>
                               {job.scheduleEntry?.status
                                 ? (SCHED_LABEL[job.scheduleEntry.status] ?? job.scheduleEntry.status)
@@ -275,7 +300,7 @@ export default function ServiceMap({
                             </td>
                           </tr>
                           <tr>
-                            <td style={{ color: '#888', paddingRight: 6 }}>Priority</td>
+                            <td style={{ color: '#aaa', paddingRight: 6 }}>Priority</td>
                             <td style={{ textTransform: 'capitalize' }}>{job.priority.toLowerCase()}</td>
                           </tr>
                         </tbody>
