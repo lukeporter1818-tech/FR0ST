@@ -3,9 +3,29 @@
 import dynamic from 'next/dynamic'
 import type { JobPin } from './ServiceMap'
 
-// Leaflet needs the DOM — dynamic import with ssr:false must live in a Client Component
-const ServiceMap = dynamic(() => import('./ServiceMap'), { ssr: false })
+function MapSkeleton() {
+  return (
+    <div className="flex h-full items-center justify-center bg-gray-950">
+      <div className="text-center">
+        <div className="mx-auto h-5 w-5 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
+        <p className="mt-3 text-xs text-gray-500">Loading map…</p>
+      </div>
+    </div>
+  )
+}
 
-export function MapLoader({ jobs }: { jobs: JobPin[] }) {
-  return <ServiceMap jobs={jobs} />
+// Leaflet needs the DOM — dynamic import with ssr:false must live in a Client Component
+const ServiceMap = dynamic(() => import('./ServiceMap'), {
+  ssr: false,
+  loading: MapSkeleton,
+})
+
+export function MapLoader({
+  jobs,
+  unmappedCount,
+}: {
+  jobs: JobPin[]
+  unmappedCount: number
+}) {
+  return <ServiceMap jobs={jobs} unmappedCount={unmappedCount} />
 }
