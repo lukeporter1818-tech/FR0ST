@@ -62,7 +62,7 @@ export default async function JobsPage({
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-gray-900">Schedule</h1>
+          <h1 className="text-lg font-semibold text-gray-900">Jobs</h1>
           <p className="text-sm text-gray-500 mt-0.5">
             {jobs.length} {jobs.length === 1 ? 'job' : 'jobs'} found
           </p>

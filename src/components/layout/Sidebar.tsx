@@ -11,15 +11,19 @@ import {
   Settings,
   Shield,
   Map,
+  ClipboardList,
+  HardHat,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const primaryNavItems = [
-  { label: "Schedule",    href: "/schedule",   icon: LayoutList,    roles: null },
-  { label: "Team Chat",   href: "/chat",       icon: MessageSquare, roles: null },
-  { label: "Service Map", href: "/map",        icon: Map,           roles: ["DISPATCHER", "ADMIN"] as string[] },
-  { label: "Management",  href: "/management", icon: Shield,        roles: ["DISPATCHER", "ADMIN"] as string[] },
-  { label: "FR0ST",       href: "/ai",         icon: Bot,           roles: null },
+  { label: "Schedule",     href: "/schedule",     icon: LayoutList,    roles: null },
+  { label: "Jobs",         href: "/jobs",         icon: ClipboardList, roles: ["DISPATCHER", "ADMIN"] as string[] },
+  { label: "Technicians",  href: "/technicians",  icon: HardHat,       roles: ["DISPATCHER", "ADMIN"] as string[] },
+  { label: "Team Chat",    href: "/chat",         icon: MessageSquare, roles: null },
+  { label: "Service Map",  href: "/map",          icon: Map,           roles: ["DISPATCHER", "ADMIN"] as string[] },
+  { label: "Management",   href: "/management",   icon: Shield,        roles: ["DISPATCHER", "ADMIN"] as string[] },
+  { label: "FR0ST",        href: "/ai",           icon: Bot,           roles: null },
 ];
 
 const secondaryNavItems = [

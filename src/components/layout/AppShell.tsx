@@ -15,7 +15,7 @@ const pageTitles: Record<string, string> = {
   "/settings": "Settings",
   "/settings/users": "User Management",
   "/settings/ai-interactions": "Frost Learning Log",
-  "/jobs": "Schedule",
+  "/jobs": "Jobs",
   "/jobs/new": "New Job",
   "/map": "Service Map",
 };
