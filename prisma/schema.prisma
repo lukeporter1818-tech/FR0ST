@@ -147,6 +147,9 @@ model Job {
   aiFollowUpQuestions String[]
   aiRiskFlags         String[]
 
+  lat Float?
+  lng Float?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

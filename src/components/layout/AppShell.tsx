@@ -17,6 +17,7 @@ const pageTitles: Record<string, string> = {
   "/settings/ai-interactions": "Frost Learning Log",
   "/jobs": "Schedule",
   "/jobs/new": "New Job",
+  "/map": "Service Map",
 };
 
 function resolveTitle(pathname: string): string {
@@ -142,7 +143,7 @@ export function AppShell({
           child element accidentally widening the content column.
         */}
         <main className={
-          pathname === '/chat' || pathname === '/ai' || pathname === '/management'
+          pathname === '/chat' || pathname === '/ai' || pathname === '/management' || pathname === '/map'
             ? 'flex-1 flex flex-col overflow-hidden min-h-0'
             : 'flex-1 overflow-y-auto overflow-x-hidden p-6'
         }>

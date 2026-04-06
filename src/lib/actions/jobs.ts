@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db'
 import { requireRole } from '@/lib/auth-guard'
 import { auditLog } from '@/lib/audit'
 import { JobStatus, JobType, Priority, Trade } from '@/generated/prisma'
+import { geocodeAddress } from '@/lib/geocode'
 
 export async function createJob(formData: FormData) {
   const session = await requireRole('DISPATCHER')
@@ -57,6 +58,15 @@ export async function createJob(formData: FormData) {
     },
   })
 
+  // Geocode once and persist — never re-geocoded unless address changes
+  const coords = await geocodeAddress(address, city, state, zip)
+  if (coords) {
+    await prisma.job.update({
+      where: { id: job.id },
+      data: { lat: coords.lat, lng: coords.lng },
+    })
+  }
+
   auditLog({
     action: 'job.create',
     userId: session.user.id,
@@ -97,6 +107,19 @@ export async function updateJob(id: string, formData: FormData) {
   const tags = tagsRaw.split(',').map((t) => t.trim()).filter(Boolean).slice(0, 20)
   const scheduledDate = scheduledDateStr ? new Date(scheduledDateStr) : null
 
+  // Re-geocode only if the address actually changed
+  const addressChanged =
+    address !== existing.address ||
+    city !== existing.city ||
+    state !== existing.state ||
+    zip !== existing.zip
+
+  let coordUpdate: { lat: number | null; lng: number | null } | Record<string, never> = {}
+  if (addressChanged) {
+    const coords = await geocodeAddress(address, city, state, zip)
+    coordUpdate = { lat: coords?.lat ?? null, lng: coords?.lng ?? null }
+  }
+
   await prisma.job.update({
     where: { id },
     data: {
@@ -116,6 +139,7 @@ export async function updateJob(id: string, formData: FormData) {
       dispatcherNotes,
       internalNotes,
       tags,
+      ...coordUpdate,
     },
   })
 
