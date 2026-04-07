@@ -94,7 +94,7 @@ export function Sidebar({ userRole, userName, userInitials, open, onClose }: Sid
 
   return (
     <aside className={cn(
-      "fixed inset-y-0 left-0 z-50 flex w-60 flex-col bg-gray-950 transition-transform duration-200 ease-in-out",
+      "fixed inset-y-0 left-0 z-[1020] flex w-60 flex-col bg-gray-950 transition-transform duration-200 ease-in-out",
       open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
     )}>
       {/* Brand */}
