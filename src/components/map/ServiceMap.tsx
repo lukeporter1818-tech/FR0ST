@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 
@@ -98,6 +98,63 @@ function SidebarClosedInvalidator() {
   return null
 }
 
+// ─── Tile-load watcher ───────────────────────────────────────────────────────
+// Listens for Leaflet's 'tileload' event to confirm at least one tile has
+// successfully rendered. If no tile loads within TILE_GRACE_MS, calls
+// onTimeout so ServiceMap can trigger an automatic remount (retry) or show
+// the error fallback. The `settled` flag ensures onSuccess / onTimeout are
+// each called at most once per mount.
+
+const TILE_GRACE_MS = 3000
+
+function TileLoadWatcher({
+  onSuccess,
+  onTimeout,
+}: {
+  onSuccess: () => void
+  onTimeout: () => void
+}) {
+  const map = useMap()
+  useEffect(() => {
+    let settled = false
+
+    const succeed = () => {
+      if (settled) return
+      settled = true
+      onSuccess()
+    }
+
+    const timer = setTimeout(() => {
+      if (settled) return
+      settled = true
+      onTimeout()
+    }, TILE_GRACE_MS)
+
+    map.on('tileload', succeed)
+    return () => {
+      map.off('tileload', succeed)
+      clearTimeout(timer)
+    }
+  }, [map, onSuccess, onTimeout])
+  return null
+}
+
+// ─── Map error fallback ───────────────────────────────────────────────────────
+
+function MapErrorFallback({ onReload }: { onReload: () => void }) {
+  return (
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-gray-950">
+      <p className="text-sm text-gray-400">Map failed to load</p>
+      <button
+        onClick={onReload}
+        className="rounded-md border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-medium text-gray-300 transition-colors hover:bg-white/10"
+      >
+        Reload map
+      </button>
+    </div>
+  )
+}
+
 // ─── Invalidate size on resize ───────────────────────────────────────────────
 // The absolute-fill shell tracks its positioned ancestor automatically in CSS,
 // but Leaflet's internal tile layout needs invalidateSize when the shell changes.
@@ -189,10 +246,31 @@ export default function ServiceMap({
   jobs: JobPin[]
   unmappedCount: number
 }) {
-  const [flyTarget,  setFlyTarget]  = useState<{ lat: number; lng: number; key: number } | null>(null)
-  const [flyKey,     setFlyKey]     = useState(0)
-  const [activeId,   setActiveId]   = useState<string | null>(null)
-  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [flyTarget,    setFlyTarget]    = useState<{ lat: number; lng: number; key: number } | null>(null)
+  const [flyKey,       setFlyKey]       = useState(0)
+  const [activeId,     setActiveId]     = useState<string | null>(null)
+  const [drawerOpen,   setDrawerOpen]   = useState(false)
+
+  // ── Blank-map recovery ─────────────────────────────────────────────────────
+  // mapAttempt: 0 = first try, 1 = auto-retry, 2 = both failed → error UI.
+  // tileLoadSeen: latched true the moment any tile loads successfully.
+  // Changing mapAttempt forces MapContainer to remount (via key prop) for a
+  // clean Leaflet re-initialisation rather than a fragile invalidateSize call.
+  const [mapAttempt,   setMapAttempt]   = useState(0)
+  const [tileLoadSeen, setTileLoadSeen] = useState(false)
+
+  const showError = mapAttempt >= 2 && !tileLoadSeen
+
+  // Stable callbacks — TileLoadWatcher depends on these not changing identity.
+  const handleTileSuccess = useCallback(() => setTileLoadSeen(true), [])
+  const handleTileTimeout = useCallback(
+    () => setMapAttempt(a => (a < 2 ? a + 1 : a)),
+    [],
+  )
+  const handleReload = useCallback(() => {
+    setMapAttempt(0)
+    setTileLoadSeen(false)
+  }, [])
 
   // Explicit pixel height — eliminates the `height:100%` against flex-derived
   // parent ambiguity. Measured once after mount and updated on window resize.
@@ -280,9 +358,15 @@ export default function ServiceMap({
         ── */}
         <div ref={mapPanelRef} className="relative flex-1 min-h-0">
 
-          {/* Absolute fill shell — MapContainer always gets real dimensions */}
+          {/* Error fallback — shown after two failed tile-load attempts */}
+          {showError && <MapErrorFallback onReload={handleReload} />}
+
+          {/* Absolute fill shell — MapContainer always gets real dimensions.
+              key={mapAttempt} forces a clean Leaflet remount on each retry. */}
+          {!showError && (
           <div className="absolute inset-0">
             <MapContainer
+              key={mapAttempt}
               center={center}
               zoom={zoom}
               style={{ height: '100%', width: '100%' }}
@@ -296,6 +380,7 @@ export default function ServiceMap({
               />
               <MapReadyHandler />
               <SidebarClosedInvalidator />
+              <TileLoadWatcher onSuccess={handleTileSuccess} onTimeout={handleTileTimeout} />
               <FlyController target={flyTarget} />
               <InvalidateSizeOnResize panelRef={mapPanelRef} />
               {jobs.map((job) => (
@@ -347,6 +432,7 @@ export default function ServiceMap({
               ))}
             </MapContainer>
           </div>
+          )}
 
           {/* ── Mobile: floating Jobs pill button ── */}
           <div className="absolute bottom-6 left-1/2 z-[1000] -translate-x-1/2 md:hidden">
