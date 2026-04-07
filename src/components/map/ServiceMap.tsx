@@ -254,7 +254,10 @@ export default function ServiceMap({
         </div>
 
         {/* ── Map panel ── */}
-        <div className="relative flex-1 min-h-0 overflow-hidden">
+        {/* `isolate` creates a new stacking context so Leaflet's internal
+            z-indices (tile pane 200, marker 600, popup 700) don't leak out
+            and paint over the sidebar (z-50) or mobile backdrop (z-40). */}
+        <div className="relative flex-1 min-h-0 overflow-hidden isolate">
           <MapContainer
             {...mapInit}
             style={{ height: mapHeight, width: '100%' }}
