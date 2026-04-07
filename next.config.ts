@@ -11,7 +11,7 @@ const cspDirectives = [
   // Styles: self + inline (Tailwind requires inline)
   "style-src 'self' 'unsafe-inline'",
   // Images: self + data URIs (for base64 image previews)
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https://*.basemaps.cartocdn.com",
   // Fonts: self
   "font-src 'self'",
   // API calls: self + Supabase realtime
