@@ -144,6 +144,10 @@ function JobListItem({
 
 const TOP_BAR_H = 64  // must match TopBar h-16
 
+// Service region fallback: DC / Maryland / Virginia metro area
+const SERVICE_CENTER: [number, number] = [38.9, -77.0]
+const SERVICE_ZOOM = 9
+
 export default function ServiceMap({
   jobs,
   unmappedCount,
@@ -156,10 +160,14 @@ export default function ServiceMap({
   const [activeId,   setActiveId]   = useState<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
-  const center: [number, number] = jobs.length > 0
-    ? [jobs[0].lat, jobs[0].lng]
-    : [39.5, -98.35]
-  const zoom = jobs.length > 0 ? 12 : 4
+  // When jobs exist, fit all markers into view. When empty, open on the
+  // DC / MD / VA service region rather than the whole U.S.
+  const jobBounds = jobs.length > 0
+    ? L.latLngBounds(jobs.map(j => [j.lat, j.lng] as [number, number]))
+    : null
+  const mapInit = jobBounds
+    ? { bounds: jobBounds, boundsOptions: { padding: [48, 48] as [number, number], maxZoom: 14 } }
+    : { center: SERVICE_CENTER, zoom: SERVICE_ZOOM }
 
   function handleListClick(job: JobPin) {
     const key = flyKey + 1
@@ -221,8 +229,7 @@ export default function ServiceMap({
         {/* ── Map panel ── */}
         <div className="relative flex-1 min-h-0 overflow-hidden">
           <MapContainer
-            center={center}
-            zoom={zoom}
+            {...mapInit}
             style={{ height: mapHeight, width: '100%' }}
             scrollWheelZoom
             zoomControl
