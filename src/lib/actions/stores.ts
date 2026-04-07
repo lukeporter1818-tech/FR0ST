@@ -46,12 +46,12 @@ export async function createStore(formData: FormData) {
     })
   } catch {
     // Store table not yet created — redirect back with a visible error param
-    redirect('/settings/stores/new?error=pending')
+    redirect('/stores/new?error=pending')
   }
 
-  revalidatePath('/settings/stores')
+  revalidatePath('/stores')
   revalidatePath('/map')
-  redirect('/settings/stores')
+  redirect('/stores')
 }
 
 export async function updateStore(formData: FormData) {
@@ -92,12 +92,12 @@ export async function updateStore(formData: FormData) {
       },
     })
   } catch {
-    redirect(`/settings/stores/${id}?error=pending`)
+    redirect(`/stores/${id}?error=pending`)
   }
 
-  revalidatePath('/settings/stores')
+  revalidatePath('/stores')
   revalidatePath('/map')
-  redirect('/settings/stores')
+  redirect('/stores')
 }
 
 export async function toggleStoreActive(id: string) {
@@ -111,6 +111,6 @@ export async function toggleStoreActive(id: string) {
     return  // Store table missing — silently no-op; list page already shows safely
   }
 
-  revalidatePath('/settings/stores')
+  revalidatePath('/stores')
   revalidatePath('/map')
 }

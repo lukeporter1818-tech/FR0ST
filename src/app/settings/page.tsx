@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { BookOpen, Building2, MapPin, MessageSquare, Sparkles, Users } from 'lucide-react'
+import { BookOpen, Building2, MessageSquare, Sparkles, Users } from 'lucide-react'
 import { auth } from '@/lib/auth'
 import { hasRole } from '@/lib/auth-guard'
 
@@ -12,14 +12,6 @@ const sections = [
     iconBg: 'bg-amber-50',
     iconColor: 'text-amber-600',
     href: '/settings/users',
-  },
-  {
-    title: 'Service Locations',
-    description: 'Manage serviced stores and locations. Each record links a 3-letter schedule code to a real address and map pin.',
-    icon: MapPin,
-    iconBg: 'bg-cyan-50',
-    iconColor: 'text-cyan-600',
-    href: '/settings/stores',
   },
   {
     title: 'Company Info',
