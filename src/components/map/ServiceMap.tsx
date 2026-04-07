@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 
@@ -64,114 +64,17 @@ function FlyController({ target }: { target: { lat: number; lng: number; key: nu
 }
 
 // ─── Invalidate size on mount ────────────────────────────────────────────────
-// Mobile browsers can take 200–400ms to commit flex layout. A single 150ms
-// timeout was firing before layout was stable, leaving tiles grey. Instead we
-// run three passes: one rAF (catches same-frame issues), 250ms (clears CSS
-// transitions), and 650ms (safety net for slow mobile layout passes).
+// The explicit dvh-calc height means Leaflet always initialises against a real
+// dimension. This single rAF + 250ms pass is kept only as a belt-and-suspenders
+// guard in case the browser hasn't committed the calc() result yet.
 
 function MapReadyHandler() {
   const map = useMap()
   useEffect(() => {
-    const inv = () => map.invalidateSize({ pan: false })
-    const raf = requestAnimationFrame(inv)
-    const t1  = setTimeout(inv, 250)
-    const t2  = setTimeout(inv, 650)
-    return () => { cancelAnimationFrame(raf); clearTimeout(t1); clearTimeout(t2) }
+    const raf = requestAnimationFrame(() => map.invalidateSize({ pan: false }))
+    const t   = setTimeout(() => map.invalidateSize({ pan: false }), 250)
+    return () => { cancelAnimationFrame(raf); clearTimeout(t) }
   }, [map])
-  return null
-}
-
-// ─── Invalidate after mobile sidebar close ───────────────────────────────────
-// The app sidebar uses `transition-transform duration-200`. On mobile it slides
-// in as a fixed overlay, but the transition can hold a GPU compositing layer
-// that prevents tiles from repainting until it's torn down. We listen for the
-// custom 'frost:sidebar-closed' event dispatched by AppShell and invalidate
-// after the 200ms transition has fully settled (+ small buffer).
-
-function SidebarClosedInvalidator() {
-  const map = useMap()
-  useEffect(() => {
-    const handle = () => setTimeout(() => map.invalidateSize({ pan: false }), 220)
-    window.addEventListener('frost:sidebar-closed', handle)
-    return () => window.removeEventListener('frost:sidebar-closed', handle)
-  }, [map])
-  return null
-}
-
-// ─── Tile-load watcher ───────────────────────────────────────────────────────
-// Listens for Leaflet's 'tileload' event to confirm at least one tile has
-// successfully rendered. If no tile loads within TILE_GRACE_MS, calls
-// onTimeout so ServiceMap can trigger an automatic remount (retry) or show
-// the error fallback. The `settled` flag ensures onSuccess / onTimeout are
-// each called at most once per mount.
-
-const TILE_GRACE_MS = 3000
-
-function TileLoadWatcher({
-  onSuccess,
-  onTimeout,
-}: {
-  onSuccess: () => void
-  onTimeout: () => void
-}) {
-  const map = useMap()
-  useEffect(() => {
-    let settled = false
-
-    const succeed = () => {
-      if (settled) return
-      settled = true
-      onSuccess()
-    }
-
-    const timer = setTimeout(() => {
-      if (settled) return
-      settled = true
-      onTimeout()
-    }, TILE_GRACE_MS)
-
-    map.on('tileload', succeed)
-    return () => {
-      map.off('tileload', succeed)
-      clearTimeout(timer)
-    }
-  }, [map, onSuccess, onTimeout])
-  return null
-}
-
-// ─── Map error fallback ───────────────────────────────────────────────────────
-
-function MapErrorFallback({ onReload }: { onReload: () => void }) {
-  return (
-    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-gray-950">
-      <p className="text-sm text-gray-400">Map failed to load</p>
-      <button
-        onClick={onReload}
-        className="rounded-md border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-medium text-gray-300 transition-colors hover:bg-white/10"
-      >
-        Reload map
-      </button>
-    </div>
-  )
-}
-
-// ─── Invalidate size on resize ───────────────────────────────────────────────
-// The absolute-fill shell tracks its positioned ancestor automatically in CSS,
-// but Leaflet's internal tile layout needs invalidateSize when the shell changes.
-
-function InvalidateSizeOnResize({
-  panelRef,
-}: {
-  panelRef: React.RefObject<HTMLDivElement | null>
-}) {
-  const map = useMap()
-  useEffect(() => {
-    const el = panelRef.current
-    if (!el) return
-    const ro = new ResizeObserver(() => map.invalidateSize({ pan: false }))
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [map, panelRef])
   return null
 }
 
@@ -232,12 +135,14 @@ function JobListItem({
 }
 
 // ─── Main component ──────────────────────────────────────────────────────────
+// Height strategy: MapContainer receives an explicit calc(100dvh - TOP_BAR_H)
+// height as an inline style. This has zero dependency on the flex chain above
+// it — no percentage resolution, no ResizeObserver, no recovery loop. 100dvh
+// (dynamic viewport height) tracks mobile browser chrome correctly. The parent
+// flex chain is still present so the surrounding sidebar and job list lay out
+// correctly; the MapContainer just ignores it for its own height calculation.
 
-// ─── Top-bar height constant ──────────────────────────────────────────────────
-// Must stay in sync with TopBar's h-16 (64px). Used to derive explicit pixel
-// height for the map container, bypassing the `height:100%` → flex-item
-// resolution ambiguity that causes blank maps on some browsers / build configs.
-const TOP_BAR_H = 64
+const TOP_BAR_H = 64  // must match TopBar h-16
 
 export default function ServiceMap({
   jobs,
@@ -246,44 +151,10 @@ export default function ServiceMap({
   jobs: JobPin[]
   unmappedCount: number
 }) {
-  const [flyTarget,    setFlyTarget]    = useState<{ lat: number; lng: number; key: number } | null>(null)
-  const [flyKey,       setFlyKey]       = useState(0)
-  const [activeId,     setActiveId]     = useState<string | null>(null)
-  const [drawerOpen,   setDrawerOpen]   = useState(false)
-
-  // ── Blank-map recovery ─────────────────────────────────────────────────────
-  // mapAttempt: 0 = first try, 1 = auto-retry, 2 = both failed → error UI.
-  // tileLoadSeen: latched true the moment any tile loads successfully.
-  // Changing mapAttempt forces MapContainer to remount (via key prop) for a
-  // clean Leaflet re-initialisation rather than a fragile invalidateSize call.
-  const [mapAttempt,   setMapAttempt]   = useState(0)
-  const [tileLoadSeen, setTileLoadSeen] = useState(false)
-
-  const showError = mapAttempt >= 2 && !tileLoadSeen
-
-  // Stable callbacks — TileLoadWatcher depends on these not changing identity.
-  const handleTileSuccess = useCallback(() => setTileLoadSeen(true), [])
-  const handleTileTimeout = useCallback(
-    () => setMapAttempt(a => (a < 2 ? a + 1 : a)),
-    [],
-  )
-  const handleReload = useCallback(() => {
-    setMapAttempt(0)
-    setTileLoadSeen(false)
-  }, [])
-
-  // Explicit pixel height — eliminates the `height:100%` against flex-derived
-  // parent ambiguity. Measured once after mount and updated on window resize.
-  const [mapH, setMapH] = useState(0)
-  useEffect(() => {
-    const measure = () => setMapH(window.innerHeight - TOP_BAR_H)
-    measure()
-    window.addEventListener('resize', measure)
-    return () => window.removeEventListener('resize', measure)
-  }, [])
-
-  // mapPanelRef is used only by InvalidateSizeOnResize
-  const mapPanelRef = useRef<HTMLDivElement>(null)
+  const [flyTarget,  setFlyTarget]  = useState<{ lat: number; lng: number; key: number } | null>(null)
+  const [flyKey,     setFlyKey]     = useState(0)
+  const [activeId,   setActiveId]   = useState<string | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   const center: [number, number] = jobs.length > 0
     ? [jobs[0].lat, jobs[0].lng]
@@ -297,16 +168,14 @@ export default function ServiceMap({
     setActiveId(job.id)
   }
 
-  return (
-    // flex-1 min-h-0 keeps this div in the flex chain so it fills <main>
-    // even before mapH is measured. Once measured the explicit pixel height
-    // takes over and guarantees Leaflet always has a non-zero, non-flex height.
-    <div
-      className="flex-1 min-h-0 flex flex-col"
-      style={mapH > 0 ? { height: `${mapH}px` } : undefined}
-    >
+  // Explicit map height: 100dvh minus the TopBar. Bypasses all flex-chain
+  // percentage-resolution ambiguity that caused blank maps on mobile.
+  const mapHeight = `calc(100dvh - ${TOP_BAR_H}px)`
 
-      {/* ── Main body: sidebar (desktop) + map ── */}
+  return (
+    <div className="flex-1 min-h-0 flex flex-col">
+
+      {/* ── Main body: desktop job sidebar + map ── */}
       <div className="flex flex-1 min-h-0">
 
         {/* ── Desktop sidebar ── */}
@@ -349,90 +218,70 @@ export default function ServiceMap({
           )}
         </div>
 
-        {/* ── Map panel ──────────────────────────────────────────────────────
-             position:relative creates the containing block.
-             The child `absolute inset-0` div fills it exactly, giving
-             MapContainer a CSS-definite height without any JS measurement.
-             This avoids the percentage-height-against-flex-item problem that
-             caused the blank map in previous deployments.
-        ── */}
-        <div ref={mapPanelRef} className="relative flex-1 min-h-0">
-
-          {/* Error fallback — shown after two failed tile-load attempts */}
-          {showError && <MapErrorFallback onReload={handleReload} />}
-
-          {/* Absolute fill shell — MapContainer always gets real dimensions.
-              key={mapAttempt} forces a clean Leaflet remount on each retry. */}
-          {!showError && (
-          <div className="absolute inset-0">
-            <MapContainer
-              key={mapAttempt}
-              center={center}
-              zoom={zoom}
-              style={{ height: '100%', width: '100%' }}
-              scrollWheelZoom
-              zoomControl
-            >
-              <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                maxZoom={19}
-              />
-              <MapReadyHandler />
-              <SidebarClosedInvalidator />
-              <TileLoadWatcher onSuccess={handleTileSuccess} onTimeout={handleTileTimeout} />
-              <FlyController target={flyTarget} />
-              <InvalidateSizeOnResize panelRef={mapPanelRef} />
-              {jobs.map((job) => (
-                <Marker
-                  key={job.id}
-                  position={[job.lat, job.lng]}
-                  icon={buildIcon(markerColor(job), job.id === activeId)}
-                  eventHandlers={{ click: () => setActiveId(job.id) }}
-                >
-                  <Popup>
-                    <div style={{ minWidth: 180 }}>
-                      <p style={{ fontWeight: 600, fontSize: 13, margin: '0 0 2px' }}>
-                        {job.customerName}
-                      </p>
-                      <p style={{ fontSize: 11, color: '#888', margin: '0 0 8px' }}>
-                        {job.address}
-                        {job.city  ? `, ${job.city}`  : ''}
-                        {job.state ? ` ${job.state}` : ''}
-                      </p>
-                      <table style={{ fontSize: 11, borderCollapse: 'collapse', width: '100%' }}>
-                        <tbody>
-                          <tr>
-                            <td style={{ color: '#aaa', paddingRight: 6, paddingBottom: 2 }}>Tech</td>
-                            <td style={{ fontWeight: 500 }}>{job.assignedTech?.name ?? '—'}</td>
-                          </tr>
-                          <tr>
-                            <td style={{ color: '#aaa', paddingRight: 6, paddingBottom: 2 }}>Status</td>
-                            <td>
-                              {job.scheduleEntry?.status
-                                ? (SCHED_LABEL[job.scheduleEntry.status] ?? job.scheduleEntry.status)
-                                : (JOB_STATUS_LABEL[job.status] ?? job.status)}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td style={{ color: '#aaa', paddingRight: 6 }}>Priority</td>
-                            <td style={{ textTransform: 'capitalize' }}>{job.priority.toLowerCase()}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                      <a
-                        href={`/jobs/${job.id}`}
-                        style={{ display: 'inline-block', marginTop: 8, fontSize: 11, color: '#d97706' }}
-                      >
-                        View job →
-                      </a>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
-          </div>
-          )}
+        {/* ── Map panel ── */}
+        <div className="relative flex-1 min-h-0 overflow-hidden">
+          <MapContainer
+            center={center}
+            zoom={zoom}
+            style={{ height: mapHeight, width: '100%' }}
+            scrollWheelZoom
+            zoomControl
+          >
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+              maxZoom={19}
+            />
+            <MapReadyHandler />
+            <FlyController target={flyTarget} />
+            {jobs.map((job) => (
+              <Marker
+                key={job.id}
+                position={[job.lat, job.lng]}
+                icon={buildIcon(markerColor(job), job.id === activeId)}
+                eventHandlers={{ click: () => setActiveId(job.id) }}
+              >
+                <Popup>
+                  <div style={{ minWidth: 180 }}>
+                    <p style={{ fontWeight: 600, fontSize: 13, margin: '0 0 2px' }}>
+                      {job.customerName}
+                    </p>
+                    <p style={{ fontSize: 11, color: '#888', margin: '0 0 8px' }}>
+                      {job.address}
+                      {job.city  ? `, ${job.city}`  : ''}
+                      {job.state ? ` ${job.state}` : ''}
+                    </p>
+                    <table style={{ fontSize: 11, borderCollapse: 'collapse', width: '100%' }}>
+                      <tbody>
+                        <tr>
+                          <td style={{ color: '#aaa', paddingRight: 6, paddingBottom: 2 }}>Tech</td>
+                          <td style={{ fontWeight: 500 }}>{job.assignedTech?.name ?? '—'}</td>
+                        </tr>
+                        <tr>
+                          <td style={{ color: '#aaa', paddingRight: 6, paddingBottom: 2 }}>Status</td>
+                          <td>
+                            {job.scheduleEntry?.status
+                              ? (SCHED_LABEL[job.scheduleEntry.status] ?? job.scheduleEntry.status)
+                              : (JOB_STATUS_LABEL[job.status] ?? job.status)}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style={{ color: '#aaa', paddingRight: 6 }}>Priority</td>
+                          <td style={{ textTransform: 'capitalize' }}>{job.priority.toLowerCase()}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <a
+                      href={`/jobs/${job.id}`}
+                      style={{ display: 'inline-block', marginTop: 8, fontSize: 11, color: '#d97706' }}
+                    >
+                      View job →
+                    </a>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
 
           {/* ── Mobile: floating Jobs pill button ── */}
           <div className="absolute bottom-6 left-1/2 z-[1000] -translate-x-1/2 md:hidden">
