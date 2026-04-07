@@ -35,7 +35,7 @@ export default async function NewStorePage({
 
       <form action={createStore} className="space-y-5">
         {/* Code + Name */}
-        <div className="grid grid-cols-[5rem_1fr] gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[5rem_1fr]">
           <div className="space-y-1.5">
             <label className="block text-xs font-medium text-gray-400" htmlFor="code">
               Code <span className="text-red-400">*</span>
@@ -80,7 +80,7 @@ export default async function NewStorePage({
         </div>
 
         {/* City / State / ZIP */}
-        <div className="grid grid-cols-[1fr_5rem_6rem] gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_5rem_6rem]">
           <div className="space-y-1.5">
             <label className="block text-xs font-medium text-gray-400" htmlFor="city">City</label>
             <input
