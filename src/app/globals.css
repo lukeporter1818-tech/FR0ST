@@ -126,6 +126,21 @@
   body { @apply bg-[#0f1117] text-gray-100 overflow-x-hidden; }
 }
 
+/* ── iPhone auto-zoom prevention ─────────────────────────────────────────────
+   iOS WebKit (Safari and Chrome on iPhone) auto-zooms when a focused input,
+   textarea, or select has a computed font-size below 16px. Frost uses
+   text-sm (14px) on every form control app-wide, so every tab is affected.
+   Fix: raise form control font-size to 16px on touch devices only.
+   Scope: pointer:coarse covers phones and tablets but not desktop mice.
+   !important is required to override Tailwind's utility layer (.text-sm etc.)
+   and is the standard production pattern for this specific iOS constraint.
+   Visual impact: 14px→16px on 2×/3× retina is sub-pixel — imperceptible. */
+@media (pointer: coarse) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
 /* ─── Leaflet / Tailwind v4 compatibility ────────────────────────────────────
    Tailwind Preflight (in @layer base) sets:
      img { max-width: 100%; height: auto; display: block; }
