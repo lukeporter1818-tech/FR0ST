@@ -180,7 +180,7 @@ export function AppShell({
         <main className={
           pathname === '/chat' || pathname === '/ai' || pathname === '/management' || pathname === '/map'
             ? 'flex-1 flex flex-col overflow-hidden min-h-0'
-            : 'flex-1 overflow-y-auto overflow-x-hidden p-6'
+            : 'flex-1 overflow-y-auto overflow-x-hidden overscroll-x-none touch-pan-y p-6'
         }>
           {children}
         </main>
