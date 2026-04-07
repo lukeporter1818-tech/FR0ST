@@ -46,7 +46,7 @@ export default async function MapPage() {
     prisma.store.findMany({
       where: { active: true, lat: { not: null }, lng: { not: null } },
       select: { id: true, code: true, name: true, address: true, city: true, state: true, lat: true, lng: true, notes: true },
-    }),
+    }).catch(() => []),
   ])
 
   // lat/lng confirmed non-null by query filters
