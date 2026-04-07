@@ -66,27 +66,23 @@ export function AppShell({
     if (screen) logPageView(screen)
   }, [pathname])
 
-  // ── Mobile keyboard auto-settling ────────────────────────────────────────
-  // Problem: when the keyboard opens on iOS, Safari scrolls window.scrollY
-  // to bring the focused input "into view" — standard browser behaviour that
-  // works for normal pages but is wrong for a position:fixed; inset:0 shell.
-  // The page scroll shifts the visual viewport DOWN past the fixed shell:
-  // the user sees blank space and the entire UI is above the visible area.
-  // They must manually scroll UP to re-align — this is the settling bug.
+  // ── Mobile keyboard sizing + scroll-drift guard ──────────────────────────
+  // Two separate mechanisms work together here:
   //
-  // Fix: whenever window.scrollY becomes non-zero (visual viewport has
-  // drifted from the fixed shell), reset it to 0 immediately.
-  // Since AppShell is fixed inset-0, the correct scroll position is always 0.
-  // Any non-zero value is iOS "helping" with a focused input — always wrong.
+  // 1. Shell height: the outer div uses `h-[100dvh]` instead of `bottom:0`
+  //    (which `inset-0` would set). `100dvh` tracks the *dynamic* viewport
+  //    height — it shrinks when the keyboard opens on iOS 15.4+ and
+  //    Chrome 108+. This means the shell itself shrinks above the keyboard,
+  //    and <main>'s overflow-y-auto can reveal any content that would otherwise
+  //    sit behind it. Older browsers fall back to 100vh (no regression).
   //
-  // We listen to visualViewport.scroll (fires when offsetTop changes due to
-  // page scroll) AND visualViewport.resize (keyboard open/close animation,
-  // where iOS sometimes adjusts scrollY mid-animation as a safety net).
-  //
-  // Android: does not scroll window.scrollY on keyboard open — scrollY stays 0,
-  // the guard `scrollY !== 0` is always false, scrollTo is never called. Safe.
-  //
-  // Desktop: keyboard never opens, events don't fire for scroll. Safe.
+  // 2. Scroll-drift guard (below): on iOS Safari, even with h-[100dvh],
+  //    the browser may momentarily scroll window.scrollY while animating the
+  //    keyboard open/close. Since the shell is position:fixed, any non-zero
+  //    scrollY shifts the visual viewport past the shell, leaving blank space.
+  //    Fix: reset scrollY to 0 whenever it drifts non-zero.
+  //    Android does not exhibit this behaviour (scrollY stays 0). Safe.
+  //    Desktop: no keyboard, events never fire. Safe.
   useEffect(() => {
     const vv = window.visualViewport
     if (!vv) return
@@ -108,7 +104,7 @@ export function AppShell({
 
   return (
     <div
-      className="flex fixed inset-0 overflow-hidden bg-[#0f1117]"
+      className="flex fixed inset-x-0 top-0 h-[100dvh] overflow-hidden bg-[#0f1117]"
     >
       <Sidebar userRole={userRole} userName={userName} userInitials={userInitials} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
