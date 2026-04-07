@@ -66,23 +66,37 @@ export function AppShell({
     if (screen) logPageView(screen)
   }, [pathname])
 
-  // ── Mobile keyboard sizing + scroll-drift guard ──────────────────────────
-  // Two separate mechanisms work together here:
+  // ── Visual viewport height → CSS variable ────────────────────────────────
+  // `100dvh` on iOS Safari does NOT respond to the on-screen keyboard:
+  // dvh tracks browser chrome (address bar) visibility, not keyboard events.
+  // `window.visualViewport.height` IS accurate — it equals exactly the pixel
+  // height the user can see above the keyboard.
   //
-  // 1. Shell height: the outer div uses `h-[100dvh]` instead of `bottom:0`
-  //    (which `inset-0` would set). `100dvh` tracks the *dynamic* viewport
-  //    height — it shrinks when the keyboard opens on iOS 15.4+ and
-  //    Chrome 108+. This means the shell itself shrinks above the keyboard,
-  //    and <main>'s overflow-y-auto can reveal any content that would otherwise
-  //    sit behind it. Older browsers fall back to 100vh (no regression).
+  // We write that value into --shell-h on <html> whenever the visual viewport
+  // resizes. The shell div reads `var(--shell-h, 100dvh)` as its height,
+  // so it always matches the truly visible area. No React state is touched →
+  // zero component rerenders on keyboard open/close.
   //
-  // 2. Scroll-drift guard (below): on iOS Safari, even with h-[100dvh],
-  //    the browser may momentarily scroll window.scrollY while animating the
-  //    keyboard open/close. Since the shell is position:fixed, any non-zero
-  //    scrollY shifts the visual viewport past the shell, leaving blank space.
-  //    Fix: reset scrollY to 0 whenever it drifts non-zero.
-  //    Android does not exhibit this behaviour (scrollY stays 0). Safe.
-  //    Desktop: no keyboard, events never fire. Safe.
+  // Desktop: visualViewport.resize fires on window resize; height stays equal
+  // to innerHeight (no keyboard). Behaviour is identical to before. Safe.
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const update = () => {
+      document.documentElement.style.setProperty('--shell-h', `${vv.height}px`)
+    }
+    update()
+    vv.addEventListener('resize', update)
+    return () => vv.removeEventListener('resize', update)
+  }, [])
+
+  // ── Scroll-drift guard ────────────────────────────────────────────────────
+  // On iOS Safari, while the keyboard animates open/close, the browser may
+  // briefly scroll window.scrollY non-zero. Since the shell is position:fixed,
+  // any non-zero scrollY shifts the visual viewport past the shell, leaving a
+  // blank gap. Reset it immediately whenever it drifts.
+  // Android: scrollY stays 0 on keyboard events — guard never fires. Safe.
+  // Desktop: no keyboard, events do not fire. Safe.
   useEffect(() => {
     const vv = window.visualViewport
     if (!vv) return
@@ -104,7 +118,8 @@ export function AppShell({
 
   return (
     <div
-      className="flex fixed inset-x-0 top-0 h-[100dvh] overflow-hidden bg-[#0f1117]"
+      className="flex fixed inset-x-0 top-0 overflow-hidden bg-[#0f1117]"
+      style={{ height: 'var(--shell-h, 100dvh)' }}
     >
       <Sidebar userRole={userRole} userName={userName} userInitials={userInitials} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
