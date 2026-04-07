@@ -64,15 +64,36 @@ function FlyController({ target }: { target: { lat: number; lng: number; key: nu
 }
 
 // ─── Invalidate size on mount ────────────────────────────────────────────────
-// After the dynamic-import resolves and React flushes the layout, Leaflet may
-// have been initialised against a zero-sized container (if flex layout hadn't
-// committed). This runs once, after the first paint, to force a correct repaint.
+// Mobile browsers can take 200–400ms to commit flex layout. A single 150ms
+// timeout was firing before layout was stable, leaving tiles grey. Instead we
+// run three passes: one rAF (catches same-frame issues), 250ms (clears CSS
+// transitions), and 650ms (safety net for slow mobile layout passes).
 
 function MapReadyHandler() {
   const map = useMap()
   useEffect(() => {
-    const t = setTimeout(() => map.invalidateSize({ pan: false }), 150)
-    return () => clearTimeout(t)
+    const inv = () => map.invalidateSize({ pan: false })
+    const raf = requestAnimationFrame(inv)
+    const t1  = setTimeout(inv, 250)
+    const t2  = setTimeout(inv, 650)
+    return () => { cancelAnimationFrame(raf); clearTimeout(t1); clearTimeout(t2) }
+  }, [map])
+  return null
+}
+
+// ─── Invalidate after mobile sidebar close ───────────────────────────────────
+// The app sidebar uses `transition-transform duration-200`. On mobile it slides
+// in as a fixed overlay, but the transition can hold a GPU compositing layer
+// that prevents tiles from repainting until it's torn down. We listen for the
+// custom 'frost:sidebar-closed' event dispatched by AppShell and invalidate
+// after the 200ms transition has fully settled (+ small buffer).
+
+function SidebarClosedInvalidator() {
+  const map = useMap()
+  useEffect(() => {
+    const handle = () => setTimeout(() => map.invalidateSize({ pan: false }), 220)
+    window.addEventListener('frost:sidebar-closed', handle)
+    return () => window.removeEventListener('frost:sidebar-closed', handle)
   }, [map])
   return null
 }
@@ -274,6 +295,7 @@ export default function ServiceMap({
                 maxZoom={19}
               />
               <MapReadyHandler />
+              <SidebarClosedInvalidator />
               <FlyController target={flyTarget} />
               <InvalidateSizeOnResize panelRef={mapPanelRef} />
               {jobs.map((job) => (

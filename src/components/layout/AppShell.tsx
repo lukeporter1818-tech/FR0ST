@@ -66,6 +66,17 @@ export function AppShell({
     if (screen) logPageView(screen)
   }, [pathname])
 
+  // ── Sidebar-close notification for map ───────────────────────────────────
+  // The Service Map needs to call invalidateSize() after the mobile sidebar
+  // slides closed (200ms CSS transition). We dispatch a lightweight custom
+  // event so ServiceMap can react without prop-drilling sidebar state down
+  // through the page/layout hierarchy.
+  useEffect(() => {
+    if (!sidebarOpen) {
+      window.dispatchEvent(new CustomEvent('frost:sidebar-closed'))
+    }
+  }, [sidebarOpen])
+
   // ── Mobile keyboard auto-settling ────────────────────────────────────────
   // Problem: when the keyboard opens on iOS, Safari scrolls window.scrollY
   // to bring the focused input "into view" — standard browser behaviour that
