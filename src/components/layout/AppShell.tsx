@@ -12,7 +12,6 @@ const pageTitles: Record<string, string> = {
   "/schedule": "Schedule",
   "/management": "Management",
   "/technicians": "Technicians",
-  "/settings": "Settings",
   "/settings/users": "User Management",
   "/stores": "Service Locations",
   "/settings/ai-interactions": "Frost Learning Log",
