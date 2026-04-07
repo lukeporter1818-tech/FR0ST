@@ -275,6 +275,28 @@ model ManagementTask {
   updatedAt    DateTime       @updatedAt
 }
 
+// ── STORES / SERVICE LOCATIONS ──
+// Each Store record represents a physical location Frost services.
+// The `code` field is the 2–5 letter abbreviation that appears in the
+// schedule board's assignment column (e.g. "WFM", "TGT"). When
+// lat/lng are present the store appears as a teal pin on the Service Map.
+
+model Store {
+  id        String   @id @default(cuid())
+  code      String   @unique  // schedule abbreviation (e.g. WFM, TGT)
+  name      String
+  address   String
+  city      String?
+  state     String?
+  zip       String?
+  lat       Float?
+  lng       Float?
+  active    Boolean  @default(true)
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // ── AI LOG ──
 
 model AIInteraction {

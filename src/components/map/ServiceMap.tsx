@@ -18,6 +18,20 @@ export type JobPin = {
   scheduleEntry: { status: string } | null
 }
 
+// A serviced store/location — appears as a teal diamond pin on the map.
+// The `code` matches the schedule board's assignment abbreviation (e.g. WFM).
+export type StorePin = {
+  id: string
+  code: string
+  name: string
+  address: string
+  city: string | null
+  state: string | null
+  lat: number
+  lng: number
+  notes: string | null
+}
+
 // ─── Icon cache ──────────────────────────────────────────────────────────────
 
 const iconCache = new Map<string, L.DivIcon>()
@@ -52,6 +66,17 @@ function markerColor(job: JobPin): string {
   if (job.status === 'SCHEDULED')   return '#818cf8'
   return '#6b7280'
 }
+
+// ─── Store icon ──────────────────────────────────────────────────────────────
+// Teal diamond — visually distinct from the circular job pins.
+
+const STORE_ICON = L.divIcon({
+  html: `<div style="width:14px;height:14px;background:#06b6d4;border:2px solid rgba(255,255,255,0.9);box-shadow:0 1px 6px rgba(0,0,0,.6);transform:rotate(45deg)"></div>`,
+  className: '',
+  iconSize:    [14, 14],
+  iconAnchor:  [7, 7],
+  popupAnchor: [0, -11],
+})
 
 // ─── Fly-to controller ───────────────────────────────────────────────────────
 
@@ -151,9 +176,11 @@ const SERVICE_ZOOM = 9
 export default function ServiceMap({
   jobs,
   unmappedCount,
+  stores,
 }: {
   jobs: JobPin[]
   unmappedCount: number
+  stores: StorePin[]
 }) {
   const [flyTarget,  setFlyTarget]  = useState<{ lat: number; lng: number; key: number } | null>(null)
   const [flyKey,     setFlyKey]     = useState(0)
@@ -284,6 +311,34 @@ export default function ServiceMap({
                     >
                       View job →
                     </a>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+
+            {/* ── Store pins (teal diamonds) ── */}
+            {stores.map((store) => (
+              <Marker
+                key={store.id}
+                position={[store.lat, store.lng]}
+                icon={STORE_ICON}
+              >
+                <Popup>
+                  <div style={{ minWidth: 160 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      <span style={{ background: '#06b6d4', color: '#fff', borderRadius: 4, padding: '1px 6px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em' }}>
+                        {store.code}
+                      </span>
+                      <p style={{ fontWeight: 600, fontSize: 13, margin: 0 }}>{store.name}</p>
+                    </div>
+                    <p style={{ fontSize: 11, color: '#888', margin: 0 }}>
+                      {store.address}
+                      {store.city  ? `, ${store.city}`  : ''}
+                      {store.state ? ` ${store.state}` : ''}
+                    </p>
+                    {store.notes && (
+                      <p style={{ fontSize: 11, color: '#aaa', marginTop: 6 }}>{store.notes}</p>
+                    )}
                   </div>
                 </Popup>
               </Marker>

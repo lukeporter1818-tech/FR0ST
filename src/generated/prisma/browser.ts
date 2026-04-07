@@ -63,6 +63,11 @@ export type BoardEntry = Prisma.BoardEntryModel
  */
 export type ManagementTask = Prisma.ManagementTaskModel
 /**
+ * Model Store
+ * 
+ */
+export type Store = Prisma.StoreModel
+/**
  * Model AIInteraction
  * 
  */

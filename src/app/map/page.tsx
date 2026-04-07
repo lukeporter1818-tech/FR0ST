@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { JobStatus } from '@/generated/prisma'
 import { MapLoader } from '@/components/map/MapLoader'
-import type { JobPin } from '@/components/map/ServiceMap'
+import type { JobPin, StorePin } from '@/components/map/ServiceMap'
 
 export const metadata = { title: 'Service Map — Frost' }
 
@@ -13,8 +13,8 @@ export default async function MapPage() {
 
   const ACTIVE_STATUSES: JobStatus[] = [JobStatus.NEW, JobStatus.SCHEDULED, JobStatus.IN_PROGRESS]
 
-  // Parallel fetch: mapped jobs + count of active jobs without coordinates
-  const [raw, unmappedCount] = await Promise.all([
+  // Parallel fetch: mapped jobs + unmapped count + active store pins
+  const [raw, unmappedCount, stores] = await Promise.all([
     prisma.job.findMany({
       where: {
         lat: { not: null },
@@ -43,10 +43,15 @@ export default async function MapPage() {
         status: { in: ACTIVE_STATUSES },
       },
     }),
+    prisma.store.findMany({
+      where: { active: true, lat: { not: null }, lng: { not: null } },
+      select: { id: true, code: true, name: true, address: true, city: true, state: true, lat: true, lng: true, notes: true },
+    }),
   ])
 
-  // lat/lng confirmed non-null by query filter
+  // lat/lng confirmed non-null by query filters
   const jobs = raw as JobPin[]
+  const storePins = stores as StorePin[]
 
-  return <MapLoader jobs={jobs} unmappedCount={unmappedCount} />
+  return <MapLoader jobs={jobs} unmappedCount={unmappedCount} stores={storePins} />
 }
