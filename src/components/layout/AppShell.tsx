@@ -66,24 +66,48 @@ export function AppShell({
     if (screen) logPageView(screen)
   }, [pathname])
 
-  // ── Visual viewport height → CSS variable ────────────────────────────────
-  // `100dvh` on iOS Safari does NOT respond to the on-screen keyboard:
-  // dvh tracks browser chrome (address bar) visibility, not keyboard events.
-  // `window.visualViewport.height` IS accurate — it equals exactly the pixel
-  // height the user can see above the keyboard.
+  // ── Visual viewport height → CSS variable + scroll-into-view ────────────
+  // iPhone WebKit (Safari AND Chrome on iPhone — both use WebKit) does NOT
+  // update CSS viewport units (dvh/svh) when the on-screen keyboard opens.
+  // Those units track browser chrome visibility (address bar), not keyboard
+  // events. `window.visualViewport.height` is the correct API: it equals
+  // exactly the pixel height the user can see above the keyboard.
   //
-  // We write that value into --shell-h on <html> whenever the visual viewport
-  // resizes. The shell div reads `var(--shell-h, 100dvh)` as its height,
-  // so it always matches the truly visible area. No React state is touched →
-  // zero component rerenders on keyboard open/close.
+  // Step 1 — shell sizing:
+  //   Write vv.height into --shell-h on <html>. The shell div reads
+  //   `var(--shell-h, 100dvh)`, so it shrinks to the visible area when the
+  //   keyboard opens. No React state → zero component rerenders.
   //
-  // Desktop: visualViewport.resize fires on window resize; height stays equal
-  // to innerHeight (no keyboard). Behaviour is identical to before. Safe.
+  // Step 2 — scroll focused input into view:
+  //   After the shell shrinks, <main> is shorter than the form and the focused
+  //   input may now sit below the fold. iPhone WebKit does not reliably
+  //   auto-scroll a nested overflow:auto container to reveal a focused element
+  //   (it handles document scroll but not inner scroll boxes). A single
+  //   requestAnimationFrame after the CSS variable is set calls
+  //   scrollIntoView({ block:'nearest' }) on the active element, which scrolls
+  //   only <main> (the nearest scrollable ancestor) — the document scroll is
+  //   untouched, so resetScroll (below) is never triggered by this.
+  //   The change guard (Math.round + prev-value check) skips the rAF entirely
+  //   when the height hasn't changed (e.g. scrollY-only events).
+  //
+  // Desktop: visualViewport.resize fires on window resize; height equals
+  //   innerHeight (no keyboard). scrollIntoView on an already-visible focused
+  //   element is a no-op. Safe.
   useEffect(() => {
     const vv = window.visualViewport
     if (!vv) return
     const update = () => {
-      document.documentElement.style.setProperty('--shell-h', `${vv.height}px`)
+      const h = `${Math.round(vv.height)}px`
+      if (document.documentElement.style.getPropertyValue('--shell-h') === h) return
+      document.documentElement.style.setProperty('--shell-h', h)
+      // After the shell reflows to the new height, scroll the focused input
+      // into view within its <main> scroll container.
+      requestAnimationFrame(() => {
+        const el = document.activeElement
+        if (el && el !== document.body && el !== document.documentElement) {
+          (el as HTMLElement).scrollIntoView?.({ block: 'nearest' })
+        }
+      })
     }
     update()
     vv.addEventListener('resize', update)
