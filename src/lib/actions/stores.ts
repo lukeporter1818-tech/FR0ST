@@ -30,19 +30,24 @@ export async function createStore(formData: FormData) {
 
   const coords = await geocodeAddress(address, city, state, zip)
 
-  await prisma.store.create({
-    data: {
-      code,
-      name,
-      address,
-      city,
-      state,
-      zip,
-      notes,
-      lat: coords?.lat ?? null,
-      lng: coords?.lng ?? null,
-    },
-  })
+  try {
+    await prisma.store.create({
+      data: {
+        code,
+        name,
+        address,
+        city,
+        state,
+        zip,
+        notes,
+        lat: coords?.lat ?? null,
+        lng: coords?.lng ?? null,
+      },
+    })
+  } catch {
+    // Store table not yet created — redirect back with a visible error param
+    redirect('/settings/stores/new?error=pending')
+  }
 
   revalidatePath('/settings/stores')
   revalidatePath('/map')
@@ -71,20 +76,24 @@ export async function updateStore(formData: FormData) {
   // Re-geocode on every edit to pick up address changes
   const coords = await geocodeAddress(address, city, state, zip)
 
-  await prisma.store.update({
-    where: { id },
-    data: {
-      code,
-      name,
-      address,
-      city,
-      state,
-      zip,
-      notes,
-      lat: coords?.lat ?? null,
-      lng: coords?.lng ?? null,
-    },
-  })
+  try {
+    await prisma.store.update({
+      where: { id },
+      data: {
+        code,
+        name,
+        address,
+        city,
+        state,
+        zip,
+        notes,
+        lat: coords?.lat ?? null,
+        lng: coords?.lng ?? null,
+      },
+    })
+  } catch {
+    redirect(`/settings/stores/${id}?error=pending`)
+  }
 
   revalidatePath('/settings/stores')
   revalidatePath('/map')
@@ -94,13 +103,13 @@ export async function updateStore(formData: FormData) {
 export async function toggleStoreActive(id: string) {
   await requireRole('DISPATCHER')
 
-  const store = await prisma.store.findUnique({ where: { id }, select: { active: true } })
-  if (!store) throw new Error('Store not found')
-
-  await prisma.store.update({
-    where: { id },
-    data: { active: !store.active },
-  })
+  try {
+    const store = await prisma.store.findUnique({ where: { id }, select: { active: true } })
+    if (!store) return
+    await prisma.store.update({ where: { id }, data: { active: !store.active } })
+  } catch {
+    return  // Store table missing — silently no-op; list page already shows safely
+  }
 
   revalidatePath('/settings/stores')
   revalidatePath('/map')

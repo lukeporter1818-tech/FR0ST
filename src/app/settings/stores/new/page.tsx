@@ -6,13 +6,24 @@ import { createStore } from '@/lib/actions/stores'
 
 export const metadata = { title: 'Add Location — Frost' }
 
-export default async function NewStorePage() {
+export default async function NewStorePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
   const session = await auth()
   if (!session?.user?.id) redirect('/login')
   if (!hasRole(session.user.role, 'DISPATCHER')) redirect('/ai')
 
+  const { error } = await searchParams
+
   return (
     <div className="max-w-lg space-y-6">
+      {error === 'pending' && (
+        <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
+          Stores are not available yet. Database setup is still pending.
+        </div>
+      )}
       <div>
         <h1 className="text-xl font-semibold text-gray-100">Add Service Location</h1>
         <p className="mt-0.5 text-sm text-gray-500">
