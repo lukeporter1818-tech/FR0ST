@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from 'react-leaflet'
 import L from 'leaflet'
 
 export type JobPin = {
@@ -16,6 +16,13 @@ export type JobPin = {
   lng: number
   assignedTech: { name: string } | null
   scheduleEntry: { status: string } | null
+}
+
+// Today's schedule assignment: a store code → tech initials pair.
+// storeCode is normalized to UPPERCASE at the data layer.
+export type TechAssignment = {
+  storeCode: string  // e.g. "85", "SPF" — normalized to uppercase
+  initials:  string  // e.g. "JD", "MK"
 }
 
 // A serviced store/location — appears as a teal diamond pin on the map.
@@ -177,10 +184,12 @@ export default function ServiceMap({
   jobs,
   unmappedCount,
   stores,
+  techAssignments,
 }: {
   jobs: JobPin[]
   unmappedCount: number
   stores: StorePin[]
+  techAssignments: TechAssignment[]
 }) {
   const [flyTarget,  setFlyTarget]  = useState<{ lat: number; lng: number; key: number } | null>(null)
   const [flyKey,     setFlyKey]     = useState(0)
@@ -316,33 +325,54 @@ export default function ServiceMap({
               </Marker>
             ))}
 
-            {/* ── Store pins (teal diamonds) ── */}
-            {stores.map((store) => (
-              <Marker
-                key={store.id}
-                position={[store.lat, store.lng]}
-                icon={STORE_ICON}
-              >
-                <Popup>
-                  <div style={{ minWidth: 160 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                      <span style={{ background: '#06b6d4', color: '#fff', borderRadius: 4, padding: '1px 6px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em' }}>
-                        {store.code}
+            {/* ── Store pins (teal diamonds) + today's tech initials ── */}
+            {stores.map((store) => {
+              // Exact case-insensitive match: store.code → today's assignments
+              const assigned = techAssignments.filter(
+                a => a.storeCode === store.code.toUpperCase()
+              )
+              const initialsLabel = assigned.map(a => a.initials).join(' · ')
+
+              return (
+                <Marker
+                  key={store.id}
+                  position={[store.lat, store.lng]}
+                  icon={STORE_ICON}
+                >
+                  {/* Permanent initials label — only shown when a tech is assigned today */}
+                  {initialsLabel && (
+                    <Tooltip permanent direction="top" offset={[0, -10]} opacity={1}>
+                      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.04em', color: '#0e7490' }}>
+                        {initialsLabel}
                       </span>
-                      <p style={{ fontWeight: 600, fontSize: 13, margin: 0 }}>{store.name}</p>
+                    </Tooltip>
+                  )}
+                  <Popup>
+                    <div style={{ minWidth: 160 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                        <span style={{ background: '#06b6d4', color: '#fff', borderRadius: 4, padding: '1px 6px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em' }}>
+                          {store.code}
+                        </span>
+                        <p style={{ fontWeight: 600, fontSize: 13, margin: 0 }}>{store.name}</p>
+                      </div>
+                      <p style={{ fontSize: 11, color: '#888', margin: 0 }}>
+                        {store.address}
+                        {store.city  ? `, ${store.city}`  : ''}
+                        {store.state ? ` ${store.state}` : ''}
+                      </p>
+                      {initialsLabel && (
+                        <p style={{ fontSize: 11, color: '#0e7490', marginTop: 6, fontWeight: 600 }}>
+                          Today: {initialsLabel}
+                        </p>
+                      )}
+                      {store.notes && (
+                        <p style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>{store.notes}</p>
+                      )}
                     </div>
-                    <p style={{ fontSize: 11, color: '#888', margin: 0 }}>
-                      {store.address}
-                      {store.city  ? `, ${store.city}`  : ''}
-                      {store.state ? ` ${store.state}` : ''}
-                    </p>
-                    {store.notes && (
-                      <p style={{ fontSize: 11, color: '#aaa', marginTop: 6 }}>{store.notes}</p>
-                    )}
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+                  </Popup>
+                </Marker>
+              )
+            })}
           </MapContainer>
 
           {/* ── Mobile: floating Jobs pill button ── */}
