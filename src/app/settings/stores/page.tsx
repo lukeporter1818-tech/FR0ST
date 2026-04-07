@@ -15,7 +15,7 @@ export default async function StoresPage() {
 
   const stores = await prisma.store.findMany({
     orderBy: [{ active: 'desc' }, { code: 'asc' }],
-  })
+  }).catch(() => [])
 
   const active   = stores.filter((s) => s.active)
   const inactive = stores.filter((s) => !s.active)
