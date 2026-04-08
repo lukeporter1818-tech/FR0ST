@@ -19,9 +19,9 @@ export default async function NewStorePage({
 
   return (
     <div className="max-w-lg space-y-6">
-      {error === 'pending' && (
-        <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
-          Stores are not available yet. Database setup is still pending.
+      {error === 'failed' && (
+        <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          Could not save. Check your input — the location code must be unique — and try again.
         </div>
       )}
 

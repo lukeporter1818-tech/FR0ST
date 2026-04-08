@@ -6,6 +6,14 @@ import { prisma } from '@/lib/db'
 import { requireRole } from '@/lib/auth-guard'
 import { geocodeAddress } from '@/lib/geocode'
 
+export async function deleteStore(id: string) {
+  await requireRole('ADMIN')
+  await prisma.store.delete({ where: { id } })
+  revalidatePath('/stores')
+  revalidatePath('/map')
+  redirect('/stores')
+}
+
 function parseCode(raw: FormDataEntryValue | null): string {
   return (raw as string)?.trim().toUpperCase() ?? ''
 }
@@ -46,7 +54,7 @@ export async function createStore(formData: FormData) {
     })
   } catch (err) {
     console.error('[createStore] failed:', err)
-    redirect('/stores/new?error=pending')
+    redirect('/stores/new?error=failed')
   }
 
   revalidatePath('/stores')
@@ -93,7 +101,7 @@ export async function updateStore(formData: FormData) {
     })
   } catch (err) {
     console.error('[updateStore] failed:', err)
-    redirect(`/stores/${id}?error=pending`)
+    redirect(`/stores/${id}?error=failed`)
   }
 
   revalidatePath('/stores')

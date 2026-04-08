@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { hasRole } from '@/lib/auth-guard'
 import { prisma } from '@/lib/db'
-import { updateStore } from '@/lib/actions/stores'
+import { updateStore, deleteStore } from '@/lib/actions/stores'
 
 export const metadata = { title: 'Edit Location — Frost' }
 
@@ -17,6 +17,7 @@ export default async function EditStorePage({
   const session = await auth()
   if (!session?.user?.id) redirect('/login')
   if (!hasRole(session.user.role, 'DISPATCHER')) redirect('/ai')
+  const isAdmin = hasRole(session.user.role, 'ADMIN')
 
   const { id } = await params
   const { error } = await searchParams
@@ -28,9 +29,9 @@ export default async function EditStorePage({
 
   return (
     <div className="max-w-lg space-y-6">
-      {error === 'pending' && (
-        <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
-          Stores are not available yet. Database setup is still pending.
+      {error === 'failed' && (
+        <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          Could not save. Check your input — the location code must be unique — and try again.
         </div>
       )}
 
@@ -160,6 +161,24 @@ export default async function EditStorePage({
           </Link>
         </div>
       </form>
+
+      {/* Admin-only: permanent delete */}
+      {isAdmin && (
+        <div className="border-t border-white/10 pt-6">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-3">Danger Zone</p>
+          <form action={deleteStore.bind(null, store.id)}>
+            <button
+              type="submit"
+              className="rounded-lg border border-red-500/30 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+            >
+              Delete this location permanently
+            </button>
+          </form>
+          <p className="mt-2 text-xs text-gray-600">
+            Removes this store from Frost and the Service Map. Cannot be undone.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

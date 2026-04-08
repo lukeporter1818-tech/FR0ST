@@ -4,7 +4,7 @@ import { Plus, MapPin, AlertTriangle } from 'lucide-react'
 import { auth } from '@/lib/auth'
 import { hasRole } from '@/lib/auth-guard'
 import { prisma } from '@/lib/db'
-import { toggleStoreActive } from '@/lib/actions/stores'
+import { toggleStoreActive, deleteStore } from '@/lib/actions/stores'
 
 export const metadata = { title: 'Service Locations — Frost' }
 
@@ -12,6 +12,8 @@ export default async function StoresPage() {
   const session = await auth()
   if (!session?.user?.id) redirect('/login')
   if (!hasRole(session.user.role, 'DISPATCHER')) redirect('/ai')
+
+  const isAdmin = hasRole(session.user.role, 'ADMIN')
 
   const stores = await prisma.store.findMany({
     orderBy: [{ active: 'desc' }, { code: 'asc' }],
@@ -53,7 +55,7 @@ export default async function StoresPage() {
             </p>
           </div>
         ) : (
-          <StoreTable stores={active} />
+          <StoreTable stores={active} isAdmin={isAdmin} />
         )}
       </section>
 
@@ -63,7 +65,7 @@ export default async function StoresPage() {
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
             Inactive
           </p>
-          <StoreTable stores={inactive} dimmed />
+          <StoreTable stores={inactive} isAdmin={isAdmin} dimmed />
         </section>
       )}
     </div>
@@ -82,12 +84,13 @@ type StoreRow = {
   lng: number | null
 }
 
-function StoreTable({ stores, dimmed = false }: { stores: StoreRow[]; dimmed?: boolean }) {
+function StoreTable({ stores, isAdmin, dimmed = false }: { stores: StoreRow[]; isAdmin: boolean; dimmed?: boolean }) {
   return (
     <div className={`rounded-xl border border-white/10 overflow-hidden ${dimmed ? 'opacity-50' : ''}`}>
       {stores.map((store, i) => {
         const geocoded = store.lat !== null && store.lng !== null
         const toggleAction = toggleStoreActive.bind(null, store.id)
+        const deleteAction = deleteStore.bind(null, store.id)
         return (
           <div
             key={store.id}
@@ -134,6 +137,16 @@ function StoreTable({ stores, dimmed = false }: { stores: StoreRow[]; dimmed?: b
                   {store.active ? 'Deactivate' : 'Activate'}
                 </button>
               </form>
+              {isAdmin && (
+                <form action={deleteAction}>
+                  <button
+                    type="submit"
+                    className="text-xs text-red-700 hover:text-red-400 font-medium transition-colors"
+                  >
+                    Delete
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         )
