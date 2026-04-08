@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   try {
     // Check if Store table already exists
     const existing = await prisma.$queryRawUnsafe<{ tbl: string | null }[]>(
-      `SELECT to_regclass('"Store"') AS tbl`
+      `SELECT to_regclass('"Store"')::text AS tbl`
     )
     if (existing[0]?.tbl !== null) {
       return NextResponse.json({ alreadyExists: true, message: 'Store table already exists — migration already applied.' })
