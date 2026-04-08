@@ -196,13 +196,15 @@ export default function ServiceMap({
   const [activeId,   setActiveId]   = useState<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
-  // When jobs exist, fit all markers into view. When empty, open on the
-  // DC / MD / VA service region rather than the whole U.S.
-  const jobBounds = jobs.length > 0
-    ? L.latLngBounds(jobs.map(j => [j.lat, j.lng] as [number, number]))
-    : null
-  const mapInit = jobBounds
-    ? { bounds: jobBounds, boundsOptions: { padding: [48, 48] as [number, number], maxZoom: 14 } }
+  // Fit all markers (jobs + stores) into view. Fall back to the DC/MD/VA
+  // service region when there are no geocoded pins at all.
+  const allPins = [
+    ...jobs.map(j  => [j.lat, j.lng]   as [number, number]),
+    ...stores.map(s => [s.lat, s.lng]  as [number, number]),
+  ]
+  const mapBounds = allPins.length > 0 ? L.latLngBounds(allPins) : null
+  const mapInit = mapBounds
+    ? { bounds: mapBounds, boundsOptions: { padding: [48, 48] as [number, number], maxZoom: 14 } }
     : { center: SERVICE_CENTER, zoom: SERVICE_ZOOM }
 
   function handleListClick(job: JobPin) {

@@ -21,19 +21,27 @@ export async function geocodeAddress(
         'User-Agent': 'Frost-FieldCommand/1.0 (field service operations)',
         Accept: 'application/json',
       },
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(9000),
       // Never cache at the fetch layer — we persist results ourselves
       cache: 'no-store',
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      console.warn(`[geocode] Nominatim HTTP ${res.status} for: ${parts}`)
+      return null
+    }
     const data = await res.json() as Array<{ lat: string; lon: string }>
-    if (!data?.length) return null
+    if (!data?.length) {
+      console.warn(`[geocode] No results for: ${parts}`)
+      return null
+    }
     const lat = parseFloat(data[0].lat)
     const lng = parseFloat(data[0].lon)
     if (isNaN(lat) || isNaN(lng)) return null
+    console.log(`[geocode] ${parts} → ${lat}, ${lng}`)
     return { lat, lng }
-  } catch {
-    // Geocoding failure is non-fatal — job is still created without coordinates
+  } catch (err) {
+    // Geocoding failure is non-fatal — record is still created without coordinates
+    console.error(`[geocode] fetch failed for: ${parts}`, err)
     return null
   }
 }
