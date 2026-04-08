@@ -14,7 +14,9 @@ export const authConfig: NextAuthConfig = {
         nextUrl.pathname.startsWith('/reset-password') ||
         // Invite activation — new users have no session yet; must be public
         nextUrl.pathname.startsWith('/invite') ||
-        nextUrl.pathname.startsWith('/api/invite')
+        nextUrl.pathname.startsWith('/api/invite') ||
+        // One-shot DB migration endpoint — protected by secret param, not session
+        nextUrl.pathname.startsWith('/api/migrate-stores')
 
       if (isAuthRoute) return true
       if (!isLoggedIn) return Response.redirect(new URL('/login', nextUrl))
