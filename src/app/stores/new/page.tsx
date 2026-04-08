@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { auth } from '@/lib/auth'
-import { hasRole } from '@/lib/auth-guard'
+import { hasRole, isStoreManager } from '@/lib/auth-guard'
 import { createStore } from '@/lib/actions/stores'
 
 export const metadata = { title: 'Add Location — Frost' }
@@ -14,6 +14,7 @@ export default async function NewStorePage({
   const session = await auth()
   if (!session?.user?.id) redirect('/login')
   if (!hasRole(session.user.role, 'DISPATCHER')) redirect('/ai')
+  if (!isStoreManager(session.user.email)) redirect('/stores')
 
   const { error } = await searchParams
 

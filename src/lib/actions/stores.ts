@@ -3,11 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { requireRole } from '@/lib/auth-guard'
+import { requireRole, requireStoreManager } from '@/lib/auth-guard'
 import { geocodeAddress } from '@/lib/geocode'
 
 export async function deleteStore(id: string) {
-  await requireRole('ADMIN')
+  await requireStoreManager()
   await prisma.store.delete({ where: { id } })
   revalidatePath('/stores')
   revalidatePath('/map')
@@ -19,7 +19,7 @@ function parseCode(raw: FormDataEntryValue | null): string {
 }
 
 export async function createStore(formData: FormData) {
-  await requireRole('DISPATCHER')
+  await requireStoreManager()
 
   const code    = parseCode(formData.get('code'))
   const name    = (formData.get('name')    as string)?.trim()
@@ -63,7 +63,7 @@ export async function createStore(formData: FormData) {
 }
 
 export async function updateStore(formData: FormData) {
-  await requireRole('DISPATCHER')
+  await requireStoreManager()
 
   const id      = formData.get('id') as string
   const code    = parseCode(formData.get('code'))

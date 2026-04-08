@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Plus, MapPin, AlertTriangle } from 'lucide-react'
 import { auth } from '@/lib/auth'
-import { hasRole } from '@/lib/auth-guard'
+import { hasRole, isStoreManager } from '@/lib/auth-guard'
 import { prisma } from '@/lib/db'
 import { deleteStore } from '@/lib/actions/stores'
 
@@ -13,7 +13,7 @@ export default async function StoresPage() {
   if (!session?.user?.id) redirect('/login')
   if (!hasRole(session.user.role, 'DISPATCHER')) redirect('/ai')
 
-  const isAdmin = hasRole(session.user.role, 'ADMIN')
+  const canManage = isStoreManager(session.user.email)
 
   const stores = await prisma.store.findMany({
     orderBy: [{ active: 'desc' }, { code: 'asc' }],
@@ -29,25 +29,29 @@ export default async function StoresPage() {
             {stores.length} {stores.length === 1 ? 'location' : 'locations'}
           </p>
         </div>
-        <Link
-          href="/stores/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-amber-400 text-gray-900 px-4 py-2 text-sm font-medium hover:bg-amber-500 transition-colors sm:shrink-0"
-        >
-          <Plus className="size-4" />
-          Add Location
-        </Link>
+        {canManage && (
+          <Link
+            href="/stores/new"
+            className="inline-flex items-center gap-2 rounded-lg bg-amber-400 text-gray-900 px-4 py-2 text-sm font-medium hover:bg-amber-500 transition-colors sm:shrink-0"
+          >
+            <Plus className="size-4" />
+            Add Location
+          </Link>
+        )}
       </div>
 
       {stores.length === 0 ? (
         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-8 text-center">
           <MapPin className="mx-auto size-6 text-gray-600 mb-2" />
           <p className="text-sm text-gray-500">No service locations yet.</p>
-          <p className="text-xs text-gray-600 mt-1">
-            Add a location to show store pins on the Service Map.
-          </p>
+          {canManage && (
+            <p className="text-xs text-gray-600 mt-1">
+              Add a location to show store pins on the Service Map.
+            </p>
+          )}
         </div>
       ) : (
-        <StoreTable stores={stores} isAdmin={isAdmin} />
+        <StoreTable stores={stores} canManage={canManage} />
       )}
     </div>
   )
@@ -65,7 +69,7 @@ type StoreRow = {
   lng: number | null
 }
 
-function StoreTable({ stores, isAdmin }: { stores: StoreRow[]; isAdmin: boolean }) {
+function StoreTable({ stores, canManage }: { stores: StoreRow[]; canManage: boolean }) {
   return (
     <div className="rounded-xl border border-white/10 overflow-hidden">
       {stores.map((store, i) => {
@@ -101,15 +105,15 @@ function StoreTable({ stores, isAdmin }: { stores: StoreRow[]; isAdmin: boolean 
               </span>
             )}
 
-            {/* Actions */}
-            <div className="flex shrink-0 items-center gap-1">
-              <Link
-                href={`/stores/${store.id}`}
-                className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium leading-none text-gray-400 hover:text-gray-100 transition-colors rounded"
-              >
-                Edit
-              </Link>
-              {isAdmin && (
+            {/* Actions — only shown to the store manager */}
+            {canManage && (
+              <div className="flex shrink-0 items-center gap-1">
+                <Link
+                  href={`/stores/${store.id}`}
+                  className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium leading-none text-gray-400 hover:text-gray-100 transition-colors rounded"
+                >
+                  Edit
+                </Link>
                 <form action={deleteAction} className="contents">
                   <button
                     type="submit"
@@ -118,8 +122,8 @@ function StoreTable({ stores, isAdmin }: { stores: StoreRow[]; isAdmin: boolean 
                     Delete
                   </button>
                 </form>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )
       })}
