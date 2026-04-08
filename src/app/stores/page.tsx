@@ -4,7 +4,7 @@ import { Plus, MapPin, AlertTriangle } from 'lucide-react'
 import { auth } from '@/lib/auth'
 import { hasRole } from '@/lib/auth-guard'
 import { prisma } from '@/lib/db'
-import { toggleStoreActive, deleteStore } from '@/lib/actions/stores'
+import { deleteStore } from '@/lib/actions/stores'
 
 export const metadata = { title: 'Service Locations — Frost' }
 
@@ -19,9 +19,6 @@ export default async function StoresPage() {
     orderBy: [{ active: 'desc' }, { code: 'asc' }],
   }).catch(() => [])
 
-  const active   = stores.filter((s) => s.active)
-  const inactive = stores.filter((s) => !s.active)
-
   return (
     <div className="space-y-8 max-w-3xl">
       {/* Header */}
@@ -29,7 +26,7 @@ export default async function StoresPage() {
         <div>
           <h1 className="text-xl font-semibold text-gray-100">Service Locations</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {active.length} active · {inactive.length} inactive
+            {stores.length} {stores.length === 1 ? 'location' : 'locations'}
           </p>
         </div>
         <Link
@@ -41,32 +38,16 @@ export default async function StoresPage() {
         </Link>
       </div>
 
-      {/* Active stores */}
-      <section>
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
-          Active
-        </p>
-        {active.length === 0 ? (
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-8 text-center">
-            <MapPin className="mx-auto size-6 text-gray-600 mb-2" />
-            <p className="text-sm text-gray-500">No service locations yet.</p>
-            <p className="text-xs text-gray-600 mt-1">
-              Add a location to show store pins on the Service Map.
-            </p>
-          </div>
-        ) : (
-          <StoreTable stores={active} isAdmin={isAdmin} />
-        )}
-      </section>
-
-      {/* Inactive stores */}
-      {inactive.length > 0 && (
-        <section>
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
-            Inactive
+      {stores.length === 0 ? (
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-8 text-center">
+          <MapPin className="mx-auto size-6 text-gray-600 mb-2" />
+          <p className="text-sm text-gray-500">No service locations yet.</p>
+          <p className="text-xs text-gray-600 mt-1">
+            Add a location to show store pins on the Service Map.
           </p>
-          <StoreTable stores={inactive} isAdmin={isAdmin} dimmed />
-        </section>
+        </div>
+      ) : (
+        <StoreTable stores={stores} isAdmin={isAdmin} />
       )}
     </div>
   )
@@ -84,12 +65,11 @@ type StoreRow = {
   lng: number | null
 }
 
-function StoreTable({ stores, isAdmin, dimmed = false }: { stores: StoreRow[]; isAdmin: boolean; dimmed?: boolean }) {
+function StoreTable({ stores, isAdmin }: { stores: StoreRow[]; isAdmin: boolean }) {
   return (
-    <div className={`rounded-xl border border-white/10 overflow-hidden ${dimmed ? 'opacity-50' : ''}`}>
+    <div className="rounded-xl border border-white/10 overflow-hidden">
       {stores.map((store, i) => {
         const geocoded = store.lat !== null && store.lng !== null
-        const toggleAction = toggleStoreActive.bind(null, store.id)
         const deleteAction = deleteStore.bind(null, store.id)
         return (
           <div
@@ -125,23 +105,15 @@ function StoreTable({ stores, isAdmin, dimmed = false }: { stores: StoreRow[]; i
             <div className="flex shrink-0 items-center gap-3">
               <Link
                 href={`/stores/${store.id}`}
-                className="text-xs text-gray-500 hover:text-gray-200 font-medium transition-colors"
+                className="text-xs font-medium text-gray-400 hover:text-gray-100 transition-colors"
               >
                 Edit
               </Link>
-              <form action={toggleAction}>
-                <button
-                  type="submit"
-                  className="text-xs text-gray-600 hover:text-gray-400 font-medium transition-colors"
-                >
-                  {store.active ? 'Deactivate' : 'Activate'}
-                </button>
-              </form>
               {isAdmin && (
                 <form action={deleteAction}>
                   <button
                     type="submit"
-                    className="text-xs text-red-700 hover:text-red-400 font-medium transition-colors"
+                    className="text-xs font-medium text-red-500 hover:text-red-300 transition-colors"
                   >
                     Delete
                   </button>
