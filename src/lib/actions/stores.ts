@@ -44,8 +44,8 @@ export async function createStore(formData: FormData) {
         lng: coords?.lng ?? null,
       },
     })
-  } catch {
-    // Store table not yet created — redirect back with a visible error param
+  } catch (err) {
+    console.error('[createStore] failed:', err)
     redirect('/stores/new?error=pending')
   }
 
@@ -91,7 +91,8 @@ export async function updateStore(formData: FormData) {
         lng: coords?.lng ?? null,
       },
     })
-  } catch {
+  } catch (err) {
+    console.error('[updateStore] failed:', err)
     redirect(`/stores/${id}?error=pending`)
   }
 
