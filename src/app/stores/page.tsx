@@ -102,18 +102,18 @@ function StoreTable({ stores, isAdmin }: { stores: StoreRow[]; isAdmin: boolean 
             )}
 
             {/* Actions */}
-            <div className="flex shrink-0 items-center gap-3">
+            <div className="flex shrink-0 items-center gap-1">
               <Link
                 href={`/stores/${store.id}`}
-                className="text-xs font-medium text-gray-400 hover:text-gray-100 transition-colors"
+                className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium leading-none text-gray-400 hover:text-gray-100 transition-colors rounded"
               >
                 Edit
               </Link>
               {isAdmin && (
-                <form action={deleteAction}>
+                <form action={deleteAction} className="contents">
                   <button
                     type="submit"
-                    className="text-xs font-medium text-red-500 hover:text-red-300 transition-colors"
+                    className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium leading-none text-red-500 hover:text-red-300 transition-colors rounded"
                   >
                     Delete
                   </button>
