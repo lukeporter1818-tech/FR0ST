@@ -27,55 +27,72 @@ export async function saveSchedule(date: string, assignments: ScheduleAssignment
     throw new Error('Invalid assignments array')
   }
 
-  const assignedJobIds = assignments.map((a) => String(a.jobId).slice(0, 100))
+  // Sanitize inputs before entering the transaction (CPU only, no DB work).
+  const sanitized = assignments.map((a) => ({
+    jobId:        String(a.jobId).slice(0, 100),
+    technicianId: String(a.technicianId).slice(0, 100),
+    orderIndex:   Number(a.orderIndex) || 0,
+    arrivalWindow: a.arrivalWindow ? String(a.arrivalWindow).slice(0, 50) : null,
+    notes:        a.notes ? String(a.notes).slice(0, 500) : null,
+  }))
+  const assignedJobIds = sanitized.map((a) => a.jobId)
 
-  await prisma.scheduleEntry.deleteMany({ where: { date: scheduleDate } })
+  // Single interactive transaction — the entire schedule save is atomic.
+  // If any step throws, Postgres rolls back all changes and the DB is left
+  // exactly as it was before the call. No partial-delete or partial-rebuild
+  // state is possible.
+  await prisma.$transaction(async (tx) => {
+    // Step 1: clear all existing entries for this date.
+    await tx.scheduleEntry.deleteMany({ where: { date: scheduleDate } })
 
-  const previouslyScheduledJobs = await prisma.job.findMany({
-    where: {
-      status: 'SCHEDULED',
-      scheduledDate: scheduleDate,
-      id: { notIn: assignedJobIds },
-    },
-    select: { id: true },
-  })
-
-  if (previouslyScheduledJobs.length > 0) {
-    await prisma.job.updateMany({
-      where: { id: { in: previouslyScheduledJobs.map((j) => j.id) } },
-      data: { status: 'NEW', assignedTechId: null, scheduledDate: null },
+    // Step 2: find jobs that were scheduled for this date but are NOT in the
+    // new assignment list — they need to revert to NEW status.
+    // This read runs inside the transaction so it sees the just-deleted state
+    // and is consistent with the writes that follow.
+    const dropped = await tx.job.findMany({
+      where: {
+        status: 'SCHEDULED',
+        scheduledDate: scheduleDate,
+        id: { notIn: assignedJobIds },
+      },
+      select: { id: true },
     })
-  }
 
-  if (assignments.length > 0) {
-    await prisma.$transaction(
-      assignments.map((a) =>
-        prisma.scheduleEntry.create({
+    // Step 3: reset dropped jobs.
+    if (dropped.length > 0) {
+      await tx.job.updateMany({
+        where: { id: { in: dropped.map((j) => j.id) } },
+        data: { status: 'NEW', assignedTechId: null, scheduledDate: null },
+      })
+    }
+
+    if (sanitized.length > 0) {
+      // Step 4: create all new schedule entries in one bulk insert.
+      await tx.scheduleEntry.createMany({
+        data: sanitized.map((a) => ({
+          technicianId: a.technicianId,
+          jobId:        a.jobId,
+          date:         scheduleDate,
+          orderIndex:   a.orderIndex,
+          arrivalWindow: a.arrivalWindow,
+          notes:        a.notes,
+        })),
+      })
+
+      // Step 5: sync job statuses. Each job may have a different assigned tech
+      // so this cannot be collapsed into a single updateMany.
+      for (const a of sanitized) {
+        await tx.job.update({
+          where: { id: a.jobId },
           data: {
-            technicianId: String(a.technicianId).slice(0, 100),
-            jobId: String(a.jobId).slice(0, 100),
-            date: scheduleDate,
-            orderIndex: Number(a.orderIndex) || 0,
-            arrivalWindow: a.arrivalWindow ? String(a.arrivalWindow).slice(0, 50) : null,
-            notes: a.notes ? String(a.notes).slice(0, 500) : null,
+            status:        'SCHEDULED',
+            assignedTechId: a.technicianId,
+            scheduledDate:  scheduleDate,
           },
         })
-      )
-    )
-
-    await prisma.$transaction(
-      assignments.map((a) =>
-        prisma.job.update({
-          where: { id: String(a.jobId).slice(0, 100) },
-          data: {
-            status: 'SCHEDULED',
-            assignedTechId: String(a.technicianId).slice(0, 100),
-            scheduledDate: scheduleDate,
-          },
-        })
-      )
-    )
-  }
+      }
+    }
+  })
 
   auditLog({
     action: 'board.save',
