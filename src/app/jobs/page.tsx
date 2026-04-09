@@ -45,11 +45,14 @@ export default async function JobsPage({
     ]
   }
 
+  const JOB_PAGE_LIMIT = 100
+
   const [jobs, technicians] = await Promise.all([
     prisma.job.findMany({
       where,
       include: { assignedTech: true },
       orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
+      take: JOB_PAGE_LIMIT,
     }),
     prisma.technician.findMany({
       where: { active: true },
@@ -64,7 +67,9 @@ export default async function JobsPage({
         <div>
           <h1 className="text-lg font-semibold text-gray-900">Jobs</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {jobs.length} {jobs.length === 1 ? 'job' : 'jobs'} found
+            {jobs.length === JOB_PAGE_LIMIT
+              ? `Showing ${JOB_PAGE_LIMIT} most recent jobs`
+              : `${jobs.length} ${jobs.length === 1 ? 'job' : 'jobs'} found`}
           </p>
         </div>
         <Link
