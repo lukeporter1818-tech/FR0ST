@@ -116,26 +116,33 @@ export async function createUser(formData: FormData) {
   const existing = await prisma.user.findUnique({ where: { email } })
   if (existing) throw new Error('A user with that email already exists')
 
+  // Hash before opening the transaction — CPU-only work, no DB round trip.
   const passwordHash = await hash(password, 12)
 
-  const user = await prisma.user.create({
-    data: {
-      name,
-      email,
-      passwordHash,
-      role: role as 'ADMIN' | 'DISPATCHER' | 'TECHNICIAN',
-      phone,
-      active: true,
-    },
-  })
-
-  // Link to technician profile if provided
-  if (technicianId) {
-    await prisma.technician.update({
-      where: { id: technicianId },
-      data: { userId: user.id },
+  // Atomic: user row and technician link either both commit or both roll back.
+  // Matches the reliability level of createUserWithInvite.
+  const user = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        name,
+        email,
+        passwordHash,
+        role: role as 'ADMIN' | 'DISPATCHER' | 'TECHNICIAN',
+        phone,
+        active: true,
+      },
+      select: { id: true },
     })
-  }
+
+    if (technicianId) {
+      await tx.technician.update({
+        where: { id: technicianId },
+        data: { userId: user.id },
+      })
+    }
+
+    return user
+  })
 
   auditLog({
     action: 'tech.create',
