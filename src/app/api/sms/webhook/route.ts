@@ -49,6 +49,7 @@ export async function POST(request: Request) {
 
     const normalizedFrom = sanitizedFrom.replace(/[^\d+]/g, '')
 
+    // Only id is needed downstream — avoid loading full Technician object.
     const technician = await prisma.technician.findFirst({
       where: {
         OR: [
@@ -57,26 +58,44 @@ export async function POST(request: Request) {
           ...(normalizedFrom.startsWith('+1') ? [{ phone: normalizedFrom.slice(2) }] : []),
         ],
       },
+      select: { id: true },
     })
 
-    await prisma.smsMessage.create({
-      data: {
-        technicianId: technician?.id ?? null,
-        direction: 'INBOUND',
-        body: sanitizedBody,
-        twilioSid: sanitizedSid,
-        status: 'received',
-        sentAt: new Date(),
-      },
-    })
-
+    // Log unknown sender before the DB write so the warning is visible even
+    // if the write fails.
     if (!technician) {
       console.warn(`[SMS WEBHOOK] Inbound from unknown number: ${sanitizedFrom}`)
     }
 
+    // ── DB write — explicit inner catch for actionable failure logging ──────
+    // Return 500 on failure so Twilio retries the webhook (up to 3×).
+    // A retry that reaches a healthy DB is preferable to guaranteed message
+    // loss. The structured log gives operators enough context to reconstruct
+    // the message manually if all retries fail.
+    try {
+      await prisma.smsMessage.create({
+        data: {
+          technicianId: technician?.id ?? null,
+          direction: 'INBOUND',
+          body: sanitizedBody,
+          twilioSid: sanitizedSid,
+          status: 'received',
+          sentAt: new Date(),
+        },
+      })
+    } catch (dbErr) {
+      console.error('[SMS WEBHOOK] DB write failed — inbound message NOT stored', {
+        from: sanitizedFrom,
+        messageSid: sanitizedSid,
+        bodyLength: sanitizedBody.length,
+        error: dbErr instanceof Error ? dbErr.message : String(dbErr),
+      })
+      return twiml(500)
+    }
+
     return twiml(200)
   } catch (err) {
-    console.error('[SMS WEBHOOK] Error:', err)
+    console.error('[SMS WEBHOOK] Unexpected error:', err)
     return twiml(500)
   }
 }
