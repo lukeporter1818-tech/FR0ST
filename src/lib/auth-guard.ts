@@ -76,14 +76,14 @@ export async function requireRole(minRole: Role) {
 }
 
 // ─── Store Management Guard ──────────────────────────────────────────────────
-// Store create / update / delete is restricted to a single owner account.
-// This is enforced server-side on every mutation; UI controls are also hidden
-// for other users but the server check is the authoritative gate.
+// Store create / update / delete is restricted to users with canManageStores=true.
+// The flag is stored on the User row and threaded into the JWT so no extra DB
+// query is needed. It is independent of the ADMIN role — granting it does not
+// broaden any other permission. This is enforced server-side on every mutation;
+// UI controls are also hidden for non-permitted users.
 
-const STORE_MANAGER_EMAIL = 'lukeporter1818@gmail.com'
-
-export function isStoreManager(email: string | null | undefined): boolean {
-  return email === STORE_MANAGER_EMAIL
+export function isStoreManager(canManageStores: boolean | null | undefined): boolean {
+  return canManageStores === true
 }
 
 export async function requireStoreManager() {
@@ -91,7 +91,7 @@ export async function requireStoreManager() {
   if (!session?.user?.id) {
     redirect('/login')
   }
-  if (!isStoreManager(session.user.email)) {
+  if (!isStoreManager(session.user.canManageStores)) {
     throw new Error('Forbidden: store management is restricted')
   }
   return session

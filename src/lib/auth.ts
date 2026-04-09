@@ -13,12 +13,14 @@ declare module 'next-auth' {
       image?: string | null
       role: string
       technicianId: string | null
+      canManageStores: boolean
     }
   }
   interface JWT {
     id: string
     role: string
     technicianId: string | null
+    canManageStores: boolean
   }
 }
 
@@ -54,6 +56,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           role: user.role,
           technicianId: user.technician?.id ?? null,
+          canManageStores: user.canManageStores,
         }
       },
     }),

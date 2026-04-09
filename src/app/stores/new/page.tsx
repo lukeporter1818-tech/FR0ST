@@ -14,7 +14,7 @@ export default async function NewStorePage({
   const session = await auth()
   if (!session?.user?.id) redirect('/login')
   if (!hasRole(session.user.role, 'DISPATCHER')) redirect('/ai')
-  if (!isStoreManager(session.user.email)) redirect('/stores')
+  if (!isStoreManager(session.user.canManageStores)) redirect('/stores')
 
   const { error } = await searchParams
 

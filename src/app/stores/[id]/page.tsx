@@ -17,7 +17,7 @@ export default async function EditStorePage({
   const session = await auth()
   if (!session?.user?.id) redirect('/login')
   if (!hasRole(session.user.role, 'DISPATCHER')) redirect('/ai')
-  if (!isStoreManager(session.user.email)) redirect('/stores')
+  if (!isStoreManager(session.user.canManageStores)) redirect('/stores')
 
   const { id } = await params
   const { error } = await searchParams

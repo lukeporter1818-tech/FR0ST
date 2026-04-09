@@ -25,6 +25,7 @@ export const authConfig: NextAuthConfig = {
         token.id = user.id
         token.role = (user as any).role
         token.technicianId = (user as any).technicianId ?? null
+        token.canManageStores = (user as any).canManageStores ?? false
       }
       return token
     },
@@ -33,6 +34,7 @@ export const authConfig: NextAuthConfig = {
         session.user.id = token.id as string
         session.user.role = token.role as string
         session.user.technicianId = token.technicianId as string | null
+        session.user.canManageStores = token.canManageStores as boolean ?? false
       }
       return session
     },

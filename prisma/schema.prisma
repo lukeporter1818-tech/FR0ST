@@ -83,6 +83,7 @@ model User {
   inviteTokenHash  String?
   inviteExpiresAt  DateTime?
   isActivated      Boolean   @default(true)
+  canManageStores  Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

@@ -13,7 +13,7 @@ export default async function StoresPage() {
   if (!session?.user?.id) redirect('/login')
   if (!hasRole(session.user.role, 'DISPATCHER')) redirect('/ai')
 
-  const canManage = isStoreManager(session.user.email)
+  const canManage = isStoreManager(session.user.canManageStores)
 
   const stores = await prisma.store.findMany({
     orderBy: [{ active: 'desc' }, { code: 'asc' }],
