@@ -83,8 +83,11 @@ export async function createJob(formData: FormData) {
 export async function updateJob(id: string, formData: FormData) {
   const session = await requireRole('DISPATCHER')
 
-  // Verify the job exists
-  const existing = await prisma.job.findUnique({ where: { id } })
+  // Verify the job exists and fetch only the fields needed for geocoding comparison
+  const existing = await prisma.job.findUnique({
+    where: { id },
+    select: { address: true, city: true, state: true, zip: true },
+  })
   if (!existing) throw new Error('Job not found')
 
   const customerName = (formData.get('customerName') as string)?.trim()
@@ -158,7 +161,10 @@ export async function updateJob(id: string, formData: FormData) {
 export async function updateJobStatus(id: string, status: JobStatus) {
   const session = await requireRole('DISPATCHER')
 
-  const existing = await prisma.job.findUnique({ where: { id } })
+  const existing = await prisma.job.findUnique({
+    where: { id },
+    select: { status: true },
+  })
   if (!existing) throw new Error('Job not found')
 
   await prisma.job.update({ where: { id }, data: { status } })
@@ -179,7 +185,10 @@ export async function updateJobStatus(id: string, status: JobStatus) {
 export async function assignJob(jobId: string, techId: string | null) {
   const session = await requireRole('DISPATCHER')
 
-  const existing = await prisma.job.findUnique({ where: { id: jobId } })
+  const existing = await prisma.job.findUnique({
+    where: { id: jobId },
+    select: { id: true },
+  })
   if (!existing) throw new Error('Job not found')
 
   await prisma.job.update({
@@ -207,7 +216,10 @@ export async function deleteJob(id: string) {
   // Only admins can delete jobs
   const session = await requireRole('ADMIN')
 
-  const existing = await prisma.job.findUnique({ where: { id } })
+  const existing = await prisma.job.findUnique({
+    where: { id },
+    select: { customerName: true },
+  })
   if (!existing) throw new Error('Job not found')
 
   await prisma.job.delete({ where: { id } })

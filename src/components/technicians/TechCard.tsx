@@ -1,11 +1,11 @@
 import Link from 'next/link'
 import { Phone, Briefcase } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Technician, Job } from '@/generated/prisma'
+import type { Technician } from '@/generated/prisma'
 
 type TechCardProps = {
   technician: Technician & {
-    jobs: Job[]
+    jobs: { id: string }[]  // only id fetched — component uses jobs.length only
   }
 }
 

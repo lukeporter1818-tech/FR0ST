@@ -23,6 +23,8 @@ export default async function TechniciansPage({
             notIn: ['COMPLETED', 'CANCELLED'],
           },
         },
+        // Only the ID is needed — TechCard uses jobs.length for the active count
+        select: { id: true },
       },
     },
     orderBy: { name: 'asc' },

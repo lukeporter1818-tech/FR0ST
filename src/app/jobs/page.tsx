@@ -50,12 +50,13 @@ export default async function JobsPage({
   const [jobs, technicians] = await Promise.all([
     prisma.job.findMany({
       where,
-      include: { assignedTech: true },
+      include: { assignedTech: { select: { name: true } } },
       orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
       take: JOB_PAGE_LIMIT,
     }),
     prisma.technician.findMany({
       where: { active: true },
+      select: { id: true, name: true },
       orderBy: { name: 'asc' },
     }),
   ])
