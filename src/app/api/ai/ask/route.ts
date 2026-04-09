@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { askAI } from '@/lib/ai'
 import { SYSTEM_PROMPT } from '@/lib/ai/system-prompt'
 import { requireApiSession, unauthorized, tooManyRequests } from '@/lib/auth-guard'
-import { rateLimit, getClientIp, LIMITS } from '@/lib/rate-limit'
+import { rateLimit, LIMITS } from '@/lib/rate-limit'
 import { aiAskSchema } from '@/lib/validations'
 import { auditLog } from '@/lib/audit'
 
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   const session = await requireApiSession()
   if (!session) return unauthorized()
 
-  if (!rateLimit(`ai:${getClientIp(request)}`, LIMITS.AI.limit, LIMITS.AI.windowMs)) {
+  if (!rateLimit(`ai:${session.user.id}`, LIMITS.AI.limit, LIMITS.AI.windowMs)) {
     return tooManyRequests()
   }
 

@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireApiRole, forbidden, tooManyRequests } from '@/lib/auth-guard'
-import { rateLimit, getClientIp, LIMITS } from '@/lib/rate-limit'
+import { rateLimit, LIMITS } from '@/lib/rate-limit'
 import { auditLog } from '@/lib/audit'
 import { cuidSchema } from '@/lib/validations'
 import { z } from 'zod'
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
   const session = await requireApiRole('DISPATCHER')
   if (!session) return forbidden()
 
-  if (!rateLimit(`ai:${getClientIp(req)}`, LIMITS.AI.limit, LIMITS.AI.windowMs)) {
+  if (!rateLimit(`ai:${session.user.id}`, LIMITS.AI.limit, LIMITS.AI.windowMs)) {
     return tooManyRequests()
   }
 

@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { NextRequest } from 'next/server'
 import { requireApiSession, unauthorized, tooManyRequests } from '@/lib/auth-guard'
-import { rateLimit, getClientIp, LIMITS } from '@/lib/rate-limit'
+import { rateLimit, LIMITS } from '@/lib/rate-limit'
 import { extractWorkOrderSchema } from '@/lib/validations'
 import { auditLog } from '@/lib/audit'
 import type { WorkOrderExtraction } from '@/types/work-order'
