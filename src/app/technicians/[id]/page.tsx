@@ -66,15 +66,27 @@ export default async function TechnicianDetailPage({
   const [session, { id }] = await Promise.all([auth(), params])
   if (!session?.user?.id) redirect('/login')
 
+  // Compute date windows before the query so they can scope the DB fetch.
+  const today    = getDateRange(0)
+  const tomorrow = getDateRange(1)
+
   const technician = await prisma.technician.findUnique({
     where: { id },
     include: {
+      // Active jobs only — completed/cancelled history is excluded at the DB
+      // level rather than loading all-time records and filtering client-side.
       jobs: {
+        where: { status: { notIn: ['COMPLETED', 'CANCELLED'] } },
         orderBy: { scheduledDate: 'asc' },
+        take: 50,
       },
+      // Schedule entries from today forward only — historical entries are not
+      // needed by this page and grow without bound over time.
       scheduleEntries: {
+        where: { date: { gte: today.start } },
         include: { job: true },
         orderBy: { date: 'asc' },
+        take: 30,
       },
     },
   })
@@ -83,9 +95,6 @@ export default async function TechnicianDetailPage({
 
   const status = statusConfig[technician.status] ?? statusConfig.OFF
 
-  const today = getDateRange(0)
-  const tomorrow = getDateRange(1)
-
   const todayEntries = technician.scheduleEntries.filter(
     (e) => e.date >= today.start && e.date < today.end
   )
@@ -93,9 +102,8 @@ export default async function TechnicianDetailPage({
     (e) => e.date >= tomorrow.start && e.date < tomorrow.end
   )
 
-  const activeJobs = technician.jobs.filter(
-    (j) => j.status !== 'COMPLETED' && j.status !== 'CANCELLED'
-  )
+  // jobs are already filtered to active statuses by the DB query
+  const activeJobs = technician.jobs
 
   const initials = getInitials(technician.name)
 
