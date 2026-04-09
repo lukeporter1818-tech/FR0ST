@@ -81,23 +81,32 @@ export async function updateStore(formData: FormData) {
     throw new Error('Code must be 2–5 characters')
   }
 
-  // Re-geocode on every edit to pick up address changes
-  const coords = await geocodeAddress(address, city, state, zip)
+  // Only re-geocode when an address field actually changed.
+  // This avoids unnecessary external API calls and the 7–14 s latency
+  // that geocoding adds when the user only edits name, code, or notes.
+  const existing = await prisma.store.findUnique({
+    where: { id },
+    select: { address: true, city: true, state: true, zip: true, lat: true, lng: true },
+  })
+
+  const addressChanged =
+    !existing ||
+    existing.address !== address ||
+    (existing.city  ?? null) !== city  ||
+    (existing.state ?? null) !== state ||
+    (existing.zip   ?? null) !== zip
+
+  const coords = addressChanged
+    ? await geocodeAddress(address, city, state, zip)
+    : null
+
+  const lat = addressChanged ? (coords?.lat ?? null) : (existing?.lat ?? null)
+  const lng = addressChanged ? (coords?.lng ?? null) : (existing?.lng ?? null)
 
   try {
     await prisma.store.update({
       where: { id },
-      data: {
-        code,
-        name,
-        address,
-        city,
-        state,
-        zip,
-        notes,
-        lat: coords?.lat ?? null,
-        lng: coords?.lng ?? null,
-      },
+      data: { code, name, address, city, state, zip, notes, lat, lng },
     })
   } catch (err) {
     console.error('[updateStore] failed:', err)
