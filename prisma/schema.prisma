@@ -158,6 +158,9 @@ model Job {
   smsMessages    SmsMessage[]
   notes          Note[]
   aiInteractions AIInteraction[]
+
+  @@index([status, priority, createdAt])
+  @@index([lat, lng])
 }
 
 // ── SCHEDULE ──
@@ -205,6 +208,8 @@ model ChatMessage {
   channel   String   @default("general")
   body      String
   createdAt DateTime @default(now())
+
+  @@index([channel, createdAt])
 }
 
 // ── NOTES ──
@@ -249,6 +254,7 @@ model BoardEntry {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
+  @@index([date])
   @@unique([technicianId, date])
   @@unique([manualName, date])
 }
