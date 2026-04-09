@@ -155,7 +155,7 @@ export async function createUser(formData: FormData) {
 export async function updateUser(id: string, formData: FormData) {
   const session = await requireRole('ADMIN')
 
-  const existing = await prisma.user.findUnique({ where: { id } })
+  const existing = await prisma.user.findUnique({ where: { id }, select: { id: true } })
   if (!existing) throw new Error('User not found')
 
   const name = (formData.get('name') as string)?.trim()
@@ -175,6 +175,7 @@ export async function updateUser(id: string, formData: FormData) {
   // Check email uniqueness (excluding self)
   const emailTaken = await prisma.user.findFirst({
     where: { email, id: { not: id } },
+    select: { id: true },
   })
   if (emailTaken) throw new Error('That email is already in use')
 
@@ -220,7 +221,7 @@ export async function setUserActive(id: string, active: boolean) {
 
   if (id === session.user.id) throw new Error('You cannot deactivate your own account')
 
-  const existing = await prisma.user.findUnique({ where: { id } })
+  const existing = await prisma.user.findUnique({ where: { id }, select: { id: true } })
   if (!existing) throw new Error('User not found')
 
   await prisma.user.update({ where: { id }, data: { active } })
@@ -244,7 +245,7 @@ export async function setUserActive(id: string, active: boolean) {
 export async function generatePasswordResetToken(userId: string): Promise<string> {
   await requireRole('ADMIN')
 
-  const existing = await prisma.user.findUnique({ where: { id: userId } })
+  const existing = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } })
   if (!existing) throw new Error('User not found')
 
   const rawToken = randomUUID()
@@ -313,7 +314,7 @@ export async function adminSetPassword(userId: string, newPassword: string) {
     throw new Error('Password must be at least 8 characters')
   }
 
-  const existing = await prisma.user.findUnique({ where: { id: userId } })
+  const existing = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } })
   if (!existing) throw new Error('User not found')
 
   const passwordHash = await hash(newPassword, 12)
@@ -355,7 +356,7 @@ export async function deleteUser(id: string): Promise<{ success: boolean; error?
 
   const existing = await prisma.user.findUnique({
     where: { id },
-    include: { technician: { select: { id: true } } },
+    select: { name: true, email: true, technician: { select: { id: true } } },
   })
   if (!existing) return { success: false, error: 'User not found' }
 

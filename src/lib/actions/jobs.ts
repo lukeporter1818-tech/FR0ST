@@ -36,6 +36,10 @@ export async function createJob(formData: FormData) {
   const scheduledDate = scheduledDateStr ? new Date(scheduledDateStr) : null
   const status: JobStatus = assignedTechId && scheduledDate ? 'SCHEDULED' : 'NEW'
 
+  // Geocode before insert so lat/lng land in a single DB write instead of
+  // create → update (two round trips, one unnecessary).
+  const coords = await geocodeAddress(address, city, state, zip)
+
   const job = await prisma.job.create({
     data: {
       customerName,
@@ -55,17 +59,10 @@ export async function createJob(formData: FormData) {
       internalNotes,
       tags,
       status,
+      lat: coords?.lat ?? null,
+      lng: coords?.lng ?? null,
     },
   })
-
-  // Geocode once and persist — never re-geocoded unless address changes
-  const coords = await geocodeAddress(address, city, state, zip)
-  if (coords) {
-    await prisma.job.update({
-      where: { id: job.id },
-      data: { lat: coords.lat, lng: coords.lng },
-    })
-  }
 
   auditLog({
     action: 'job.create',

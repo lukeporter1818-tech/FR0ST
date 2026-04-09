@@ -49,7 +49,7 @@ export async function createTechnician(formData: FormData) {
 export async function updateTechnician(id: string, formData: FormData) {
   const session = await requireRole('DISPATCHER')
 
-  const existing = await prisma.technician.findUnique({ where: { id } })
+  const existing = await prisma.technician.findUnique({ where: { id }, select: { id: true } })
   if (!existing) throw new Error('Technician not found')
 
   const name = (formData.get('name') as string)?.trim()
@@ -94,7 +94,7 @@ export async function deleteTechnician(id: string) {
   // Only admins can delete technicians
   const session = await requireRole('ADMIN')
 
-  const existing = await prisma.technician.findUnique({ where: { id } })
+  const existing = await prisma.technician.findUnique({ where: { id }, select: { id: true, name: true } })
   if (!existing) throw new Error('Technician not found')
 
   await prisma.technician.delete({ where: { id } })

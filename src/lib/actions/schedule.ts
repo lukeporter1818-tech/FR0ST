@@ -84,13 +84,13 @@ export async function saveSchedule(date: string, assignments: ScheduleAssignment
     meta: { date, assignmentCount: assignments.length },
   })
 
-  revalidatePath('/dispatch')
+  revalidatePath('/schedule')
 }
 
 export async function removeFromSchedule(jobId: string) {
   const session = await requireRole('DISPATCHER')
 
-  const existing = await prisma.job.findUnique({ where: { id: jobId } })
+  const existing = await prisma.job.findUnique({ where: { id: jobId }, select: { id: true } })
   if (!existing) throw new Error('Job not found')
 
   await prisma.scheduleEntry.deleteMany({ where: { jobId } })
@@ -108,13 +108,13 @@ export async function removeFromSchedule(jobId: string) {
     meta: { action: 'removed_from_schedule' },
   })
 
-  revalidatePath('/dispatch')
+  revalidatePath('/schedule')
 }
 
 export async function updateScheduleEntryNotes(entryId: string, notes: string) {
   const session = await requireRole('DISPATCHER')
 
-  const existing = await prisma.scheduleEntry.findUnique({ where: { id: entryId } })
+  const existing = await prisma.scheduleEntry.findUnique({ where: { id: entryId }, select: { id: true } })
   if (!existing) throw new Error('Schedule entry not found')
 
   await prisma.scheduleEntry.update({
@@ -130,5 +130,5 @@ export async function updateScheduleEntryNotes(entryId: string, notes: string) {
     meta: { action: 'update_notes' },
   })
 
-  revalidatePath('/dispatch')
+  revalidatePath('/schedule')
 }

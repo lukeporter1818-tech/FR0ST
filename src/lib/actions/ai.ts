@@ -34,7 +34,7 @@ export async function applyTriageToJob(jobId: string, triage: TriageData) {
   const session = await requireRole('DISPATCHER')
 
   // IDOR protection: verify job exists
-  const existing = await prisma.job.findUnique({ where: { id: jobId } })
+  const existing = await prisma.job.findUnique({ where: { id: jobId }, select: { id: true } })
   if (!existing) throw new Error('Job not found')
 
   const trade = VALID_TRADES[triage.tradeClassification] ?? 'UNKNOWN'
