@@ -173,7 +173,7 @@ export default async function OverviewPage() {
 
       {/* Metric cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <MetricCard label="Today's Board" value={totalRows} />
+        <MetricCard label="Today's Schedule" value={totalRows} />
         <MetricCard label="Emergency"     value={emergencyRows.length} accent="red" />
         <MetricCard label="Completed"     value={completedCount}       accent="green" />
         <MetricCard label="Active"        value={activeCount}           accent="amber" />
@@ -209,13 +209,13 @@ export default async function OverviewPage() {
         <div className="grid grid-cols-3 gap-2">
           <ActivityStat label="Frost queries" value={frostCount} />
           <ActivityStat label="Chat messages" value={chatCount} />
-          <ActivityStat label="Board entries" value={assignedCount} />
+          <ActivityStat label="Schedule entries" value={assignedCount} />
         </div>
       </div>
 
       {!hasAnyData ? (
         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-10 text-center">
-          <p className="text-sm font-medium text-gray-400">No board entries yet today.</p>
+          <p className="text-sm font-medium text-gray-400">No schedule entries yet today.</p>
           <p className="text-xs text-gray-600 mt-1">Add technicians to the schedule to start tracking.</p>
         </div>
       ) : (
