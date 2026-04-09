@@ -18,7 +18,6 @@ export default async function EditStorePage({
   if (!session?.user?.id) redirect('/login')
   if (!hasRole(session.user.role, 'DISPATCHER')) redirect('/ai')
   if (!isStoreManager(session.user.email)) redirect('/stores')
-  const isAdmin = hasRole(session.user.role, 'ADMIN')
 
   const { id } = await params
   const { error } = await searchParams
@@ -163,9 +162,8 @@ export default async function EditStorePage({
         </div>
       </form>
 
-      {/* Admin-only: permanent delete */}
-      {isAdmin && (
-        <div className="border-t border-white/10 pt-6">
+      {/* Owner-only: permanent delete (page is already owner-gated above) */}
+      <div className="border-t border-white/10 pt-6">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-3">Danger Zone</p>
           <form action={deleteStore.bind(null, store.id)}>
             <button
@@ -178,8 +176,7 @@ export default async function EditStorePage({
           <p className="mt-2 text-xs text-gray-600">
             Removes this store from Frost and the Service Map. Cannot be undone.
           </p>
-        </div>
-      )}
+      </div>
     </div>
   )
 }
