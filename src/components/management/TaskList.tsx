@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useTransition } from 'react'
+import { useState, useMemo, useTransition, useEffect, useCallback } from 'react'
 import { Loader2, Plus, Trash2, Pencil, Check, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -34,16 +34,19 @@ interface TaskListProps {
   managementUsers: ManagementUser[]
 }
 
-// ─── Add form ─────────────────────────────────────────────────────────────────
+// ─── Add Task Modal ───────────────────────────────────────────────────────────
 
-function AddTaskForm({
+function AddTaskModal({
+  isOpen,
+  onClose,
   managementUsers,
   onAdd,
 }: {
+  isOpen: boolean
+  onClose: () => void
   managementUsers: ManagementUser[]
   onAdd: (task: TaskData) => void
 }) {
-  const [expanded, setExpanded] = useState(false)
   const [title, setTitle] = useState('')
   const [notes, setNotes] = useState('')
   const [location, setLocation] = useState('')
@@ -51,19 +54,44 @@ function AddTaskForm({
   const [assignedToId, setAssignedToId] = useState('')
   const [pending, startTransition] = useTransition()
 
-  function reset() {
+  const reset = useCallback(() => {
     setTitle('')
     setNotes('')
     setLocation('')
     setDueDate('')
     setAssignedToId('')
-    setExpanded(false)
-  }
+  }, [])
+
+  const handleClose = useCallback(() => {
+    if (pending) return
+    reset()
+    onClose()
+  }, [pending, reset, onClose])
+
+  // Escape key
+  useEffect(() => {
+    if (!isOpen) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') handleClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [isOpen, handleClose])
+
+  // Scroll lock
+  useEffect(() => {
+    if (!isOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [isOpen])
+
+  if (!isOpen) return null
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const trimmed = title.trim()
-    if (!trimmed) return
+    if (!trimmed || pending) return
 
     startTransition(async () => {
       const result = await createManagementTask({
@@ -76,77 +104,122 @@ function AddTaskForm({
       if (result.success) {
         onAdd(result.task)
         reset()
+        onClose()
         toast.success('Task added')
       } else {
+        // Keep modal open so user can fix the error and retry
         toast.error(result.error)
       }
     })
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onFocus={() => setExpanded(true)}
-          placeholder="Add a task…"
-          disabled={pending}
-          className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-base md:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:opacity-50"
-        />
-        <button
-          type="submit"
-          disabled={pending || !title.trim()}
-          className="flex items-center gap-1.5 px-3 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-40"
-        >
-          {pending ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
-          Add
-        </button>
-      </div>
+    // Backdrop — click outside closes
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onClick={handleClose}
+    >
+      {/* Dim overlay */}
+      <div className="absolute inset-0 bg-black/60" aria-hidden="true" />
 
-      {expanded && (
-        <div className="grid grid-cols-2 gap-3 pt-1">
+      {/* Panel — stopPropagation prevents backdrop-close when clicking inside */}
+      <div
+        className="relative w-full max-w-md rounded-2xl bg-gray-900 border border-white/10 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="task-modal-title"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <h2 id="task-modal-title" className="text-sm font-semibold text-gray-100">
+            New Task
+          </h2>
+          <button
+            onClick={handleClose}
+            disabled={pending}
+            className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-40"
+            aria-label="Close"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
+          {/* Title */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Location / Store</label>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">
+              Task <span className="text-red-400">*</span>
+            </label>
             <input
               type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="e.g. Store #14"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="What needs to be done?"
               disabled={pending}
-              className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-base md:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:opacity-50"
+              autoFocus
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 disabled:opacity-50"
             />
           </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {/* Location */}
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">
+                Location / Store
+              </label>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="e.g. Store #14"
+                disabled={pending}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 disabled:opacity-50"
+              />
+            </div>
+
+            {/* Due date */}
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">
+                Due Date
+              </label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                disabled={pending}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 disabled:opacity-50"
+              />
+            </div>
+          </div>
+
+          {/* Notes */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Due Date</label>
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              disabled={pending}
-              className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-base md:text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:opacity-50"
-            />
-          </div>
-          <div className="col-span-2">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Notes</label>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">
+              Notes
+            </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Optional details…"
               rows={2}
               disabled={pending}
-              className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-base md:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:opacity-50 resize-none"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 disabled:opacity-50 resize-none"
             />
           </div>
+
+          {/* Assign to */}
           {managementUsers.length > 0 && (
-            <div className="col-span-2">
-              <label className="block text-xs font-medium text-gray-500 mb-1">Assign to</label>
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">
+                Assign to
+              </label>
               <select
                 value={assignedToId}
                 onChange={(e) => setAssignedToId(e.target.value)}
                 disabled={pending}
-                className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-base md:text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:opacity-50"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 disabled:opacity-50"
               >
                 <option value="">— Unassigned —</option>
                 {managementUsers.map((u) => (
@@ -155,9 +228,31 @@ function AddTaskForm({
               </select>
             </div>
           )}
-        </div>
-      )}
-    </form>
+
+          {/* Actions */}
+          <div className="flex gap-2 pt-1">
+            <button
+              type="submit"
+              disabled={pending || !title.trim()}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-amber-400 text-gray-900 text-sm font-semibold rounded-lg hover:bg-amber-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {pending
+                ? <><Loader2 className="size-3.5 animate-spin" /> Saving…</>
+                : <><Plus className="size-3.5" /> Add Task</>
+              }
+            </button>
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={pending}
+              className="px-4 py-2 border border-white/10 text-gray-400 text-sm rounded-lg hover:bg-white/5 hover:text-gray-200 transition-colors disabled:opacity-40"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   )
 }
 
@@ -361,8 +456,8 @@ function TaskRow({
 
 export function TaskList({ initialTasks, currentUserId, managementUsers }: TaskListProps) {
   const [tasks, setTasks] = useState<TaskData[]>(initialTasks)
+  const [modalOpen, setModalOpen] = useState(false)
 
-  // Recompute only when tasks array changes
   const ordered = useMemo(() => {
     const open       = tasks.filter((t) => t.status === 'OPEN')
     const inProgress = tasks.filter((t) => t.status === 'IN_PROGRESS')
@@ -383,27 +478,43 @@ export function TaskList({ initialTasks, currentUserId, managementUsers }: TaskL
   }
 
   return (
-    <div className="space-y-4">
-      <AddTaskForm managementUsers={managementUsers} onAdd={handleAdd} />
+    <>
+      <AddTaskModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        managementUsers={managementUsers}
+        onAdd={handleAdd}
+      />
 
-      {ordered.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-sm text-gray-400 font-medium">No tasks yet</p>
-          <p className="text-xs text-gray-300 mt-1">Add one above to get started</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {ordered.map((task) => (
-            <TaskRow
-              key={task.id}
-              task={task}
-              managementUsers={managementUsers}
-              onUpdate={handleUpdate}
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+      <div className="space-y-4">
+        {/* New Task button */}
+        <button
+          onClick={() => setModalOpen(true)}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 bg-white/[0.03] text-sm font-medium text-gray-400 hover:bg-white/[0.06] hover:text-gray-200 hover:border-white/20 transition-colors"
+        >
+          <Plus className="size-4" />
+          New Task
+        </button>
+
+        {ordered.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-sm text-gray-400 font-medium">No tasks yet</p>
+            <p className="text-xs text-gray-600 mt-1">Add one to get started</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {ordered.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                managementUsers={managementUsers}
+                onUpdate={handleUpdate}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   )
 }
