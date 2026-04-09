@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { askAI } from '@/lib/ai'
-import { SYSTEM_PROMPT } from '@/lib/ai/system-prompt'
 import { requireApiRole, forbidden, tooManyRequests } from '@/lib/auth-guard'
 import { rateLimit, LIMITS } from '@/lib/rate-limit'
 import { aiDraftTextSchema } from '@/lib/validations'
+
+// Focused system prompt — the full SYSTEM_PROMPT (~1 750 tokens of trade
+// classifications, urgency frameworks, and safety guardrails) is irrelevant
+// for SMS drafting. This route only needs tone and format guidance.
+const DRAFT_TEXT_SYSTEM_PROMPT = `You are a dispatch assistant for a field-service company. Draft brief, professional SMS messages for technicians. Keep messages under 160 characters when possible. Return ONLY the message text — no quotes, no explanation, no preamble.`
 
 export async function POST(request: NextRequest) {
   const session = await requireApiRole('DISPATCHER')
@@ -45,7 +49,7 @@ ${jobSummary ? `**Job Context:** ${jobSummary}` : ''}
 Return just the SMS text, no quotes, no explanation.`
 
   try {
-    const draft = await askAI(SYSTEM_PROMPT, userMessage, 256)
+    const draft = await askAI(DRAFT_TEXT_SYSTEM_PROMPT, userMessage, 256)
     return NextResponse.json({ draft: draft.trim() })
   } catch (error) {
     console.error('AI draft-text error:', error)

@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { askAI } from '@/lib/ai'
-import { SYSTEM_PROMPT } from '@/lib/ai/system-prompt'
 import { requireApiRole, forbidden, tooManyRequests } from '@/lib/auth-guard'
 import { rateLimit, LIMITS } from '@/lib/rate-limit'
 import { aiSummarizeBoardSchema } from '@/lib/validations'
+
+// Focused system prompt — the full SYSTEM_PROMPT (~1 750 tokens of trade
+// knowledge, safety guardrails, and blue-collar slang) is irrelevant here.
+// This route only needs to understand a dispatch board and emit JSON.
+const BOARD_SUMMARY_SYSTEM_PROMPT = `You are a dispatch board analyst for a field-service company. Summarize schedule data and return ONLY a valid JSON object — no markdown, no explanation, no prose.`
 
 export async function POST(request: NextRequest) {
   const session = await requireApiRole('DISPATCHER')
@@ -31,7 +35,7 @@ export async function POST(request: NextRequest) {
   const boardDescription = scheduleData
     .map(
       (tech) =>
-        `**${tech.techName}** (${tech.jobs.length} jobs):\n${tech.jobs.map((j, i) => `  ${i + 1}. ${j.customer} — ${j.issue} [${j.priority}]`).join('\n')}`
+        `${tech.techName} (${tech.jobs.length} jobs):\n${tech.jobs.map((j, i) => `  ${i + 1}. ${j.customer} — ${j.issue.slice(0, 80)} [${j.priority}]`).join('\n')}`
     )
     .join('\n\n')
 
@@ -48,7 +52,7 @@ Return this exact JSON structure:
 }`
 
   try {
-    const raw = await askAI(SYSTEM_PROMPT, userMessage, 1024)
+    const raw = await askAI(BOARD_SUMMARY_SYSTEM_PROMPT, userMessage, 1024)
     let parsed
     try {
       parsed = JSON.parse(raw)
