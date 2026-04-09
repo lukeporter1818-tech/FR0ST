@@ -5,6 +5,23 @@ import { prisma } from '@/lib/db'
 import { requireRole } from '@/lib/auth-guard'
 import { auditLog } from '@/lib/audit'
 
+// Twilio's network SLA is well within 10 s; anything longer is a stall, not a
+// slow request. Fail fast so serverless runtime isn't wasted and callers get a
+// clear error instead of a silent hang.
+const TWILIO_TIMEOUT_MS = 10_000
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(
+        () => reject(new Error(`${label} timed out after ${ms}ms`)),
+        ms
+      )
+    ),
+  ])
+}
+
 export async function sendSms(
   technicianId: string,
   body: string,
@@ -46,11 +63,15 @@ export async function sendSms(
         process.env.TWILIO_ACCOUNT_SID,
         process.env.TWILIO_AUTH_TOKEN
       )
-      const message = await client.messages.create({
-        body,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: technician.phone,
-      })
+      const message = await withTimeout(
+        client.messages.create({
+          body,
+          from: process.env.TWILIO_PHONE_NUMBER,
+          to: technician.phone,
+        }),
+        TWILIO_TIMEOUT_MS,
+        'Twilio messages.create'
+      )
       twilioSid = message.sid
       status = message.status
     } catch (err) {
