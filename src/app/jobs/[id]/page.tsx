@@ -14,7 +14,7 @@ import {
   Edit,
 } from 'lucide-react'
 import { prisma } from '@/lib/db'
-import type { Note, User as UserModel } from '@/generated/prisma'
+import type { Note } from '@/generated/prisma'
 import { PriorityBadge } from '@/components/jobs/PriorityBadge'
 import { TradeBadge } from '@/components/jobs/TradeBadge'
 import { JobDetailActions } from '@/components/jobs/JobDetailActions'
@@ -38,10 +38,9 @@ export default async function JobDetailPage({
   const job = await prisma.job.findUnique({
     where: { id },
     include: {
-      assignedTech: true,
-      scheduleEntry: true,
+      assignedTech: { select: { id: true, name: true } },
       notes: {
-        include: { createdBy: true },
+        include: { createdBy: { select: { name: true } } },
         orderBy: { createdAt: 'desc' },
       },
     },
@@ -180,7 +179,7 @@ export default async function JobDetailPage({
             </div>
             {job.notes.length > 0 ? (
               <div className="px-6 py-2 divide-y divide-gray-100">
-                {job.notes.map((note: Note & { createdBy: UserModel }) => (
+                {job.notes.map((note: Note & { createdBy: { name: string } }) => (
                   <div key={note.id} className="py-4">
                     <div className="flex items-center justify-between mb-1.5">
                       <p className="text-xs font-medium text-gray-900">

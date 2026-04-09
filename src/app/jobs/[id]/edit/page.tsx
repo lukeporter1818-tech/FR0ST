@@ -12,10 +12,10 @@ export default async function EditJobPage({
   const [job, technicians] = await Promise.all([
     prisma.job.findUnique({
       where: { id },
-      include: { assignedTech: true },
     }),
     prisma.technician.findMany({
       where: { active: true },
+      select: { id: true, name: true },
       orderBy: { name: 'asc' },
     }),
   ])
