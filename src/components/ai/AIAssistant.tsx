@@ -1,11 +1,9 @@
 'use client'
 
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
-import { Bot, Camera, MapPin, Phone, Send, X } from 'lucide-react'
+import { Bot, Camera, Send, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { addWorkOrderToBoard } from '@/lib/actions/board'
-import { findSupplier } from '@/lib/suppliers'
-import type { SupplierInfo } from '@/lib/suppliers'
 import type { WorkOrderExtraction } from '@/types/work-order'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -73,16 +71,6 @@ const AssistantContent = memo(function AssistantContent({ content }: { content: 
           trimmed.endsWith(':')
         ) {
           inAvailability = false
-        }
-
-        // ── Supplier bullet inside availability section ─────────────────────
-        if (inAvailability && (line.startsWith('- ') || line.startsWith('• '))) {
-          const name = line.slice(2).trim()
-          const info = findSupplier(name)
-          if (info) {
-            return <SupplierActions key={i} name={name} info={info} />
-          }
-          // Unknown supplier — fall through to normal bullet render
         }
 
         // ── Standard bullet ────────────────────────────────────────────────
@@ -167,39 +155,6 @@ function WorkOrderCard({ wo }: { wo: WorkOrderExtraction }) {
   )
 }
 
-function SupplierActions({ name, info }: { name: string; info: SupplierInfo }) {
-  const mapsUrl = info.onlineOnly
-    ? null
-    : `https://www.google.com/maps/search/${info.mapsQuery}`
-
-  return (
-    <div className="flex items-center justify-between gap-3 py-1">
-      <span className="text-sm text-gray-200 font-medium leading-snug">{name}</span>
-      <div className="flex gap-1.5 shrink-0">
-        {info.phone && (
-          <a
-            href={`tel:${info.phone}`}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/8 border border-white/15 text-xs font-medium text-gray-300 hover:bg-amber-500/20 hover:text-amber-300 hover:border-amber-500/40 active:bg-amber-500/30 transition-colors"
-          >
-            <Phone size={11} strokeWidth={2.5} />
-            Call
-          </a>
-        )}
-        {mapsUrl && (
-          <a
-            href={mapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/8 border border-white/15 text-xs font-medium text-gray-300 hover:bg-amber-500/20 hover:text-amber-300 hover:border-amber-500/40 active:bg-amber-500/30 transition-colors"
-          >
-            <MapPin size={11} strokeWidth={2.5} />
-            Directions
-          </a>
-        )}
-      </div>
-    </div>
-  )
-}
 
 function LoadingDots() {
   return (

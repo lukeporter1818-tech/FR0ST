@@ -1280,6 +1280,7 @@ export const UserScalarFieldEnum = {
   inviteTokenHash: 'inviteTokenHash',
   inviteExpiresAt: 'inviteExpiresAt',
   isActivated: 'isActivated',
+  canManageStores: 'canManageStores',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

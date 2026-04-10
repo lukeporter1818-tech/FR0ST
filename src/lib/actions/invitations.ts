@@ -7,10 +7,8 @@ import { prisma } from '@/lib/db'
 import { requireRole } from '@/lib/auth-guard'
 import { auditLog } from '@/lib/audit'
 import { technicianInviteSchema } from '@/lib/validations'
-import { sendSms } from './sms'
 import { sendInviteEmail } from './email'
 
-const TWILIO_SENT = new Set(['accepted', 'queued', 'sending', 'sent', 'delivered'])
 
 function generateInviteToken(): { raw: string; tokenHash: string; expiresAt: Date } {
   const raw = randomBytes(32).toString('hex')
@@ -225,36 +223,8 @@ export async function inviteTechnician(
       emailStatusMessage = emailResult.message
     }
 
-    // ── SMS delivery (invite link) ────────────────────────────────────────────
-
-    let smsStatus: 'sent' | 'simulated' | 'failed' | undefined
-    let smsStatusMessage: string | undefined
-
-    if (validMethod === 'phone' || validMethod === 'both') {
-      try {
-        const smsBody =
-          `Welcome to FR0ST!\n` +
-          `${validName}, activate your account:\n` +
-          inviteUrl
-
-        const smsResult = await sendSms(technician.id, smsBody, undefined, false, `Invite link sent via SMS`)
-
-        if (smsResult.status === 'simulated') {
-          smsStatus = 'simulated'
-          smsStatusMessage = 'SMS not configured; share invite link manually'
-        } else if (TWILIO_SENT.has(smsResult.status)) {
-          smsStatus = 'sent'
-          smsStatusMessage = 'Invite link sent via SMS'
-        } else {
-          smsStatus = 'failed'
-          smsStatusMessage = `SMS status: ${smsResult.status}`
-        }
-      } catch (smsErr) {
-        smsStatus = 'failed'
-        smsStatusMessage = `SMS error: ${smsErr instanceof Error ? smsErr.message : 'Unknown error'}`
-        console.error('[inviteTechnician] SMS error (invite still succeeded):', smsErr)
-      }
-    }
+    const smsStatus: 'sent' | 'simulated' | 'failed' | undefined = undefined
+    const smsStatusMessage: string | undefined = undefined
 
     auditLog({
       action: 'invite.send',
@@ -301,44 +271,9 @@ export async function inviteTechnician(
 // ─── Resend invite SMS (from success screen) ─────────────────────────────────
 
 export async function resendInviteSms(
-  technicianId: string,
-  loginEmail: string,
-  tempPassword: string
+  _technicianId: string,
+  _loginEmail: string,
+  _tempPassword: string
 ): Promise<{ status: 'sent' | 'simulated' | 'failed'; message: string }> {
-  await requireRole('ADMIN')
-
-  // Validate server-side — inputs come from client state even though they
-  // originated from a previous server response.
-  if (!technicianId || technicianId.length > 128) {
-    return { status: 'failed', message: 'Invalid technician ID' }
-  }
-  if (!loginEmail || loginEmail.length > 200) {
-    return { status: 'failed', message: 'Invalid login email' }
-  }
-  if (!tempPassword || tempPassword.length > 100) {
-    return { status: 'failed', message: 'Invalid password' }
-  }
-
-  try {
-    const smsBody =
-      `FieldCommand Login\n` +
-      `Login: ${loginEmail}\n` +
-      `Password: ${tempPassword}\n\n` +
-      `Sign in: ${APP_BASE_URL}/login`
-
-    const redactedBody =
-      `FieldCommand Login\n` +
-      `Login: ${loginEmail}\n` +
-      `Password: [redacted]\n\n` +
-      `Sign in: ${APP_BASE_URL}/login`
-
-    const result = await sendSms(technicianId, smsBody, undefined, false, redactedBody)
-
-    if (result.status === 'simulated') return { status: 'simulated', message: 'SMS not configured; share manually' }
-    if (TWILIO_SENT.has(result.status)) return { status: 'sent', message: 'SMS sent' }
-    return { status: 'failed', message: `SMS status: ${result.status}` }
-  } catch (err) {
-    console.error('[resendInviteSms] Error:', err)
-    return { status: 'failed', message: err instanceof Error ? err.message : 'Unknown error' }
-  }
+  return { status: 'failed', message: 'SMS not configured' }
 }
