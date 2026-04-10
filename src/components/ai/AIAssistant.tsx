@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { Bot, Camera, Send, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { addWorkOrderToBoard } from '@/lib/actions/board'
+import { logStoreIssue } from '@/lib/actions/storeIssues'
 import type { WorkOrderExtraction } from '@/types/work-order'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -684,7 +685,6 @@ export function AIAssistant() {
         // Execute the log action
         try {
           const logData = JSON.parse(logMatch[1].trim())
-          const { logStoreIssue } = await import('@/lib/actions/storeIssues')
           await logStoreIssue(logData)
         } catch {
           // Non-fatal — log failed silently, response still displayed
