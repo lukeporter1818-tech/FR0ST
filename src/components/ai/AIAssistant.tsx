@@ -183,7 +183,7 @@ export function AIAssistant() {
   const [intakeStep, setIntakeStep] = useState<'awaiting-tech' | 'confirming' | null>(null)
   const [pendingExtraction, setPendingExtraction] = useState<WorkOrderExtraction | null>(null)
   const [pendingTechMatch, setPendingTechMatch] = useState<TechMatch | null>(null)
-  const [techList, setTechList] = useState<TechMatch[]>([])
+  const techList: TechMatch[] = []
 
   // Upload source menu + its fixed screen coordinates (computed on open)
   const [showUploadMenu, setShowUploadMenu] = useState(false)
@@ -241,14 +241,6 @@ export function AIAssistant() {
     update()
     vv.addEventListener('resize', update)
     return () => vv.removeEventListener('resize', update)
-  }, [])
-
-  // Load technician list once on mount for name-matching
-  useEffect(() => {
-    fetch('/api/technicians')
-      .then((r) => (r.ok ? r.json() : []))
-      .then((techs: TechMatch[]) => setTechList(techs))
-      .catch(() => {}) // silent — tech matching degrades gracefully
   }, [])
 
   // ── Image handling ──────────────────────────────────────────────────────────
@@ -684,7 +676,6 @@ export function AIAssistant() {
 
       // Parse and execute any store issue log blocks
       let responseText = data.response as string
-      console.log('[FR0ST DEBUG] raw response:', responseText)
       const logMatch = responseText.match(/<log_issue>([\s\S]*?)<\/log_issue>/)
       if (logMatch) {
         // Strip the log block from displayed response
@@ -726,7 +717,7 @@ export function AIAssistant() {
     } finally {
       setLoading(false)
     }
-  }, [input, imageFile, imagePreview, loading, messages, intakeStep, pendingExtraction, techList, resetIntake])
+  }, [input, imageFile, imagePreview, loading, messages, intakeStep, pendingExtraction, resetIntake])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
