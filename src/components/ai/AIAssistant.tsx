@@ -669,20 +669,66 @@ export function AIAssistant() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(28_000),
       })
 
       if (!res.ok) throw new Error(`Request failed: ${res.status}`)
-      const data = await res.json()
+      if (!res.body) throw new Error('No response body')
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let streamedText = ''
+      let interactionId: string | undefined
+
+      // Add a streaming message placeholder immediately
+      const streamingId = crypto.randomUUID()
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: streamingId,
+          role: 'assistant' as const,
+          content: '',
+          timestamp: new Date(),
+        },
+      ])
+      setLoading(false) // hide loading dots — streaming has started
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value, { stream: true })
+        const lines = chunk.split('\n').filter((line) => line.startsWith('data: '))
+
+        for (const line of lines) {
+          try {
+            const json = JSON.parse(line.slice(6))
+            if (json.text) {
+              streamedText += json.text
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === streamingId ? { ...m, content: streamedText } : m
+                )
+              )
+            }
+            if (json.done) {
+              interactionId = json.interactionId
+            }
+            if (json.error) {
+              throw new Error(json.error)
+            }
+          } catch {
+            // Skip malformed chunks
+          }
+        }
+      }
+
+      // Process completed response
+      let responseText = streamedText
 
       // Parse and execute any store issue log blocks
-      let responseText = data.response as string
       const logMatch = responseText.match(/<log_issue>([\s\S]*?)<\/log_issue>/)
       if (logMatch) {
-        // Strip the log block from displayed response
         responseText = responseText.replace(/<log_issue>[\s\S]*?<\/log_issue>/, '').trim()
-
-        // Execute the log action
         try {
           const logData = JSON.parse(logMatch[1].trim())
           const result = await logStoreIssue(logData)
@@ -692,16 +738,14 @@ export function AIAssistant() {
         }
       }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: 'assistant',
-          content: responseText,
-          timestamp: new Date(),
-          interactionId: data.interactionId as string | undefined,
-        },
-      ])
+      // Update the streamed message with final cleaned content and interactionId
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === streamingId
+            ? { ...m, content: responseText, interactionId }
+            : m
+        )
+      )
     } catch (err) {
       const isTimeout = err instanceof DOMException && err.name === 'TimeoutError'
       setMessages((prev) => [

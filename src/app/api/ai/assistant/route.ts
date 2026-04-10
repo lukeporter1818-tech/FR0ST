@@ -194,59 +194,71 @@ ${storeLines.join('\n')}${issueContext}
     // Non-fatal — operational context unavailable
   }
 
-  // 25 s hard timeout — prevents slow Anthropic responses from holding a
-  // Vercel function slot open indefinitely under concurrent load.
-  let timeoutHandle: ReturnType<typeof setTimeout> | undefined
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    timeoutHandle = setTimeout(() => reject(new Error('AI_TIMEOUT')), 25_000)
+  auditLog({
+    action: 'ai.query',
+    userId: session.user.id,
+    meta: { endpoint: 'assistant', hasImage: photoMode, turns: messages.length, mode: modePrefix || 'normal' },
   })
 
   try {
-    const response = await Promise.race([
-      anthropic.messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 512,
-        temperature: 0.3,
-        system: FROST_SYSTEM_PROMPT + operationalContext + fixContext,
-        messages: claudeMessages,
-      }),
-      timeoutPromise,
-    ])
-    clearTimeout(timeoutHandle)
-
-    const block = response.content[0]
-    const text = block.type === 'text' ? block.text : ''
-
-    auditLog({
-      action: 'ai.query',
-      userId: session.user.id,
-      meta: { endpoint: 'assistant', hasImage: photoMode, turns: messages.length, mode: modePrefix || 'normal' },
+    const stream = anthropic.messages.stream({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 512,
+      temperature: 0.3,
+      system: FROST_SYSTEM_PROMPT + operationalContext + fixContext,
+      messages: claudeMessages,
     })
 
-    // Log interaction for Frost learning system — non-fatal if DB write fails
-    let interactionId: string | undefined
-    try {
-      const lastUserMessage = trimmedMessages.filter((m) => m.role === 'user').pop()
-      const interaction = await prisma.aIInteraction.create({
-        data: {
-          userId: session.user.id,
-          actionType: 'frost.chat',
-          prompt: lastUserMessage?.content ?? '',
-          response: text,
-        },
-        select: { id: true },
-      })
-      interactionId = interaction.id
-    } catch {
-      // Non-fatal: learning log unavailable, response still delivered
-    }
+    const encoder = new TextEncoder()
+    let fullText = ''
 
-    return Response.json({ response: text, interactionId })
+    const readable = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of stream) {
+            if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+              const text = chunk.delta.text
+              fullText += text
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`))
+            }
+          }
+
+          // Log interaction for Frost learning system — non-fatal if DB write fails
+          let interactionId: string | undefined
+          try {
+            const lastUserMessage = trimmedMessages.filter((m) => m.role === 'user').pop()
+            const interaction = await prisma.aIInteraction.create({
+              data: {
+                userId: session.user.id,
+                actionType: 'frost.chat',
+                prompt: lastUserMessage?.content ?? '',
+                response: fullText,
+              },
+              select: { id: true },
+            })
+            interactionId = interaction.id
+          } catch {
+            // Non-fatal: learning log unavailable, response still delivered
+          }
+
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, interactionId })}\n\n`))
+          controller.close()
+        } catch (err) {
+          console.error('AI assistant stream error:', err)
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: 'Stream failed' })}\n\n`))
+          controller.close()
+        }
+      },
+    })
+
+    return new Response(readable, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    })
   } catch (error) {
-    clearTimeout(timeoutHandle)
-    if (error instanceof Error && error.message === 'AI_TIMEOUT') {
-      return Response.json({ error: 'Request timed out — Frost is under load. Please try again.' }, { status: 504 })
-    }
     console.error('AI assistant error:', error)
     return Response.json({ error: 'Failed to get a response. Please try again.' }, { status: 500 })
   }
