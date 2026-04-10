@@ -684,6 +684,7 @@ export function AIAssistant() {
 
       // Parse and execute any store issue log blocks
       let responseText = data.response as string
+      console.log('[FR0ST DEBUG] raw response:', responseText)
       const logMatch = responseText.match(/<log_issue>([\s\S]*?)<\/log_issue>/)
       if (logMatch) {
         // Strip the log block from displayed response
