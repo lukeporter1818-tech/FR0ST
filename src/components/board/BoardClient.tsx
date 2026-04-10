@@ -810,13 +810,13 @@ export function BoardClient({
               {/* Assignment — dispatchers/admins only */}
               {!isTechnician && (
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Assignment</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Store</label>
                   <input
                     ref={assignmentRef}
                     type="text"
                     value={editDraft.assignment}
                     onChange={(e) => setEditDraft((d) => ({ ...d, assignment: e.target.value }))}
-                    placeholder="Assignment"
+                    placeholder="Store"
                     className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-base font-semibold text-gray-100 placeholder:text-gray-600 placeholder:font-normal outline-none focus:ring-2 focus:ring-amber-500/40"
                   />
                 </div>
