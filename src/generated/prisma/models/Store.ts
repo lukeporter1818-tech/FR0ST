@@ -284,6 +284,7 @@ export type StoreWhereInput = {
   notes?: Prisma.StringNullableFilter<"Store"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Store"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Store"> | Date | string
+  issueLog?: Prisma.StoreIssueLogListRelationFilter
 }
 
 export type StoreOrderByWithRelationInput = {
@@ -300,6 +301,7 @@ export type StoreOrderByWithRelationInput = {
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  issueLog?: Prisma.StoreIssueLogOrderByRelationAggregateInput
 }
 
 export type StoreWhereUniqueInput = Prisma.AtLeast<{
@@ -319,6 +321,7 @@ export type StoreWhereUniqueInput = Prisma.AtLeast<{
   notes?: Prisma.StringNullableFilter<"Store"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Store"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Store"> | Date | string
+  issueLog?: Prisma.StoreIssueLogListRelationFilter
 }, "id" | "code">
 
 export type StoreOrderByWithAggregationInput = {
@@ -375,6 +378,7 @@ export type StoreCreateInput = {
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  issueLog?: Prisma.StoreIssueLogCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateInput = {
@@ -391,6 +395,7 @@ export type StoreUncheckedCreateInput = {
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  issueLog?: Prisma.StoreIssueLogUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUpdateInput = {
@@ -407,6 +412,7 @@ export type StoreUpdateInput = {
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  issueLog?: Prisma.StoreIssueLogUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateInput = {
@@ -423,6 +429,7 @@ export type StoreUncheckedUpdateInput = {
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  issueLog?: Prisma.StoreIssueLogUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateManyInput = {
@@ -531,6 +538,134 @@ export type StoreSumOrderByAggregateInput = {
   lng?: Prisma.SortOrder
 }
 
+export type StoreScalarRelationFilter = {
+  is?: Prisma.StoreWhereInput
+  isNot?: Prisma.StoreWhereInput
+}
+
+export type StoreCreateNestedOneWithoutIssueLogInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutIssueLogInput, Prisma.StoreUncheckedCreateWithoutIssueLogInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutIssueLogInput
+  connect?: Prisma.StoreWhereUniqueInput
+}
+
+export type StoreUpdateOneRequiredWithoutIssueLogNestedInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutIssueLogInput, Prisma.StoreUncheckedCreateWithoutIssueLogInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutIssueLogInput
+  upsert?: Prisma.StoreUpsertWithoutIssueLogInput
+  connect?: Prisma.StoreWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutIssueLogInput, Prisma.StoreUpdateWithoutIssueLogInput>, Prisma.StoreUncheckedUpdateWithoutIssueLogInput>
+}
+
+export type StoreCreateWithoutIssueLogInput = {
+  id?: string
+  code: string
+  name: string
+  address: string
+  city?: string | null
+  state?: string | null
+  zip?: string | null
+  lat?: number | null
+  lng?: number | null
+  active?: boolean
+  notes?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type StoreUncheckedCreateWithoutIssueLogInput = {
+  id?: string
+  code: string
+  name: string
+  address: string
+  city?: string | null
+  state?: string | null
+  zip?: string | null
+  lat?: number | null
+  lng?: number | null
+  active?: boolean
+  notes?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type StoreCreateOrConnectWithoutIssueLogInput = {
+  where: Prisma.StoreWhereUniqueInput
+  create: Prisma.XOR<Prisma.StoreCreateWithoutIssueLogInput, Prisma.StoreUncheckedCreateWithoutIssueLogInput>
+}
+
+export type StoreUpsertWithoutIssueLogInput = {
+  update: Prisma.XOR<Prisma.StoreUpdateWithoutIssueLogInput, Prisma.StoreUncheckedUpdateWithoutIssueLogInput>
+  create: Prisma.XOR<Prisma.StoreCreateWithoutIssueLogInput, Prisma.StoreUncheckedCreateWithoutIssueLogInput>
+  where?: Prisma.StoreWhereInput
+}
+
+export type StoreUpdateToOneWithWhereWithoutIssueLogInput = {
+  where?: Prisma.StoreWhereInput
+  data: Prisma.XOR<Prisma.StoreUpdateWithoutIssueLogInput, Prisma.StoreUncheckedUpdateWithoutIssueLogInput>
+}
+
+export type StoreUpdateWithoutIssueLogInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  address?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  zip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type StoreUncheckedUpdateWithoutIssueLogInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  address?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  zip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+
+/**
+ * Count Type StoreCountOutputType
+ */
+
+export type StoreCountOutputType = {
+  issueLog: number
+}
+
+export type StoreCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  issueLog?: boolean | StoreCountOutputTypeCountIssueLogArgs
+}
+
+/**
+ * StoreCountOutputType without action
+ */
+export type StoreCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the StoreCountOutputType
+   */
+  select?: Prisma.StoreCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * StoreCountOutputType without action
+ */
+export type StoreCountOutputTypeCountIssueLogArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.StoreIssueLogWhereInput
+}
 
 
 export type StoreSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -547,6 +682,8 @@ export type StoreSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   notes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  issueLog?: boolean | Prisma.Store$issueLogArgs<ExtArgs>
+  _count?: boolean | Prisma.StoreCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["store"]>
 
 export type StoreSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -598,10 +735,18 @@ export type StoreSelectScalar = {
 }
 
 export type StoreOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "code" | "name" | "address" | "city" | "state" | "zip" | "lat" | "lng" | "active" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["store"]>
+export type StoreInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  issueLog?: boolean | Prisma.Store$issueLogArgs<ExtArgs>
+  _count?: boolean | Prisma.StoreCountOutputTypeDefaultArgs<ExtArgs>
+}
+export type StoreIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
+export type StoreIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
 
 export type $StorePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Store"
-  objects: {}
+  objects: {
+    issueLog: Prisma.$StoreIssueLogPayload<ExtArgs>[]
+  }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     code: string
@@ -1010,6 +1155,7 @@ readonly fields: StoreFieldRefs;
  */
 export interface Prisma__StoreClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  issueLog<T extends Prisma.Store$issueLogArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$issueLogArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StoreIssueLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1069,6 +1215,10 @@ export type StoreFindUniqueArgs<ExtArgs extends runtime.Types.Extensions.Interna
    */
   omit?: Prisma.StoreOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StoreInclude<ExtArgs> | null
+  /**
    * Filter, which Store to fetch.
    */
   where: Prisma.StoreWhereUniqueInput
@@ -1087,6 +1237,10 @@ export type StoreFindUniqueOrThrowArgs<ExtArgs extends runtime.Types.Extensions.
    */
   omit?: Prisma.StoreOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StoreInclude<ExtArgs> | null
+  /**
    * Filter, which Store to fetch.
    */
   where: Prisma.StoreWhereUniqueInput
@@ -1104,6 +1258,10 @@ export type StoreFindFirstArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * Omit specific fields from the Store
    */
   omit?: Prisma.StoreOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StoreInclude<ExtArgs> | null
   /**
    * Filter, which Store to fetch.
    */
@@ -1153,6 +1311,10 @@ export type StoreFindFirstOrThrowArgs<ExtArgs extends runtime.Types.Extensions.I
    */
   omit?: Prisma.StoreOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StoreInclude<ExtArgs> | null
+  /**
    * Filter, which Store to fetch.
    */
   where?: Prisma.StoreWhereInput
@@ -1200,6 +1362,10 @@ export type StoreFindManyArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    * Omit specific fields from the Store
    */
   omit?: Prisma.StoreOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StoreInclude<ExtArgs> | null
   /**
    * Filter, which Stores to fetch.
    */
@@ -1249,6 +1415,10 @@ export type StoreCreateArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
    */
   omit?: Prisma.StoreOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StoreInclude<ExtArgs> | null
+  /**
    * The data needed to create a Store.
    */
   data: Prisma.XOR<Prisma.StoreCreateInput, Prisma.StoreUncheckedCreateInput>
@@ -1296,6 +1466,10 @@ export type StoreUpdateArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
    * Omit specific fields from the Store
    */
   omit?: Prisma.StoreOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StoreInclude<ExtArgs> | null
   /**
    * The data needed to update a Store.
    */
@@ -1363,6 +1537,10 @@ export type StoreUpsertArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
    */
   omit?: Prisma.StoreOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StoreInclude<ExtArgs> | null
+  /**
    * The filter to search for the Store to update in case it exists.
    */
   where: Prisma.StoreWhereUniqueInput
@@ -1389,6 +1567,10 @@ export type StoreDeleteArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
    */
   omit?: Prisma.StoreOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StoreInclude<ExtArgs> | null
+  /**
    * Filter which Store to delete.
    */
   where: Prisma.StoreWhereUniqueInput
@@ -1409,6 +1591,30 @@ export type StoreDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
 }
 
 /**
+ * Store.issueLog
+ */
+export type Store$issueLogArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the StoreIssueLog
+   */
+  select?: Prisma.StoreIssueLogSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the StoreIssueLog
+   */
+  omit?: Prisma.StoreIssueLogOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StoreIssueLogInclude<ExtArgs> | null
+  where?: Prisma.StoreIssueLogWhereInput
+  orderBy?: Prisma.StoreIssueLogOrderByWithRelationInput | Prisma.StoreIssueLogOrderByWithRelationInput[]
+  cursor?: Prisma.StoreIssueLogWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.StoreIssueLogScalarFieldEnum | Prisma.StoreIssueLogScalarFieldEnum[]
+}
+
+/**
  * Store without action
  */
 export type StoreDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1420,4 +1626,8 @@ export type StoreDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
    * Omit specific fields from the Store
    */
   omit?: Prisma.StoreOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StoreInclude<ExtArgs> | null
 }

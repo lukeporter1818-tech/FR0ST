@@ -394,6 +394,7 @@ export const ModelName = {
   BoardEntry: 'BoardEntry',
   ManagementTask: 'ManagementTask',
   Store: 'Store',
+  StoreIssueLog: 'StoreIssueLog',
   AIInteraction: 'AIInteraction'
 } as const
 
@@ -410,7 +411,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "technician" | "job" | "scheduleEntry" | "smsMessage" | "chatMessage" | "note" | "boardEntry" | "managementTask" | "store" | "aIInteraction"
+    modelProps: "user" | "technician" | "job" | "scheduleEntry" | "smsMessage" | "chatMessage" | "note" | "boardEntry" | "managementTask" | "store" | "storeIssueLog" | "aIInteraction"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1154,6 +1155,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    StoreIssueLog: {
+      payload: Prisma.$StoreIssueLogPayload<ExtArgs>
+      fields: Prisma.StoreIssueLogFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.StoreIssueLogFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreIssueLogPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.StoreIssueLogFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreIssueLogPayload>
+        }
+        findFirst: {
+          args: Prisma.StoreIssueLogFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreIssueLogPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.StoreIssueLogFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreIssueLogPayload>
+        }
+        findMany: {
+          args: Prisma.StoreIssueLogFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreIssueLogPayload>[]
+        }
+        create: {
+          args: Prisma.StoreIssueLogCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreIssueLogPayload>
+        }
+        createMany: {
+          args: Prisma.StoreIssueLogCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.StoreIssueLogCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreIssueLogPayload>[]
+        }
+        delete: {
+          args: Prisma.StoreIssueLogDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreIssueLogPayload>
+        }
+        update: {
+          args: Prisma.StoreIssueLogUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreIssueLogPayload>
+        }
+        deleteMany: {
+          args: Prisma.StoreIssueLogDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.StoreIssueLogUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.StoreIssueLogUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreIssueLogPayload>[]
+        }
+        upsert: {
+          args: Prisma.StoreIssueLogUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreIssueLogPayload>
+        }
+        aggregate: {
+          args: Prisma.StoreIssueLogAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateStoreIssueLog>
+        }
+        groupBy: {
+          args: Prisma.StoreIssueLogGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StoreIssueLogGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.StoreIssueLogCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StoreIssueLogCountAggregateOutputType> | number
+        }
+      }
+    }
     AIInteraction: {
       payload: Prisma.$AIInteractionPayload<ExtArgs>
       fields: Prisma.AIInteractionFieldRefs
@@ -1444,6 +1519,19 @@ export const StoreScalarFieldEnum = {
 } as const
 
 export type StoreScalarFieldEnum = (typeof StoreScalarFieldEnum)[keyof typeof StoreScalarFieldEnum]
+
+
+export const StoreIssueLogScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  reportedById: 'reportedById',
+  systemType: 'systemType',
+  description: 'description',
+  resolution: 'resolution',
+  createdAt: 'createdAt'
+} as const
+
+export type StoreIssueLogScalarFieldEnum = (typeof StoreIssueLogScalarFieldEnum)[keyof typeof StoreIssueLogScalarFieldEnum]
 
 
 export const AIInteractionScalarFieldEnum = {
@@ -1801,6 +1889,7 @@ export type GlobalOmitConfig = {
   boardEntry?: Prisma.BoardEntryOmit
   managementTask?: Prisma.ManagementTaskOmit
   store?: Prisma.StoreOmit
+  storeIssueLog?: Prisma.StoreIssueLogOmit
   aIInteraction?: Prisma.AIInteractionOmit
 }
 

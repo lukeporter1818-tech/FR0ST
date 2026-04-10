@@ -61,6 +61,7 @@ export const ModelName = {
   BoardEntry: 'BoardEntry',
   ManagementTask: 'ManagementTask',
   Store: 'Store',
+  StoreIssueLog: 'StoreIssueLog',
   AIInteraction: 'AIInteraction'
 } as const
 
@@ -257,6 +258,19 @@ export const StoreScalarFieldEnum = {
 } as const
 
 export type StoreScalarFieldEnum = (typeof StoreScalarFieldEnum)[keyof typeof StoreScalarFieldEnum]
+
+
+export const StoreIssueLogScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  reportedById: 'reportedById',
+  systemType: 'systemType',
+  description: 'description',
+  resolution: 'resolution',
+  createdAt: 'createdAt'
+} as const
+
+export type StoreIssueLogScalarFieldEnum = (typeof StoreIssueLogScalarFieldEnum)[keyof typeof StoreIssueLogScalarFieldEnum]
 
 
 export const AIInteractionScalarFieldEnum = {

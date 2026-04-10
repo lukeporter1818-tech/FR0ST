@@ -68,6 +68,11 @@ export type ManagementTask = Prisma.ManagementTaskModel
  */
 export type Store = Prisma.StoreModel
 /**
+ * Model StoreIssueLog
+ * 
+ */
+export type StoreIssueLog = Prisma.StoreIssueLogModel
+/**
  * Model AIInteraction
  * 
  */

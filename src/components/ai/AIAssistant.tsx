@@ -682,12 +682,29 @@ export function AIAssistant() {
       if (!res.ok) throw new Error(`Request failed: ${res.status}`)
       const data = await res.json()
 
+      // Parse and execute any store issue log blocks
+      let responseText = data.response as string
+      const logMatch = responseText.match(/<log_issue>([\s\S]*?)<\/log_issue>/)
+      if (logMatch) {
+        // Strip the log block from displayed response
+        responseText = responseText.replace(/<log_issue>[\s\S]*?<\/log_issue>/, '').trim()
+
+        // Execute the log action
+        try {
+          const logData = JSON.parse(logMatch[1].trim())
+          const { logStoreIssue } = await import('@/lib/actions/storeIssues')
+          await logStoreIssue(logData)
+        } catch {
+          // Non-fatal — log failed silently, response still displayed
+        }
+      }
+
       setMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          content: data.response,
+          content: responseText,
           timestamp: new Date(),
           interactionId: data.interactionId as string | undefined,
         },

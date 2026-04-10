@@ -97,6 +97,80 @@ export async function POST(req: NextRequest) {
     ? await retrieveApprovedFixes(queryText).catch(() => '')
     : ''
 
+  // ── Operational context ───────────────────────────────────────────────────────
+  // Fetch today's board + store list to inject into FR0ST's system prompt.
+  // Non-fatal — if DB is unavailable, FR0ST still responds without context.
+
+  let operationalContext = ''
+  try {
+    const today = new Date().toISOString().slice(0, 10)
+
+    const [boardEntries, stores] = await Promise.all([
+      prisma.boardEntry.findMany({
+        where: { date: new Date(today) },
+        include: { technician: { select: { name: true } } },
+        orderBy: { orderIndex: 'asc' },
+      }),
+      prisma.store.findMany({
+        where: { active: true },
+        orderBy: { code: 'asc' },
+      }),
+    ])
+
+    // Build schedule summary
+    const scheduleLines = boardEntries
+      .filter((e) => e.assignment)
+      .map((e) => {
+        const name = e.technician?.name ?? e.manualName ?? 'Unknown'
+        const firstName = name.split(' ')[0]
+        return `- ${firstName}: ${e.assignment}${e.note ? ` (${e.note})` : ''}${e.status ? ` [${e.status}]` : ''}`
+      })
+
+    // Build store list
+    const storeLines = stores.map((s) =>
+      `- ${s.code}: ${s.name}${s.city ? `, ${s.city}` : ''}${s.state ? ` ${s.state}` : ''}`
+    )
+
+    // Check if query mentions a specific store code
+    const storeCodesInQuery = stores
+      .filter((s) => queryText.toUpperCase().includes(s.code))
+      .map((s) => s.id)
+
+    let issueContext = ''
+    if (storeCodesInQuery.length > 0) {
+      const issues = await prisma.storeIssueLog.findMany({
+        where: { storeId: { in: storeCodesInQuery } },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+        include: {
+          store: { select: { code: true, name: true } },
+          reportedBy: { select: { name: true } },
+        },
+      })
+
+      if (issues.length > 0) {
+        const issueLines = issues.map((i) =>
+          `- [${i.store.code}] ${i.systemType}: ${i.description}${i.resolution ? ` → Fixed: ${i.resolution}` : ' (unresolved)'}  (logged by ${i.reportedBy.name.split(' ')[0]}, ${i.createdAt.toLocaleDateString()})`
+        )
+        issueContext = `\n\nKNOWN STORE ISSUES:\n${issueLines.join('\n')}`
+      }
+    }
+
+    operationalContext = `
+
+---
+LIVE OPERATIONAL CONTEXT (today: ${today}):
+
+TODAY'S SCHEDULE:
+${scheduleLines.length > 0 ? scheduleLines.join('\n') : '- No assignments yet today'}
+
+ACTIVE STORES:
+${storeLines.join('\n')}${issueContext}
+---`
+  } catch {
+    // Non-fatal — operational context unavailable
+  }
+
   // 25 s hard timeout — prevents slow Anthropic responses from holding a
   // Vercel function slot open indefinitely under concurrent load.
   let timeoutHandle: ReturnType<typeof setTimeout> | undefined
@@ -110,7 +184,7 @@ export async function POST(req: NextRequest) {
         model: 'claude-sonnet-4-6',
         max_tokens: 512,
         temperature: 0.3,
-        system: FROST_SYSTEM_PROMPT + fixContext,
+        system: FROST_SYSTEM_PROMPT + operationalContext + fixContext,
         messages: claudeMessages,
       }),
       timeoutPromise,

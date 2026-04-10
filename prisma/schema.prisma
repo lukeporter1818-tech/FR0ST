@@ -94,6 +94,8 @@ model User {
 
   mgmtTasksCreated  ManagementTask[] @relation("MgmtTasksCreated")
   mgmtTasksAssigned ManagementTask[] @relation("MgmtTasksAssigned")
+
+  storeIssueLogs StoreIssueLog[] @relation("StoreIssueLogsReported")
 }
 
 // ── TECHNICIANS ──
@@ -302,6 +304,26 @@ model Store {
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  issueLog StoreIssueLog[]
+}
+
+// ── STORE ISSUE LOG ──
+// Conversational memory layer for FR0ST. Technicians describe fixes to FR0ST
+// and the AI logs them here so future techs can recall past issues at a store.
+
+model StoreIssueLog {
+  id           String   @id @default(cuid())
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id])
+  reportedById String
+  reportedBy   User     @relation("StoreIssueLogsReported", fields: [reportedById], references: [id])
+  systemType   String   // e.g. "Walk-in Cooler", "Rack System", "HVAC / RTU"
+  description  String   // what the issue was
+  resolution   String?  // what fixed it (optional at log time)
+  createdAt    DateTime @default(now())
+
+  @@index([storeId, createdAt])
 }
 
 // ── AI LOG ──

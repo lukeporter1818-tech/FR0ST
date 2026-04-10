@@ -268,6 +268,7 @@ export type UserWhereInput = {
   aiInteractions?: Prisma.AIInteractionListRelationFilter
   mgmtTasksCreated?: Prisma.ManagementTaskListRelationFilter
   mgmtTasksAssigned?: Prisma.ManagementTaskListRelationFilter
+  storeIssueLogs?: Prisma.StoreIssueLogListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -292,6 +293,7 @@ export type UserOrderByWithRelationInput = {
   aiInteractions?: Prisma.AIInteractionOrderByRelationAggregateInput
   mgmtTasksCreated?: Prisma.ManagementTaskOrderByRelationAggregateInput
   mgmtTasksAssigned?: Prisma.ManagementTaskOrderByRelationAggregateInput
+  storeIssueLogs?: Prisma.StoreIssueLogOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -319,6 +321,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   aiInteractions?: Prisma.AIInteractionListRelationFilter
   mgmtTasksCreated?: Prisma.ManagementTaskListRelationFilter
   mgmtTasksAssigned?: Prisma.ManagementTaskListRelationFilter
+  storeIssueLogs?: Prisma.StoreIssueLogListRelationFilter
 }, "id" | "email" | "passwordResetToken">
 
 export type UserOrderByWithAggregationInput = {
@@ -385,6 +388,7 @@ export type UserCreateInput = {
   aiInteractions?: Prisma.AIInteractionCreateNestedManyWithoutUserInput
   mgmtTasksCreated?: Prisma.ManagementTaskCreateNestedManyWithoutCreatedByInput
   mgmtTasksAssigned?: Prisma.ManagementTaskCreateNestedManyWithoutAssignedToInput
+  storeIssueLogs?: Prisma.StoreIssueLogCreateNestedManyWithoutReportedByInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -409,6 +413,7 @@ export type UserUncheckedCreateInput = {
   aiInteractions?: Prisma.AIInteractionUncheckedCreateNestedManyWithoutUserInput
   mgmtTasksCreated?: Prisma.ManagementTaskUncheckedCreateNestedManyWithoutCreatedByInput
   mgmtTasksAssigned?: Prisma.ManagementTaskUncheckedCreateNestedManyWithoutAssignedToInput
+  storeIssueLogs?: Prisma.StoreIssueLogUncheckedCreateNestedManyWithoutReportedByInput
 }
 
 export type UserUpdateInput = {
@@ -433,6 +438,7 @@ export type UserUpdateInput = {
   aiInteractions?: Prisma.AIInteractionUpdateManyWithoutUserNestedInput
   mgmtTasksCreated?: Prisma.ManagementTaskUpdateManyWithoutCreatedByNestedInput
   mgmtTasksAssigned?: Prisma.ManagementTaskUpdateManyWithoutAssignedToNestedInput
+  storeIssueLogs?: Prisma.StoreIssueLogUpdateManyWithoutReportedByNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -457,6 +463,7 @@ export type UserUncheckedUpdateInput = {
   aiInteractions?: Prisma.AIInteractionUncheckedUpdateManyWithoutUserNestedInput
   mgmtTasksCreated?: Prisma.ManagementTaskUncheckedUpdateManyWithoutCreatedByNestedInput
   mgmtTasksAssigned?: Prisma.ManagementTaskUncheckedUpdateManyWithoutAssignedToNestedInput
+  storeIssueLogs?: Prisma.StoreIssueLogUncheckedUpdateManyWithoutReportedByNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -675,6 +682,20 @@ export type UserUpdateOneWithoutMgmtTasksAssignedNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutMgmtTasksAssignedInput, Prisma.UserUpdateWithoutMgmtTasksAssignedInput>, Prisma.UserUncheckedUpdateWithoutMgmtTasksAssignedInput>
 }
 
+export type UserCreateNestedOneWithoutStoreIssueLogsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutStoreIssueLogsInput, Prisma.UserUncheckedCreateWithoutStoreIssueLogsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutStoreIssueLogsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutStoreIssueLogsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutStoreIssueLogsInput, Prisma.UserUncheckedCreateWithoutStoreIssueLogsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutStoreIssueLogsInput
+  upsert?: Prisma.UserUpsertWithoutStoreIssueLogsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutStoreIssueLogsInput, Prisma.UserUpdateWithoutStoreIssueLogsInput>, Prisma.UserUncheckedUpdateWithoutStoreIssueLogsInput>
+}
+
 export type UserCreateNestedOneWithoutAiInteractionsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutAiInteractionsInput, Prisma.UserUncheckedCreateWithoutAiInteractionsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutAiInteractionsInput
@@ -710,6 +731,7 @@ export type UserCreateWithoutTechnicianInput = {
   aiInteractions?: Prisma.AIInteractionCreateNestedManyWithoutUserInput
   mgmtTasksCreated?: Prisma.ManagementTaskCreateNestedManyWithoutCreatedByInput
   mgmtTasksAssigned?: Prisma.ManagementTaskCreateNestedManyWithoutAssignedToInput
+  storeIssueLogs?: Prisma.StoreIssueLogCreateNestedManyWithoutReportedByInput
 }
 
 export type UserUncheckedCreateWithoutTechnicianInput = {
@@ -733,6 +755,7 @@ export type UserUncheckedCreateWithoutTechnicianInput = {
   aiInteractions?: Prisma.AIInteractionUncheckedCreateNestedManyWithoutUserInput
   mgmtTasksCreated?: Prisma.ManagementTaskUncheckedCreateNestedManyWithoutCreatedByInput
   mgmtTasksAssigned?: Prisma.ManagementTaskUncheckedCreateNestedManyWithoutAssignedToInput
+  storeIssueLogs?: Prisma.StoreIssueLogUncheckedCreateNestedManyWithoutReportedByInput
 }
 
 export type UserCreateOrConnectWithoutTechnicianInput = {
@@ -772,6 +795,7 @@ export type UserUpdateWithoutTechnicianInput = {
   aiInteractions?: Prisma.AIInteractionUpdateManyWithoutUserNestedInput
   mgmtTasksCreated?: Prisma.ManagementTaskUpdateManyWithoutCreatedByNestedInput
   mgmtTasksAssigned?: Prisma.ManagementTaskUpdateManyWithoutAssignedToNestedInput
+  storeIssueLogs?: Prisma.StoreIssueLogUpdateManyWithoutReportedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTechnicianInput = {
@@ -795,6 +819,7 @@ export type UserUncheckedUpdateWithoutTechnicianInput = {
   aiInteractions?: Prisma.AIInteractionUncheckedUpdateManyWithoutUserNestedInput
   mgmtTasksCreated?: Prisma.ManagementTaskUncheckedUpdateManyWithoutCreatedByNestedInput
   mgmtTasksAssigned?: Prisma.ManagementTaskUncheckedUpdateManyWithoutAssignedToNestedInput
+  storeIssueLogs?: Prisma.StoreIssueLogUncheckedUpdateManyWithoutReportedByNestedInput
 }
 
 export type UserCreateWithoutChatMessagesInput = {
@@ -818,6 +843,7 @@ export type UserCreateWithoutChatMessagesInput = {
   aiInteractions?: Prisma.AIInteractionCreateNestedManyWithoutUserInput
   mgmtTasksCreated?: Prisma.ManagementTaskCreateNestedManyWithoutCreatedByInput
   mgmtTasksAssigned?: Prisma.ManagementTaskCreateNestedManyWithoutAssignedToInput
+  storeIssueLogs?: Prisma.StoreIssueLogCreateNestedManyWithoutReportedByInput
 }
 
 export type UserUncheckedCreateWithoutChatMessagesInput = {
@@ -841,6 +867,7 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
   aiInteractions?: Prisma.AIInteractionUncheckedCreateNestedManyWithoutUserInput
   mgmtTasksCreated?: Prisma.ManagementTaskUncheckedCreateNestedManyWithoutCreatedByInput
   mgmtTasksAssigned?: Prisma.ManagementTaskUncheckedCreateNestedManyWithoutAssignedToInput
+  storeIssueLogs?: Prisma.StoreIssueLogUncheckedCreateNestedManyWithoutReportedByInput
 }
 
 export type UserCreateOrConnectWithoutChatMessagesInput = {
@@ -880,6 +907,7 @@ export type UserUpdateWithoutChatMessagesInput = {
   aiInteractions?: Prisma.AIInteractionUpdateManyWithoutUserNestedInput
   mgmtTasksCreated?: Prisma.ManagementTaskUpdateManyWithoutCreatedByNestedInput
   mgmtTasksAssigned?: Prisma.ManagementTaskUpdateManyWithoutAssignedToNestedInput
+  storeIssueLogs?: Prisma.StoreIssueLogUpdateManyWithoutReportedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutChatMessagesInput = {
@@ -903,6 +931,7 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
   aiInteractions?: Prisma.AIInteractionUncheckedUpdateManyWithoutUserNestedInput
   mgmtTasksCreated?: Prisma.ManagementTaskUncheckedUpdateManyWithoutCreatedByNestedInput
   mgmtTasksAssigned?: Prisma.ManagementTaskUncheckedUpdateManyWithoutAssignedToNestedInput
+  storeIssueLogs?: Prisma.StoreIssueLogUncheckedUpdateManyWithoutReportedByNestedInput
 }
 
 export type UserCreateWithoutNotesInput = {
@@ -926,6 +955,7 @@ export type UserCreateWithoutNotesInput = {
   aiInteractions?: Prisma.AIInteractionCreateNestedManyWithoutUserInput
   mgmtTasksCreated?: Prisma.ManagementTaskCreateNestedManyWithoutCreatedByInput
   mgmtTasksAssigned?: Prisma.ManagementTaskCreateNestedManyWithoutAssignedToInput
+  storeIssueLogs?: Prisma.StoreIssueLogCreateNestedManyWithoutReportedByInput
 }
 
 export type UserUncheckedCreateWithoutNotesInput = {
@@ -949,6 +979,7 @@ export type UserUncheckedCreateWithoutNotesInput = {
   aiInteractions?: Prisma.AIInteractionUncheckedCreateNestedManyWithoutUserInput
   mgmtTasksCreated?: Prisma.ManagementTaskUncheckedCreateNestedManyWithoutCreatedByInput
   mgmtTasksAssigned?: Prisma.ManagementTaskUncheckedCreateNestedManyWithoutAssignedToInput
+  storeIssueLogs?: Prisma.StoreIssueLogUncheckedCreateNestedManyWithoutReportedByInput
 }
 
 export type UserCreateOrConnectWithoutNotesInput = {
@@ -988,6 +1019,7 @@ export type UserUpdateWithoutNotesInput = {
   aiInteractions?: Prisma.AIInteractionUpdateManyWithoutUserNestedInput
   mgmtTasksCreated?: Prisma.ManagementTaskUpdateManyWithoutCreatedByNestedInput
   mgmtTasksAssigned?: Prisma.ManagementTaskUpdateManyWithoutAssignedToNestedInput
+  storeIssueLogs?: Prisma.StoreIssueLogUpdateManyWithoutReportedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotesInput = {
@@ -1011,6 +1043,7 @@ export type UserUncheckedUpdateWithoutNotesInput = {
   aiInteractions?: Prisma.AIInteractionUncheckedUpdateManyWithoutUserNestedInput
   mgmtTasksCreated?: Prisma.ManagementTaskUncheckedUpdateManyWithoutCreatedByNestedInput
   mgmtTasksAssigned?: Prisma.ManagementTaskUncheckedUpdateManyWithoutAssignedToNestedInput
+  storeIssueLogs?: Prisma.StoreIssueLogUncheckedUpdateManyWithoutReportedByNestedInput
 }
 
 export type UserCreateWithoutMgmtTasksCreatedInput = {
@@ -1034,6 +1067,7 @@ export type UserCreateWithoutMgmtTasksCreatedInput = {
   notes?: Prisma.NoteCreateNestedManyWithoutCreatedByInput
   aiInteractions?: Prisma.AIInteractionCreateNestedManyWithoutUserInput
   mgmtTasksAssigned?: Prisma.ManagementTaskCreateNestedManyWithoutAssignedToInput
+  storeIssueLogs?: Prisma.StoreIssueLogCreateNestedManyWithoutReportedByInput
 }
 
 export type UserUncheckedCreateWithoutMgmtTasksCreatedInput = {
@@ -1057,6 +1091,7 @@ export type UserUncheckedCreateWithoutMgmtTasksCreatedInput = {
   notes?: Prisma.NoteUncheckedCreateNestedManyWithoutCreatedByInput
   aiInteractions?: Prisma.AIInteractionUncheckedCreateNestedManyWithoutUserInput
   mgmtTasksAssigned?: Prisma.ManagementTaskUncheckedCreateNestedManyWithoutAssignedToInput
+  storeIssueLogs?: Prisma.StoreIssueLogUncheckedCreateNestedManyWithoutReportedByInput
 }
 
 export type UserCreateOrConnectWithoutMgmtTasksCreatedInput = {
@@ -1085,6 +1120,7 @@ export type UserCreateWithoutMgmtTasksAssignedInput = {
   notes?: Prisma.NoteCreateNestedManyWithoutCreatedByInput
   aiInteractions?: Prisma.AIInteractionCreateNestedManyWithoutUserInput
   mgmtTasksCreated?: Prisma.ManagementTaskCreateNestedManyWithoutCreatedByInput
+  storeIssueLogs?: Prisma.StoreIssueLogCreateNestedManyWithoutReportedByInput
 }
 
 export type UserUncheckedCreateWithoutMgmtTasksAssignedInput = {
@@ -1108,6 +1144,7 @@ export type UserUncheckedCreateWithoutMgmtTasksAssignedInput = {
   notes?: Prisma.NoteUncheckedCreateNestedManyWithoutCreatedByInput
   aiInteractions?: Prisma.AIInteractionUncheckedCreateNestedManyWithoutUserInput
   mgmtTasksCreated?: Prisma.ManagementTaskUncheckedCreateNestedManyWithoutCreatedByInput
+  storeIssueLogs?: Prisma.StoreIssueLogUncheckedCreateNestedManyWithoutReportedByInput
 }
 
 export type UserCreateOrConnectWithoutMgmtTasksAssignedInput = {
@@ -1147,6 +1184,7 @@ export type UserUpdateWithoutMgmtTasksCreatedInput = {
   notes?: Prisma.NoteUpdateManyWithoutCreatedByNestedInput
   aiInteractions?: Prisma.AIInteractionUpdateManyWithoutUserNestedInput
   mgmtTasksAssigned?: Prisma.ManagementTaskUpdateManyWithoutAssignedToNestedInput
+  storeIssueLogs?: Prisma.StoreIssueLogUpdateManyWithoutReportedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMgmtTasksCreatedInput = {
@@ -1170,6 +1208,7 @@ export type UserUncheckedUpdateWithoutMgmtTasksCreatedInput = {
   notes?: Prisma.NoteUncheckedUpdateManyWithoutCreatedByNestedInput
   aiInteractions?: Prisma.AIInteractionUncheckedUpdateManyWithoutUserNestedInput
   mgmtTasksAssigned?: Prisma.ManagementTaskUncheckedUpdateManyWithoutAssignedToNestedInput
+  storeIssueLogs?: Prisma.StoreIssueLogUncheckedUpdateManyWithoutReportedByNestedInput
 }
 
 export type UserUpsertWithoutMgmtTasksAssignedInput = {
@@ -1204,6 +1243,7 @@ export type UserUpdateWithoutMgmtTasksAssignedInput = {
   notes?: Prisma.NoteUpdateManyWithoutCreatedByNestedInput
   aiInteractions?: Prisma.AIInteractionUpdateManyWithoutUserNestedInput
   mgmtTasksCreated?: Prisma.ManagementTaskUpdateManyWithoutCreatedByNestedInput
+  storeIssueLogs?: Prisma.StoreIssueLogUpdateManyWithoutReportedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMgmtTasksAssignedInput = {
@@ -1227,6 +1267,119 @@ export type UserUncheckedUpdateWithoutMgmtTasksAssignedInput = {
   notes?: Prisma.NoteUncheckedUpdateManyWithoutCreatedByNestedInput
   aiInteractions?: Prisma.AIInteractionUncheckedUpdateManyWithoutUserNestedInput
   mgmtTasksCreated?: Prisma.ManagementTaskUncheckedUpdateManyWithoutCreatedByNestedInput
+  storeIssueLogs?: Prisma.StoreIssueLogUncheckedUpdateManyWithoutReportedByNestedInput
+}
+
+export type UserCreateWithoutStoreIssueLogsInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  role?: $Enums.Role
+  phone?: string | null
+  active?: boolean
+  passwordResetToken?: string | null
+  passwordResetExpiry?: Date | string | null
+  inviteTokenHash?: string | null
+  inviteExpiresAt?: Date | string | null
+  isActivated?: boolean
+  canManageStores?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  technician?: Prisma.TechnicianCreateNestedOneWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+  notes?: Prisma.NoteCreateNestedManyWithoutCreatedByInput
+  aiInteractions?: Prisma.AIInteractionCreateNestedManyWithoutUserInput
+  mgmtTasksCreated?: Prisma.ManagementTaskCreateNestedManyWithoutCreatedByInput
+  mgmtTasksAssigned?: Prisma.ManagementTaskCreateNestedManyWithoutAssignedToInput
+}
+
+export type UserUncheckedCreateWithoutStoreIssueLogsInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  role?: $Enums.Role
+  phone?: string | null
+  active?: boolean
+  passwordResetToken?: string | null
+  passwordResetExpiry?: Date | string | null
+  inviteTokenHash?: string | null
+  inviteExpiresAt?: Date | string | null
+  isActivated?: boolean
+  canManageStores?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  technician?: Prisma.TechnicianUncheckedCreateNestedOneWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+  notes?: Prisma.NoteUncheckedCreateNestedManyWithoutCreatedByInput
+  aiInteractions?: Prisma.AIInteractionUncheckedCreateNestedManyWithoutUserInput
+  mgmtTasksCreated?: Prisma.ManagementTaskUncheckedCreateNestedManyWithoutCreatedByInput
+  mgmtTasksAssigned?: Prisma.ManagementTaskUncheckedCreateNestedManyWithoutAssignedToInput
+}
+
+export type UserCreateOrConnectWithoutStoreIssueLogsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutStoreIssueLogsInput, Prisma.UserUncheckedCreateWithoutStoreIssueLogsInput>
+}
+
+export type UserUpsertWithoutStoreIssueLogsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutStoreIssueLogsInput, Prisma.UserUncheckedUpdateWithoutStoreIssueLogsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutStoreIssueLogsInput, Prisma.UserUncheckedCreateWithoutStoreIssueLogsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutStoreIssueLogsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutStoreIssueLogsInput, Prisma.UserUncheckedUpdateWithoutStoreIssueLogsInput>
+}
+
+export type UserUpdateWithoutStoreIssueLogsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordResetExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  inviteTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inviteExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isActivated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  technician?: Prisma.TechnicianUpdateOneWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+  notes?: Prisma.NoteUpdateManyWithoutCreatedByNestedInput
+  aiInteractions?: Prisma.AIInteractionUpdateManyWithoutUserNestedInput
+  mgmtTasksCreated?: Prisma.ManagementTaskUpdateManyWithoutCreatedByNestedInput
+  mgmtTasksAssigned?: Prisma.ManagementTaskUpdateManyWithoutAssignedToNestedInput
+}
+
+export type UserUncheckedUpdateWithoutStoreIssueLogsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  passwordResetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordResetExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  inviteTokenHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inviteExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isActivated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  technician?: Prisma.TechnicianUncheckedUpdateOneWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+  notes?: Prisma.NoteUncheckedUpdateManyWithoutCreatedByNestedInput
+  aiInteractions?: Prisma.AIInteractionUncheckedUpdateManyWithoutUserNestedInput
+  mgmtTasksCreated?: Prisma.ManagementTaskUncheckedUpdateManyWithoutCreatedByNestedInput
+  mgmtTasksAssigned?: Prisma.ManagementTaskUncheckedUpdateManyWithoutAssignedToNestedInput
 }
 
 export type UserCreateWithoutAiInteractionsInput = {
@@ -1250,6 +1403,7 @@ export type UserCreateWithoutAiInteractionsInput = {
   notes?: Prisma.NoteCreateNestedManyWithoutCreatedByInput
   mgmtTasksCreated?: Prisma.ManagementTaskCreateNestedManyWithoutCreatedByInput
   mgmtTasksAssigned?: Prisma.ManagementTaskCreateNestedManyWithoutAssignedToInput
+  storeIssueLogs?: Prisma.StoreIssueLogCreateNestedManyWithoutReportedByInput
 }
 
 export type UserUncheckedCreateWithoutAiInteractionsInput = {
@@ -1273,6 +1427,7 @@ export type UserUncheckedCreateWithoutAiInteractionsInput = {
   notes?: Prisma.NoteUncheckedCreateNestedManyWithoutCreatedByInput
   mgmtTasksCreated?: Prisma.ManagementTaskUncheckedCreateNestedManyWithoutCreatedByInput
   mgmtTasksAssigned?: Prisma.ManagementTaskUncheckedCreateNestedManyWithoutAssignedToInput
+  storeIssueLogs?: Prisma.StoreIssueLogUncheckedCreateNestedManyWithoutReportedByInput
 }
 
 export type UserCreateOrConnectWithoutAiInteractionsInput = {
@@ -1312,6 +1467,7 @@ export type UserUpdateWithoutAiInteractionsInput = {
   notes?: Prisma.NoteUpdateManyWithoutCreatedByNestedInput
   mgmtTasksCreated?: Prisma.ManagementTaskUpdateManyWithoutCreatedByNestedInput
   mgmtTasksAssigned?: Prisma.ManagementTaskUpdateManyWithoutAssignedToNestedInput
+  storeIssueLogs?: Prisma.StoreIssueLogUpdateManyWithoutReportedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAiInteractionsInput = {
@@ -1335,6 +1491,7 @@ export type UserUncheckedUpdateWithoutAiInteractionsInput = {
   notes?: Prisma.NoteUncheckedUpdateManyWithoutCreatedByNestedInput
   mgmtTasksCreated?: Prisma.ManagementTaskUncheckedUpdateManyWithoutCreatedByNestedInput
   mgmtTasksAssigned?: Prisma.ManagementTaskUncheckedUpdateManyWithoutAssignedToNestedInput
+  storeIssueLogs?: Prisma.StoreIssueLogUncheckedUpdateManyWithoutReportedByNestedInput
 }
 
 
@@ -1348,6 +1505,7 @@ export type UserCountOutputType = {
   aiInteractions: number
   mgmtTasksCreated: number
   mgmtTasksAssigned: number
+  storeIssueLogs: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1356,6 +1514,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   aiInteractions?: boolean | UserCountOutputTypeCountAiInteractionsArgs
   mgmtTasksCreated?: boolean | UserCountOutputTypeCountMgmtTasksCreatedArgs
   mgmtTasksAssigned?: boolean | UserCountOutputTypeCountMgmtTasksAssignedArgs
+  storeIssueLogs?: boolean | UserCountOutputTypeCountStoreIssueLogsArgs
 }
 
 /**
@@ -1403,6 +1562,13 @@ export type UserCountOutputTypeCountMgmtTasksAssignedArgs<ExtArgs extends runtim
   where?: Prisma.ManagementTaskWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountStoreIssueLogsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.StoreIssueLogWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1426,6 +1592,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   aiInteractions?: boolean | Prisma.User$aiInteractionsArgs<ExtArgs>
   mgmtTasksCreated?: boolean | Prisma.User$mgmtTasksCreatedArgs<ExtArgs>
   mgmtTasksAssigned?: boolean | Prisma.User$mgmtTasksAssignedArgs<ExtArgs>
+  storeIssueLogs?: boolean | Prisma.User$storeIssueLogsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1491,6 +1658,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   aiInteractions?: boolean | Prisma.User$aiInteractionsArgs<ExtArgs>
   mgmtTasksCreated?: boolean | Prisma.User$mgmtTasksCreatedArgs<ExtArgs>
   mgmtTasksAssigned?: boolean | Prisma.User$mgmtTasksAssignedArgs<ExtArgs>
+  storeIssueLogs?: boolean | Prisma.User$storeIssueLogsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1505,6 +1673,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     aiInteractions: Prisma.$AIInteractionPayload<ExtArgs>[]
     mgmtTasksCreated: Prisma.$ManagementTaskPayload<ExtArgs>[]
     mgmtTasksAssigned: Prisma.$ManagementTaskPayload<ExtArgs>[]
+    storeIssueLogs: Prisma.$StoreIssueLogPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1922,6 +2091,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   aiInteractions<T extends Prisma.User$aiInteractionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$aiInteractionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AIInteractionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   mgmtTasksCreated<T extends Prisma.User$mgmtTasksCreatedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$mgmtTasksCreatedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ManagementTaskPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   mgmtTasksAssigned<T extends Prisma.User$mgmtTasksAssignedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$mgmtTasksAssignedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ManagementTaskPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  storeIssueLogs<T extends Prisma.User$storeIssueLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$storeIssueLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StoreIssueLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2495,6 +2665,30 @@ export type User$mgmtTasksAssignedArgs<ExtArgs extends runtime.Types.Extensions.
   take?: number
   skip?: number
   distinct?: Prisma.ManagementTaskScalarFieldEnum | Prisma.ManagementTaskScalarFieldEnum[]
+}
+
+/**
+ * User.storeIssueLogs
+ */
+export type User$storeIssueLogsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the StoreIssueLog
+   */
+  select?: Prisma.StoreIssueLogSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the StoreIssueLog
+   */
+  omit?: Prisma.StoreIssueLogOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StoreIssueLogInclude<ExtArgs> | null
+  where?: Prisma.StoreIssueLogWhereInput
+  orderBy?: Prisma.StoreIssueLogOrderByWithRelationInput | Prisma.StoreIssueLogOrderByWithRelationInput[]
+  cursor?: Prisma.StoreIssueLogWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.StoreIssueLogScalarFieldEnum | Prisma.StoreIssueLogScalarFieldEnum[]
 }
 
 /**
