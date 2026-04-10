@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
-import { deleteStore } from '@/lib/actions/stores'
+import { deleteStoreFromList } from '@/lib/actions/stores'
 
 export type StoreRow = {
   id: string
@@ -17,7 +17,6 @@ export type StoreRow = {
 }
 
 // ─── Edit button ──────────────────────────────────────────────────────────────
-// Isolated so the router hook is bound once per button, not in a map callback.
 
 function EditButton({ id }: { id: string }) {
   const router = useRouter()
@@ -36,17 +35,25 @@ function EditButton({ id }: { id: string }) {
 }
 
 // ─── Delete button ────────────────────────────────────────────────────────────
-// useTransition is required when calling a server action that ends with
-// redirect(). Without it the NEXT_REDIRECT throw propagates as an unhandled
-// promise rejection and navigation never fires — the button appears to do nothing.
+// Uses deleteStoreFromList — a non-redirecting server action that returns a
+// plain result object. This avoids the redirect()/throw pattern that causes
+// Next.js to hit the error boundary, crashing the page into the error screen.
 
 function DeleteButton({ id, name }: { id: string; name: string }) {
+  const router = useRouter()
   const [pending, start] = useTransition()
 
   function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
     e.stopPropagation()
     if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return
-    start(() => deleteStore(id))
+    start(async () => {
+      const result = await deleteStoreFromList(id)
+      if (result.ok) {
+        router.refresh()   // re-fetches the server component; row disappears
+      } else {
+        window.alert(`Could not delete: ${result.error}`)
+      }
+    })
   }
 
   return (

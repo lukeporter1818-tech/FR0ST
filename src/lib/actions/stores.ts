@@ -14,6 +14,28 @@ export async function deleteStore(id: string) {
   redirect('/stores')
 }
 
+// Non-redirecting variant for list-row deletion.
+// Returns a plain result so the client can handle success/failure without
+// hitting the error boundary that redirect() and thrown errors trigger.
+export async function deleteStoreFromList(
+  id: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await requireStoreManager()
+    await prisma.store.delete({ where: { id } })
+    revalidatePath('/stores')
+    revalidatePath('/map')
+    return { ok: true }
+  } catch (err) {
+    // requireStoreManager throws on permission failure; prisma throws on DB errors.
+    // Catch both and surface them to the client cleanly.
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : 'Delete failed',
+    }
+  }
+}
+
 function parseCode(raw: FormDataEntryValue | null): string {
   return (raw as string)?.trim().toUpperCase() ?? ''
 }
