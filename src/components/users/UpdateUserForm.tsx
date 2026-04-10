@@ -10,6 +10,7 @@ interface Props {
     email: string
     role: string
     phone: string | null
+    canManageStores: boolean
     technician: { id: string; name: string } | null
   }
   unlinkedTechs: { id: string; name: string; tradeType: string | null }[]
@@ -92,6 +93,21 @@ export function UpdateUserForm({ user, unlinkedTechs, isSelf }: Props) {
             defaultValue={user.phone ?? ''}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
           />
+        </div>
+
+        <div className="col-span-2">
+          <label className="flex items-center gap-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              name="canManageStores"
+              defaultChecked={user.canManageStores}
+              className="size-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+            />
+            <span className="text-sm font-medium text-gray-700">Can manage service locations</span>
+          </label>
+          <p className="mt-1 text-xs text-gray-400 ml-6.5">
+            Allows creating, editing, and deleting stores
+          </p>
         </div>
 
         <div className="col-span-2">

@@ -170,6 +170,8 @@ export async function updateUser(id: string, formData: FormData) {
   const role = formData.get('role') as string
   const phone = (formData.get('phone') as string)?.trim() || null
   const technicianId = (formData.get('technicianId') as string) || null
+  // Checkbox inputs are absent from FormData when unchecked, present when checked
+  const canManageStores = formData.get('canManageStores') === 'on'
 
   if (!name || !email) throw new Error('Name and email are required')
   if (!['ADMIN', 'DISPATCHER', 'TECHNICIAN'].includes(role)) throw new Error('Invalid role')
@@ -193,6 +195,7 @@ export async function updateUser(id: string, formData: FormData) {
       email,
       role: role as 'ADMIN' | 'DISPATCHER' | 'TECHNICIAN',
       phone,
+      canManageStores,
     },
   })
 
