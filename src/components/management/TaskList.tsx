@@ -117,7 +117,7 @@ function AddTaskModal({
   return (
     // Backdrop — click outside closes
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-12 p-4"
       onClick={handleClose}
     >
       {/* Dim overlay */}
@@ -587,7 +587,7 @@ function TaskRow({
       </div>
 
       {/* Actions */}
-      <div className="shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="shrink-0 flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
         <button
           onClick={(e) => { e.stopPropagation(); if (!anyPending) onStartEdit() }}
           title="Edit"
