@@ -31,21 +31,37 @@ export function StoreTable({
         const geocoded = store.lat !== null && store.lng !== null
         const deleteAction = deleteStore.bind(null, store.id)
 
+        // The edit page at /stores/[id] is gated to canManage users only.
+        // Rendering a tappable row for non-managers would silently redirect them
+        // back to /stores, making the tap look broken. Only make rows interactive
+        // for users who can actually reach the destination.
+        const interactive = canManage
+
         return (
           <div
             key={store.id}
-            role="button"
-            tabIndex={0}
-            onClick={() => router.push(`/stores/${store.id}`)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                router.push(`/stores/${store.id}`)
-              }
-            }}
-            className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-white/[0.03] ${
-              i !== 0 ? 'border-t border-white/8' : ''
-            }`}
+            {...(interactive
+              ? {
+                  role: 'button',
+                  tabIndex: 0,
+                  onClick: () => router.push(`/stores/${store.id}`),
+                  onKeyDown: (e: React.KeyboardEvent) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      router.push(`/stores/${store.id}`)
+                    }
+                  },
+                }
+              : {})}
+            className={[
+              'flex items-center gap-3 px-4 py-3 transition-colors',
+              i !== 0 ? 'border-t border-white/8' : '',
+              interactive
+                ? 'cursor-pointer select-none touch-manipulation hover:bg-white/[0.03]'
+                : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
           >
             {/* Code badge */}
             <span className="inline-flex shrink-0 items-center justify-center rounded-md bg-cyan-500/15 px-2 py-0.5 text-xs font-bold tracking-wider text-cyan-300 ring-1 ring-inset ring-cyan-500/25 min-w-[3rem] text-center">
