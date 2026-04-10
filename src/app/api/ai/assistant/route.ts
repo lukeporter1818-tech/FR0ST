@@ -4,7 +4,7 @@ import { FROST_SYSTEM_PROMPT } from '@/lib/ai/system-prompt'
 import { isPartsQuery } from '@/lib/ai/parts-detector'
 import { retrieveApprovedFixes } from '@/lib/ai/retrieve-fixes'
 import { requireApiSession, unauthorized, tooManyRequests } from '@/lib/auth-guard'
-import { rateLimit, LIMITS } from '@/lib/rate-limit'
+import { rateLimitDb, LIMITS } from '@/lib/rate-limit'
 import { aiAssistantSchema } from '@/lib/validations'
 import { auditLog } from '@/lib/audit'
 import { prisma } from '@/lib/db'
@@ -17,8 +17,29 @@ export async function POST(req: NextRequest) {
 
   // Rate limit per user, not per IP — multiple users behind a corporate NAT
   // would otherwise share a single bucket and exhaust it immediately.
-  if (!rateLimit(`ai:${session.user.id}`, LIMITS.AI.limit, LIMITS.AI.windowMs)) {
+  const allowed = await rateLimitDb(session.user.id, LIMITS.AI.limit, LIMITS.AI.windowMs)
+  if (!allowed) {
     return tooManyRequests()
+  }
+
+  // Daily cap: 50 FR0ST messages per user per day
+  const today = new Date().toISOString().slice(0, 10)
+  const dailyCount = await prisma.aIInteraction.count({
+    where: {
+      userId: session.user.id,
+      actionType: 'frost.chat',
+      createdAt: {
+        gte: new Date(today),
+        lt: new Date(new Date(today).getTime() + 86_400_000),
+      },
+    },
+  }).catch(() => 0)
+
+  if (dailyCount >= 50) {
+    return Response.json(
+      { error: "You've reached your 50 message daily limit for FR0ST. Resets at midnight." },
+      { status: 429 }
+    )
   }
 
   let raw: unknown
@@ -110,10 +131,12 @@ export async function POST(req: NextRequest) {
         where: { date: new Date(today) },
         include: { technician: { select: { name: true } } },
         orderBy: { orderIndex: 'asc' },
+        take: 30,
       }),
       prisma.store.findMany({
         where: { active: true },
         orderBy: { code: 'asc' },
+        take: 60,
       }),
     ])
 
@@ -141,7 +164,7 @@ export async function POST(req: NextRequest) {
       const issues = await prisma.storeIssueLog.findMany({
         where: { storeId: { in: storeCodesInQuery } },
         orderBy: { createdAt: 'desc' },
-        take: 10,
+        take: 5,
         include: {
           store: { select: { code: true, name: true } },
           reportedBy: { select: { name: true } },

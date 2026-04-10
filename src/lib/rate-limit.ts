@@ -1,3 +1,5 @@
+import { prisma } from '@/lib/db'
+
 /**
  * In-memory sliding-window rate limiter.
  * Suitable for single-process deployments. For multi-instance production,
@@ -36,6 +38,30 @@ export function rateLimit(key: string, limit: number, windowMs: number): boolean
   timestamps.push(now)
   store.set(key, timestamps)
   return true
+}
+
+/**
+ * Database-backed rate limiter for serverless environments.
+ * Uses AIInteraction count as a proxy for AI rate limiting.
+ * Safe for multi-instance Vercel deployments.
+ */
+export async function rateLimitDb(
+  userId: string,
+  limit: number,
+  windowMs: number
+): Promise<boolean> {
+  const windowStart = new Date(Date.now() - windowMs)
+  try {
+    const count = await prisma.aIInteraction.count({
+      where: {
+        userId,
+        createdAt: { gte: windowStart },
+      },
+    })
+    return count < limit
+  } catch {
+    return true // fail open — don't block users if DB is unavailable
+  }
 }
 
 /**
