@@ -1,7 +1,8 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { AlertTriangle } from 'lucide-react'
+import { useTransition } from 'react'
+import { AlertTriangle, Trash2, Loader2 } from 'lucide-react'
 import { deleteStore } from '@/lib/actions/stores'
 
 export type StoreRow = {
@@ -16,6 +17,41 @@ export type StoreRow = {
   lng: number | null
 }
 
+// ─── Per-row delete button ────────────────────────────────────────────────────
+// Isolated into its own component so each row has its own useTransition state.
+// stopPropagation on both mousedown and click prevents the row's router.push
+// from firing when the trash icon is tapped.
+
+function DeleteButton({ id, name }: { id: string; name: string }) {
+  const [pending, start] = useTransition()
+
+  function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (!window.confirm(`Delete "${name}"?\n\nThis removes the store and its map pin. Cannot be undone.`)) return
+    start(async () => {
+      await deleteStore(id)
+    })
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleDelete}
+      onMouseDown={(e) => e.stopPropagation()}
+      disabled={pending}
+      aria-label={`Delete ${name}`}
+      className="shrink-0 flex items-center justify-center size-8 rounded-lg text-red-500 hover:text-red-300 hover:bg-red-500/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
+    >
+      {pending
+        ? <Loader2 className="size-4 animate-spin" />
+        : <Trash2 className="size-4" />
+      }
+    </button>
+  )
+}
+
+// ─── Store list ───────────────────────────────────────────────────────────────
+
 export function StoreTable({
   stores,
   canManage,
@@ -29,12 +65,9 @@ export function StoreTable({
     <div className="rounded-xl border border-white/10 overflow-hidden">
       {stores.map((store, i) => {
         const geocoded = store.lat !== null && store.lng !== null
-        const deleteAction = deleteStore.bind(null, store.id)
 
         // The edit page at /stores/[id] is gated to canManage users only.
-        // Rendering a tappable row for non-managers would silently redirect them
-        // back to /stores, making the tap look broken. Only make rows interactive
-        // for users who can actually reach the destination.
+        // Only make rows interactive for users who can actually reach the destination.
         const interactive = canManage
 
         return (
@@ -78,7 +111,7 @@ export function StoreTable({
               </p>
             </div>
 
-            {/* Geocode warning */}
+            {/* Geocode warning — hidden on mobile to keep the row clean */}
             {!geocoded && (
               <span
                 className="hidden sm:inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400 ring-1 ring-inset ring-amber-500/20"
@@ -89,21 +122,8 @@ export function StoreTable({
               </span>
             )}
 
-            {/* Delete — stopPropagation prevents row onClick from firing */}
-            {canManage && (
-              <form
-                action={deleteAction}
-                className="shrink-0"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  type="submit"
-                  className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium leading-none text-red-500 hover:text-red-300 transition-colors rounded"
-                >
-                  Delete
-                </button>
-              </form>
-            )}
+            {/* Delete — only for authorized users, isolated from row navigation */}
+            {canManage && <DeleteButton id={store.id} name={store.name} />}
           </div>
         )
       })}
