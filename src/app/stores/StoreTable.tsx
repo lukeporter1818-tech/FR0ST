@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
-import { AlertTriangle, Trash2, Loader2 } from 'lucide-react'
+import { AlertTriangle, Loader2 } from 'lucide-react'
 import { deleteStore } from '@/lib/actions/stores'
 
 export type StoreRow = {
@@ -16,11 +16,6 @@ export type StoreRow = {
   lat: number | null
   lng: number | null
 }
-
-// ─── Per-row delete button ────────────────────────────────────────────────────
-// Isolated into its own component so each row has its own useTransition state.
-// stopPropagation on both mousedown and click prevents the row's router.push
-// from firing when the trash icon is tapped.
 
 function DeleteButton({ id, name }: { id: string; name: string }) {
   const [pending, start] = useTransition()
@@ -39,22 +34,16 @@ function DeleteButton({ id, name }: { id: string; name: string }) {
       onClick={handleDelete}
       onMouseDown={(e) => e.stopPropagation()}
       disabled={pending}
-      aria-label={`Delete ${name}`}
-      className="shrink-0 flex items-center justify-center size-8 rounded-lg text-red-500 hover:text-red-300 hover:bg-red-500/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
+      className="shrink-0 inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-xs font-medium text-red-400 border border-red-500/30 hover:bg-red-500/10 hover:text-red-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
     >
-      {pending
-        ? <Loader2 className="size-4 animate-spin" />
-        : <Trash2 className="size-4" />
-      }
+      {pending ? <Loader2 className="size-3 animate-spin" /> : 'Delete'}
     </button>
   )
 }
 
-// ─── Store list ───────────────────────────────────────────────────────────────
-
 export function StoreTable({
   stores,
-  canManage,
+  canManage: _canManage,
 }: {
   stores: StoreRow[]
   canManage: boolean
@@ -66,35 +55,13 @@ export function StoreTable({
       {stores.map((store, i) => {
         const geocoded = store.lat !== null && store.lng !== null
 
-        // The edit page at /stores/[id] is gated to canManage users only.
-        // Only make rows interactive for users who can actually reach the destination.
-        const interactive = canManage
-
         return (
           <div
             key={store.id}
-            {...(interactive
-              ? {
-                  role: 'button',
-                  tabIndex: 0,
-                  onClick: () => router.push(`/stores/${store.id}`),
-                  onKeyDown: (e: React.KeyboardEvent) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      router.push(`/stores/${store.id}`)
-                    }
-                  },
-                }
-              : {})}
             className={[
               'flex items-center gap-3 px-4 py-3 transition-colors',
               i !== 0 ? 'border-t border-white/8' : '',
-              interactive
-                ? 'cursor-pointer select-none touch-manipulation hover:bg-white/[0.03]'
-                : '',
-            ]
-              .filter(Boolean)
-              .join(' ')}
+            ].join(' ')}
           >
             {/* Code badge */}
             <span className="inline-flex shrink-0 items-center justify-center rounded-md bg-cyan-500/15 px-2 py-0.5 text-xs font-bold tracking-wider text-cyan-300 ring-1 ring-inset ring-cyan-500/25 min-w-[3rem] text-center">
@@ -111,7 +78,7 @@ export function StoreTable({
               </p>
             </div>
 
-            {/* Geocode warning — hidden on mobile to keep the row clean */}
+            {/* Geocode warning */}
             {!geocoded && (
               <span
                 className="hidden sm:inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400 ring-1 ring-inset ring-amber-500/20"
@@ -122,8 +89,18 @@ export function StoreTable({
               </span>
             )}
 
-            {/* Delete — only for authorized users, isolated from row navigation */}
-            {canManage && <DeleteButton id={store.id} name={store.name} />}
+            {/* Always-visible action buttons */}
+            <div className="shrink-0 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); router.push(`/stores/${store.id}`) }}
+                onMouseDown={(e) => e.stopPropagation()}
+                className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-xs font-medium text-gray-300 border border-white/15 hover:bg-white/[0.06] hover:text-white transition-colors touch-manipulation"
+              >
+                Edit
+              </button>
+              <DeleteButton id={store.id} name={store.name} />
+            </div>
           </div>
         )
       })}
