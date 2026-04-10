@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/db'
-import { requireSession } from '@/lib/auth-guard'
+import { auth } from '@/lib/auth'
 
 export async function logStoreIssue({
   storeCode,
@@ -14,7 +14,8 @@ export async function logStoreIssue({
   description: string
   resolution?: string
 }) {
-  const session = await requireSession()
+  const session = await auth()
+  if (!session?.user?.id) return { ok: false, error: 'Not authenticated' }
 
   const store = await prisma.store.findUnique({ where: { code: storeCode.toUpperCase() } })
   if (!store) return { ok: false, error: `Store ${storeCode} not found` }

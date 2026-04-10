@@ -685,9 +685,10 @@ export function AIAssistant() {
         // Execute the log action
         try {
           const logData = JSON.parse(logMatch[1].trim())
-          await logStoreIssue(logData)
-        } catch {
-          // Non-fatal — log failed silently, response still displayed
+          const result = await logStoreIssue(logData)
+          console.log('[FR0ST] issue log result:', result)
+        } catch (err) {
+          console.error('[FR0ST] issue log error:', err)
         }
       }
 
