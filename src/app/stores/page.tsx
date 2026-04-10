@@ -76,17 +76,28 @@ function StoreTable({ stores, canManage }: { stores: StoreRow[]; canManage: bool
         const geocoded = store.lat !== null && store.lng !== null
         const deleteAction = deleteStore.bind(null, store.id)
         return (
+          // `relative` creates the stacking context the block-link pattern needs.
+          // The <Link> is stretched to fill the whole card via `absolute inset-0`.
+          // Every other child is `relative` so it stacks above the link and
+          // intercepts its own pointer events (delete button still works).
           <div
             key={store.id}
-            className={`flex items-center gap-3 px-4 py-3 ${i !== 0 ? 'border-t border-white/8' : ''} hover:bg-white/[0.03]`}
+            className={`relative flex items-center gap-3 px-4 py-3 cursor-pointer ${i !== 0 ? 'border-t border-white/8' : ''} hover:bg-white/[0.03]`}
           >
+            {/* Full-card tap/click target */}
+            <Link
+              href={`/stores/${store.id}`}
+              className="absolute inset-0"
+              aria-label={`Open ${store.name}`}
+            />
+
             {/* Code badge */}
-            <span className="inline-flex shrink-0 items-center justify-center rounded-md bg-cyan-500/15 px-2 py-0.5 text-xs font-bold tracking-wider text-cyan-300 ring-1 ring-inset ring-cyan-500/25 min-w-[3rem] text-center">
+            <span className="relative inline-flex shrink-0 items-center justify-center rounded-md bg-cyan-500/15 px-2 py-0.5 text-xs font-bold tracking-wider text-cyan-300 ring-1 ring-inset ring-cyan-500/25 min-w-[3rem] text-center">
               {store.code}
             </span>
 
             {/* Name + address */}
-            <div className="min-w-0 flex-1">
+            <div className="relative min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-gray-200">{store.name}</p>
               <p className="truncate text-xs text-gray-500">
                 {store.address}{store.city ? `, ${store.city}` : ''}
@@ -97,7 +108,7 @@ function StoreTable({ stores, canManage }: { stores: StoreRow[]; canManage: bool
             {/* Geocode status */}
             {!geocoded && (
               <span
-                className="hidden sm:inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400 ring-1 ring-inset ring-amber-500/20"
+                className="relative hidden sm:inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400 ring-1 ring-inset ring-amber-500/20"
                 title="No coordinates — check the address"
               >
                 <AlertTriangle className="size-3" />
@@ -105,15 +116,9 @@ function StoreTable({ stores, canManage }: { stores: StoreRow[]; canManage: bool
               </span>
             )}
 
-            {/* Actions — only shown to the store manager */}
+            {/* Delete action — relative so it stacks above the block link */}
             {canManage && (
-              <div className="flex shrink-0 items-center gap-1">
-                <Link
-                  href={`/stores/${store.id}`}
-                  className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium leading-none text-gray-400 hover:text-gray-100 transition-colors rounded"
-                >
-                  Edit
-                </Link>
+              <div className="relative flex shrink-0 items-center gap-1">
                 <form action={deleteAction} className="contents">
                   <button
                     type="submit"
