@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import { logPageView } from "@/lib/client-telemetry";
+import { OnboardingGate } from "@/components/onboarding/OnboardingFlow";
 
 const pageTitles: Record<string, string> = {
   "/ai": "Frost",
@@ -33,6 +34,7 @@ function resolveTitle(pathname: string): string {
 
 interface AppShellProps {
   children: React.ReactNode;
+  userId?: string;
   userName?: string;
   userRole?: string;
   userInitials?: string;
@@ -40,6 +42,7 @@ interface AppShellProps {
 
 export function AppShell({
   children,
+  userId = '',
   userName = "User",
   userRole = "DISPATCHER",
   userInitials = "U",
@@ -145,6 +148,7 @@ export function AppShell({
       className="flex fixed inset-x-0 top-0 overflow-hidden bg-[#0f1117]"
       style={{ height: 'var(--shell-h, 100dvh)' }}
     >
+      {userId && <OnboardingGate userId={userId} userRole={userRole} />}
       <Sidebar userRole={userRole} userName={userName} userInitials={userInitials} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Mobile sidebar backdrop */}

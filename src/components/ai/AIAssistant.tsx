@@ -825,17 +825,34 @@ export function AIAssistant() {
           </div>
         )}
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-4 pb-8 px-2">
+          <div className="flex flex-col items-center justify-center h-full gap-6 pb-8 px-4">
             <div className="flex flex-col items-center gap-2 text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400">
                 <Bot size={24} />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-100">Frost Field Helper</p>
+                <p className="text-sm font-semibold text-gray-100">FR0ST Field Helper</p>
                 <p className="mt-0.5 max-w-sm text-xs text-gray-500 leading-relaxed">
-                  Describe a problem or upload a part photo for identification.
+                  Ask anything about equipment, parts, or troubleshooting.
                 </p>
               </div>
+            </div>
+
+            <div className="w-full max-w-sm grid grid-cols-2 gap-2">
+              {[
+                { label: "Help me troubleshoot", prompt: "I need help troubleshooting an issue on a job" },
+                { label: "Identify a part", prompt: "I need help identifying a part or component" },
+                { label: "Teach me something", prompt: "Can you teach me how something works?" },
+                { label: "Log a store issue", prompt: "I want to log an issue I found at a store" },
+              ].map(({ label, prompt }) => (
+                <button
+                  key={label}
+                  onClick={() => setInput(prompt)}
+                  className="flex items-center justify-center px-3 py-3 rounded-xl border border-white/10 bg-white/[0.03] text-xs font-medium text-gray-400 hover:bg-white/[0.07] hover:text-gray-200 hover:border-white/20 transition-colors text-center leading-snug"
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
         ) : (

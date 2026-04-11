@@ -64,6 +64,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col overflow-x-hidden">
         {session?.user ? (
           <AppShell
+            userId={session.user.id ?? ''}
             userName={session.user.name ?? ''}
             userRole={session.user.role ?? 'DISPATCHER'}
             userInitials={getInitials(session.user.name ?? 'U')}
