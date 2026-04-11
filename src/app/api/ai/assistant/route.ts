@@ -161,8 +161,13 @@ export async function POST(req: NextRequest) {
 
     let issueContext = ''
     if (storeCodesInQuery.length > 0) {
+      const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
       const issues = await prisma.storeIssueLog.findMany({
-        where: { storeId: { in: storeCodesInQuery } },
+        where: {
+          storeId: { in: storeCodesInQuery },
+          resolvedAt: null,
+          createdAt: { gte: ninetyDaysAgo },
+        },
         orderBy: { createdAt: 'desc' },
         take: 5,
         include: {

@@ -1,0 +1,1 @@
+ALTER TABLE "StoreIssueLog" ADD COLUMN IF NOT EXISTS "resolvedAt" TIMESTAMP(3);

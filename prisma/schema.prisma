@@ -321,6 +321,7 @@ model StoreIssueLog {
   systemType   String   // e.g. "Walk-in Cooler", "Rack System", "HVAC / RTU"
   description  String   // what the issue was
   resolution   String?  // what fixed it (optional at log time)
+  resolvedAt   DateTime? // null = active, set = resolved
   createdAt    DateTime @default(now())
 
   @@index([storeId, createdAt])

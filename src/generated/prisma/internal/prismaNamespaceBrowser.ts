@@ -267,6 +267,7 @@ export const StoreIssueLogScalarFieldEnum = {
   systemType: 'systemType',
   description: 'description',
   resolution: 'resolution',
+  resolvedAt: 'resolvedAt',
   createdAt: 'createdAt'
 } as const
 

@@ -4,7 +4,7 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { Bot, Camera, Send, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { addWorkOrderToBoard } from '@/lib/actions/board'
-import { logStoreIssue } from '@/lib/actions/storeIssues'
+import { logStoreIssue, resolveStoreIssueByDescription } from '@/lib/actions/storeIssues'
 import type { WorkOrderExtraction } from '@/types/work-order'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -735,6 +735,19 @@ export function AIAssistant() {
           console.log('[FR0ST] issue log result:', result)
         } catch (err) {
           console.error('[FR0ST] issue log error:', err)
+        }
+      }
+
+      // Parse and execute any resolve issue blocks
+      const resolveMatch = responseText.match(/<resolve_issue>([\s\S]*?)<\/resolve_issue>/)
+      if (resolveMatch) {
+        responseText = responseText.replace(/<resolve_issue>[\s\S]*?<\/resolve_issue>/, '').trim()
+        try {
+          const resolveData = JSON.parse(resolveMatch[1].trim())
+          const result = await resolveStoreIssueByDescription(resolveData.storeCode, resolveData.description)
+          console.log('[FR0ST] resolve result:', result)
+        } catch (err) {
+          console.error('[FR0ST] resolve error:', err)
         }
       }
 

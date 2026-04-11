@@ -31,6 +31,7 @@ export type StoreIssueLogMinAggregateOutputType = {
   systemType: string | null
   description: string | null
   resolution: string | null
+  resolvedAt: Date | null
   createdAt: Date | null
 }
 
@@ -41,6 +42,7 @@ export type StoreIssueLogMaxAggregateOutputType = {
   systemType: string | null
   description: string | null
   resolution: string | null
+  resolvedAt: Date | null
   createdAt: Date | null
 }
 
@@ -51,6 +53,7 @@ export type StoreIssueLogCountAggregateOutputType = {
   systemType: number
   description: number
   resolution: number
+  resolvedAt: number
   createdAt: number
   _all: number
 }
@@ -63,6 +66,7 @@ export type StoreIssueLogMinAggregateInputType = {
   systemType?: true
   description?: true
   resolution?: true
+  resolvedAt?: true
   createdAt?: true
 }
 
@@ -73,6 +77,7 @@ export type StoreIssueLogMaxAggregateInputType = {
   systemType?: true
   description?: true
   resolution?: true
+  resolvedAt?: true
   createdAt?: true
 }
 
@@ -83,6 +88,7 @@ export type StoreIssueLogCountAggregateInputType = {
   systemType?: true
   description?: true
   resolution?: true
+  resolvedAt?: true
   createdAt?: true
   _all?: true
 }
@@ -166,6 +172,7 @@ export type StoreIssueLogGroupByOutputType = {
   systemType: string
   description: string
   resolution: string | null
+  resolvedAt: Date | null
   createdAt: Date
   _count: StoreIssueLogCountAggregateOutputType | null
   _min: StoreIssueLogMinAggregateOutputType | null
@@ -197,6 +204,7 @@ export type StoreIssueLogWhereInput = {
   systemType?: Prisma.StringFilter<"StoreIssueLog"> | string
   description?: Prisma.StringFilter<"StoreIssueLog"> | string
   resolution?: Prisma.StringNullableFilter<"StoreIssueLog"> | string | null
+  resolvedAt?: Prisma.DateTimeNullableFilter<"StoreIssueLog"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"StoreIssueLog"> | Date | string
   store?: Prisma.XOR<Prisma.StoreScalarRelationFilter, Prisma.StoreWhereInput>
   reportedBy?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -209,6 +217,7 @@ export type StoreIssueLogOrderByWithRelationInput = {
   systemType?: Prisma.SortOrder
   description?: Prisma.SortOrder
   resolution?: Prisma.SortOrderInput | Prisma.SortOrder
+  resolvedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   store?: Prisma.StoreOrderByWithRelationInput
   reportedBy?: Prisma.UserOrderByWithRelationInput
@@ -224,6 +233,7 @@ export type StoreIssueLogWhereUniqueInput = Prisma.AtLeast<{
   systemType?: Prisma.StringFilter<"StoreIssueLog"> | string
   description?: Prisma.StringFilter<"StoreIssueLog"> | string
   resolution?: Prisma.StringNullableFilter<"StoreIssueLog"> | string | null
+  resolvedAt?: Prisma.DateTimeNullableFilter<"StoreIssueLog"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"StoreIssueLog"> | Date | string
   store?: Prisma.XOR<Prisma.StoreScalarRelationFilter, Prisma.StoreWhereInput>
   reportedBy?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -236,6 +246,7 @@ export type StoreIssueLogOrderByWithAggregationInput = {
   systemType?: Prisma.SortOrder
   description?: Prisma.SortOrder
   resolution?: Prisma.SortOrderInput | Prisma.SortOrder
+  resolvedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.StoreIssueLogCountOrderByAggregateInput
   _max?: Prisma.StoreIssueLogMaxOrderByAggregateInput
@@ -252,6 +263,7 @@ export type StoreIssueLogScalarWhereWithAggregatesInput = {
   systemType?: Prisma.StringWithAggregatesFilter<"StoreIssueLog"> | string
   description?: Prisma.StringWithAggregatesFilter<"StoreIssueLog"> | string
   resolution?: Prisma.StringNullableWithAggregatesFilter<"StoreIssueLog"> | string | null
+  resolvedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"StoreIssueLog"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"StoreIssueLog"> | Date | string
 }
 
@@ -260,6 +272,7 @@ export type StoreIssueLogCreateInput = {
   systemType: string
   description: string
   resolution?: string | null
+  resolvedAt?: Date | string | null
   createdAt?: Date | string
   store: Prisma.StoreCreateNestedOneWithoutIssueLogInput
   reportedBy: Prisma.UserCreateNestedOneWithoutStoreIssueLogsInput
@@ -272,6 +285,7 @@ export type StoreIssueLogUncheckedCreateInput = {
   systemType: string
   description: string
   resolution?: string | null
+  resolvedAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -280,6 +294,7 @@ export type StoreIssueLogUpdateInput = {
   systemType?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   resolution?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   store?: Prisma.StoreUpdateOneRequiredWithoutIssueLogNestedInput
   reportedBy?: Prisma.UserUpdateOneRequiredWithoutStoreIssueLogsNestedInput
@@ -292,6 +307,7 @@ export type StoreIssueLogUncheckedUpdateInput = {
   systemType?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   resolution?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -302,6 +318,7 @@ export type StoreIssueLogCreateManyInput = {
   systemType: string
   description: string
   resolution?: string | null
+  resolvedAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -310,6 +327,7 @@ export type StoreIssueLogUpdateManyMutationInput = {
   systemType?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   resolution?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -320,6 +338,7 @@ export type StoreIssueLogUncheckedUpdateManyInput = {
   systemType?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   resolution?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -340,6 +359,7 @@ export type StoreIssueLogCountOrderByAggregateInput = {
   systemType?: Prisma.SortOrder
   description?: Prisma.SortOrder
   resolution?: Prisma.SortOrder
+  resolvedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -350,6 +370,7 @@ export type StoreIssueLogMaxOrderByAggregateInput = {
   systemType?: Prisma.SortOrder
   description?: Prisma.SortOrder
   resolution?: Prisma.SortOrder
+  resolvedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -360,6 +381,7 @@ export type StoreIssueLogMinOrderByAggregateInput = {
   systemType?: Prisma.SortOrder
   description?: Prisma.SortOrder
   resolution?: Prisma.SortOrder
+  resolvedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -452,6 +474,7 @@ export type StoreIssueLogCreateWithoutReportedByInput = {
   systemType: string
   description: string
   resolution?: string | null
+  resolvedAt?: Date | string | null
   createdAt?: Date | string
   store: Prisma.StoreCreateNestedOneWithoutIssueLogInput
 }
@@ -462,6 +485,7 @@ export type StoreIssueLogUncheckedCreateWithoutReportedByInput = {
   systemType: string
   description: string
   resolution?: string | null
+  resolvedAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -501,6 +525,7 @@ export type StoreIssueLogScalarWhereInput = {
   systemType?: Prisma.StringFilter<"StoreIssueLog"> | string
   description?: Prisma.StringFilter<"StoreIssueLog"> | string
   resolution?: Prisma.StringNullableFilter<"StoreIssueLog"> | string | null
+  resolvedAt?: Prisma.DateTimeNullableFilter<"StoreIssueLog"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"StoreIssueLog"> | Date | string
 }
 
@@ -509,6 +534,7 @@ export type StoreIssueLogCreateWithoutStoreInput = {
   systemType: string
   description: string
   resolution?: string | null
+  resolvedAt?: Date | string | null
   createdAt?: Date | string
   reportedBy: Prisma.UserCreateNestedOneWithoutStoreIssueLogsInput
 }
@@ -519,6 +545,7 @@ export type StoreIssueLogUncheckedCreateWithoutStoreInput = {
   systemType: string
   description: string
   resolution?: string | null
+  resolvedAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -554,6 +581,7 @@ export type StoreIssueLogCreateManyReportedByInput = {
   systemType: string
   description: string
   resolution?: string | null
+  resolvedAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -562,6 +590,7 @@ export type StoreIssueLogUpdateWithoutReportedByInput = {
   systemType?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   resolution?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   store?: Prisma.StoreUpdateOneRequiredWithoutIssueLogNestedInput
 }
@@ -572,6 +601,7 @@ export type StoreIssueLogUncheckedUpdateWithoutReportedByInput = {
   systemType?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   resolution?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -581,6 +611,7 @@ export type StoreIssueLogUncheckedUpdateManyWithoutReportedByInput = {
   systemType?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   resolution?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -590,6 +621,7 @@ export type StoreIssueLogCreateManyStoreInput = {
   systemType: string
   description: string
   resolution?: string | null
+  resolvedAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -598,6 +630,7 @@ export type StoreIssueLogUpdateWithoutStoreInput = {
   systemType?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   resolution?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reportedBy?: Prisma.UserUpdateOneRequiredWithoutStoreIssueLogsNestedInput
 }
@@ -608,6 +641,7 @@ export type StoreIssueLogUncheckedUpdateWithoutStoreInput = {
   systemType?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   resolution?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -617,6 +651,7 @@ export type StoreIssueLogUncheckedUpdateManyWithoutStoreInput = {
   systemType?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   resolution?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -629,6 +664,7 @@ export type StoreIssueLogSelect<ExtArgs extends runtime.Types.Extensions.Interna
   systemType?: boolean
   description?: boolean
   resolution?: boolean
+  resolvedAt?: boolean
   createdAt?: boolean
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
   reportedBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -641,6 +677,7 @@ export type StoreIssueLogSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   systemType?: boolean
   description?: boolean
   resolution?: boolean
+  resolvedAt?: boolean
   createdAt?: boolean
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
   reportedBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -653,6 +690,7 @@ export type StoreIssueLogSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   systemType?: boolean
   description?: boolean
   resolution?: boolean
+  resolvedAt?: boolean
   createdAt?: boolean
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
   reportedBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -665,10 +703,11 @@ export type StoreIssueLogSelectScalar = {
   systemType?: boolean
   description?: boolean
   resolution?: boolean
+  resolvedAt?: boolean
   createdAt?: boolean
 }
 
-export type StoreIssueLogOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "storeId" | "reportedById" | "systemType" | "description" | "resolution" | "createdAt", ExtArgs["result"]["storeIssueLog"]>
+export type StoreIssueLogOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "storeId" | "reportedById" | "systemType" | "description" | "resolution" | "resolvedAt" | "createdAt", ExtArgs["result"]["storeIssueLog"]>
 export type StoreIssueLogInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
   reportedBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -695,6 +734,7 @@ export type $StoreIssueLogPayload<ExtArgs extends runtime.Types.Extensions.Inter
     systemType: string
     description: string
     resolution: string | null
+    resolvedAt: Date | null
     createdAt: Date
   }, ExtArgs["result"]["storeIssueLog"]>
   composites: {}
@@ -1127,6 +1167,7 @@ export interface StoreIssueLogFieldRefs {
   readonly systemType: Prisma.FieldRef<"StoreIssueLog", 'String'>
   readonly description: Prisma.FieldRef<"StoreIssueLog", 'String'>
   readonly resolution: Prisma.FieldRef<"StoreIssueLog", 'String'>
+  readonly resolvedAt: Prisma.FieldRef<"StoreIssueLog", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"StoreIssueLog", 'DateTime'>
 }
     
