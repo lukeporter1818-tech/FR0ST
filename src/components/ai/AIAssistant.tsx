@@ -838,7 +838,7 @@ export function AIAssistant() {
           </div>
         )}
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-6 pb-8 px-4">
+          <div className="flex flex-col items-center justify-center min-h-full gap-6 py-8 px-4">
             <div className="flex flex-col items-center gap-2 text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400">
                 <Bot size={24} />
