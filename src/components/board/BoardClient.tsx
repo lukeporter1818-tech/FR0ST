@@ -554,7 +554,7 @@ export function BoardClient({
                     )}
                   >
                     <span className={cn('w-2.5 h-2.5 rounded-full shrink-0', confirmEmergency ? 'bg-red-500' : 'bg-gray-600')} />
-                    {confirmEmergency ? 'Emergency Priority' : 'Normal Priority'}
+                    {confirmEmergency ? 'On Call' : 'Normal Priority'}
                   </button>
 
                   <div className="flex gap-3 pt-1">
@@ -692,7 +692,7 @@ export function BoardClient({
                           : 'bg-transparent border-white/15 text-gray-600 hover:text-gray-300'
                       )}
                     >
-                      {editDraft.isEmergency ? 'EMRG' : 'Nml'}
+                      {editDraft.isEmergency ? 'On Call' : 'Nml'}
                     </button>
                   )}
                 </>
@@ -701,7 +701,7 @@ export function BoardClient({
                 <>
                   {row.isEmergency && (
                     <span className="shrink-0 self-center text-[10px] font-bold uppercase tracking-wide text-red-400 bg-red-500/15 border border-red-500/30 rounded px-1.5 leading-5">
-                      EMRG
+                      On Call
                     </span>
                   )}
                   <span className={cn('min-w-0 truncate text-[15px] font-bold leading-none tracking-tight', row.assignment ? 'text-gray-100' : 'text-gray-600')}>
@@ -862,7 +862,7 @@ export function BoardClient({
                   )}
                 >
                   <span className={cn('w-2.5 h-2.5 rounded-full shrink-0', editDraft.isEmergency ? 'bg-red-500' : 'bg-gray-600')} />
-                  {editDraft.isEmergency ? 'Emergency Priority' : 'Normal Priority'}
+                  {editDraft.isEmergency ? 'On Call' : 'Normal Priority'}
                 </button>
               )}
             </div>
