@@ -117,7 +117,7 @@ function AddTaskModal({
   return (
     // Backdrop — click outside closes
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-12 p-4"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-12 px-4 pb-4 overflow-hidden"
       onClick={handleClose}
     >
       {/* Dim overlay */}
@@ -125,7 +125,7 @@ function AddTaskModal({
 
       {/* Panel — stopPropagation prevents backdrop-close when clicking inside */}
       <div
-        className="relative w-full max-w-md rounded-2xl bg-gray-900 border border-white/10 shadow-2xl"
+        className="relative w-full max-w-md rounded-2xl bg-gray-900 border border-white/10 shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
