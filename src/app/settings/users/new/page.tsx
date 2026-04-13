@@ -117,7 +117,7 @@ export default function NewUserPage() {
                 className="w-full border border-white/15 rounded-lg px-3 py-2 text-sm text-gray-100 bg-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-500/50 disabled:opacity-50"
               >
                 <option value="TECHNICIAN">Field Technician — Schedule, FR0ST AI, Team Chat</option>
-                <option value="DISPATCHER">Office Staff — Schedule, FR0ST AI, Team Chat + Management</option>
+                <option value="DISPATCHER">Office Staff — Schedule, FR0ST AI, Team Chat + Warehouse</option>
                 <option value="ADMIN">Admin — Full access including User Management</option>
               </select>
             </div>
