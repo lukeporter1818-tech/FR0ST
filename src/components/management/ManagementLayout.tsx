@@ -69,7 +69,7 @@ export function ManagementLayout({
         <div className={cn('h-full overflow-y-auto px-6 py-5', tab !== 'tasks' && 'hidden')}>
           <div className="max-w-2xl mx-auto">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-base font-semibold text-gray-100">Management Tasks</h2>
+              <h2 className="text-base font-semibold text-gray-100">Warehouse Tasks</h2>
               {openCount > 0 && (
                 <span className="text-xs text-gray-500">{openCount} open</span>
               )}
