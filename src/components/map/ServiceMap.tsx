@@ -36,6 +36,16 @@ const STORE_ICON = L.divIcon({
   popupAnchor: [0, -11],
 })
 
+function buildWholeFoodsIcon(code: string): L.DivIcon {
+  return L.divIcon({
+    html: `<div style="background:#16a34a;color:#fff;font-size:9px;font-weight:800;letter-spacing:0.05em;padding:2px 5px;border-radius:6px;border:2px solid rgba(255,255,255,0.9);box-shadow:0 1px 6px rgba(0,0,0,.6);white-space:nowrap;">${code.toUpperCase()}</div>`,
+    className: '',
+    iconSize: undefined,
+    iconAnchor: [20, 10],
+    popupAnchor: [0, -14],
+  })
+}
+
 // ─── Invalidate size on mount ────────────────────────────────────────────────
 // The explicit dvh-calc height means Leaflet always initialises against a real
 // dimension. This single rAF + 250ms pass is kept only as a belt-and-suspenders
@@ -106,7 +116,9 @@ export default function ServiceMap({
                 <Marker
                   key={store.id}
                   position={[store.lat, store.lng]}
-                  icon={STORE_ICON}
+                  icon={store.name.toLowerCase().includes('whole foods')
+                    ? buildWholeFoodsIcon(store.code)
+                    : STORE_ICON}
                 >
                   {/* Permanent initials label — only shown when a tech is assigned today */}
                   {initialsLabel && (
