@@ -19,7 +19,7 @@ const primaryNavItems = [
   { label: "Team Chat",    href: "/chat",         icon: MessageSquare, roles: null },
   { label: "Service Map",  href: "/map",          icon: Map,           roles: ["DISPATCHER", "ADMIN"] as string[] },
   { label: "Stores",       href: "/stores",           icon: MapPin,     roles: ["DISPATCHER", "ADMIN"] as string[] },
-  { label: "Management",   href: "/management",   icon: Shield,        roles: ["DISPATCHER", "ADMIN"] as string[] },
+  { label: "Warehouse",   href: "/management",   icon: Shield,        roles: ["DISPATCHER", "ADMIN"] as string[] },
   { label: "FR0ST",        href: "/ai",           icon: Bot,           roles: null },
 ];
 
