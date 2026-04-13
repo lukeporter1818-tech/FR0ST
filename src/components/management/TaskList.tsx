@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useTransition, useEffect, useRef, useCallback } from 'react'
+import { useState, useMemo, useTransition, useEffect, useCallback } from 'react'
 import { Loader2, Plus, Trash2, Pencil, Check, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -329,61 +329,49 @@ function TaskRowInlineEdit({
 
 function MobileEditPanel({
   task,
-  managementUsers,
   draft,
   onDraftChange,
   onSave,
   onClose,
   pending,
-  panelRef,
-  panelBottom,
 }: {
   task: TaskData
-  managementUsers: ManagementUser[]
   draft: EditDraft
   onDraftChange: (d: EditDraft) => void
   onSave: () => void
   onClose: () => void
   pending: boolean
-  panelRef: React.RefObject<HTMLDivElement | null>
-  panelBottom: number
 }) {
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-40 bg-black/50"
-        onClick={() => { if (!pending) onClose() }}
-      />
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center pt-12 px-3 pb-4 overflow-hidden"
+      onClick={() => { if (!pending) onClose() }}
+    >
+      {/* Dim overlay */}
+      <div className="absolute inset-0 bg-black/60" aria-hidden="true" />
 
-      {/* Slide-up panel */}
+      {/* Panel */}
       <div
-        ref={panelRef}
-        className="fixed inset-x-0 bottom-0 z-50 bg-gray-900 border-t border-white/10 rounded-t-2xl shadow-2xl overflow-y-auto max-h-[85dvh]"
-        style={{
-          paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
-          ...(panelBottom > 0 && { transform: `translateY(-${panelBottom}px)` }),
-        }}
+        className="relative w-full max-w-md rounded-2xl bg-gray-900 border border-white/10 shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-white/20" />
-        </div>
-
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3">
-          <p className="text-base font-semibold text-white truncate pr-4">{task.title}</p>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <p className="text-sm font-semibold text-gray-100 truncate pr-4">{task.title}</p>
           <button
             onClick={() => { if (!pending) onClose() }}
             disabled={pending}
-            className="text-sm text-gray-400 hover:text-gray-200 transition-colors disabled:opacity-40 shrink-0"
+            className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-40"
+            aria-label="Close"
           >
-            Cancel
+            <X className="size-4" />
           </button>
         </div>
 
         {/* Fields */}
-        <div className="px-4 pb-4 space-y-4">
+        <div className="px-4 py-4 space-y-4">
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-1.5">Task</label>
             <input
@@ -391,12 +379,13 @@ function MobileEditPanel({
               value={draft.title}
               onChange={(e) => onDraftChange({ ...draft, title: e.target.value })}
               disabled={pending}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-400/50 disabled:opacity-50"
+              autoFocus
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 disabled:opacity-50"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs font-medium text-gray-400 mb-1.5">Location / Store</label>
               <input
                 type="text"
@@ -404,63 +393,34 @@ function MobileEditPanel({
                 onChange={(e) => onDraftChange({ ...draft, location: e.target.value })}
                 disabled={pending}
                 placeholder="e.g. Store #14"
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-400/50 disabled:opacity-50"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 disabled:opacity-50"
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs font-medium text-gray-400 mb-1.5">Due Date</label>
               <input
                 type="date"
                 value={draft.dueDate}
                 onChange={(e) => onDraftChange({ ...draft, dueDate: e.target.value })}
                 disabled={pending}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-400/50 disabled:opacity-50"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 disabled:opacity-50 appearance-none"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1.5">Notes</label>
-            <textarea
-              value={draft.notes}
-              onChange={(e) => onDraftChange({ ...draft, notes: e.target.value })}
-              rows={3}
-              disabled={pending}
-              placeholder="Optional details…"
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-400/50 disabled:opacity-50 resize-none"
-            />
-          </div>
-
-          {managementUsers.length > 0 && (
-            <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Assign to</label>
-              <select
-                value={draft.assignedToId}
-                onChange={(e) => onDraftChange({ ...draft, assignedToId: e.target.value })}
-                disabled={pending}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-400/50 disabled:opacity-50"
-              >
-                <option value="">— Unassigned —</option>
-                {managementUsers.map((u) => (
-                  <option key={u.id} value={u.id}>{u.name}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
           <button
             onClick={onSave}
             disabled={pending || !draft.title.trim()}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-400 text-gray-900 text-sm font-semibold rounded-lg hover:bg-amber-300 transition-colors disabled:opacity-40"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-amber-400 text-gray-900 text-sm font-semibold rounded-lg hover:bg-amber-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {pending
               ? <><Loader2 className="size-3.5 animate-spin" /> Saving…</>
-              : <><Check className="size-3.5" /> Save Changes</>
+              : <><Plus className="size-3.5" /> Save Changes</>
             }
           </button>
         </div>
       </div>
-    </>
+    </div>
   )
 }
 
@@ -619,8 +579,6 @@ export function TaskList({ initialTasks, currentUserId, managementUsers }: TaskL
   })
   const [isMobileView, setIsMobileView] = useState(false)
   const [updatePending, startUpdateTransition] = useTransition()
-  const [panelBottom, setPanelBottom] = useState(0)
-  const panelRef = useRef<HTMLDivElement>(null)
 
   // Derive the task object being edited (needed for mobile panel header)
   const editingTask = useMemo(
@@ -660,25 +618,6 @@ export function TaskList({ initialTasks, currentUserId, managementUsers }: TaskL
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = prev }
-  }, [editingId, isMobileView])
-
-  // ── Mobile: float panel above soft keyboard via visualViewport ────────────
-  useEffect(() => {
-    if (!editingId || !isMobileView) return
-    const vv = window.visualViewport
-    if (!vv) return
-    function update() {
-      const offset = window.innerHeight - (vv!.offsetTop + vv!.height)
-      setPanelBottom(Math.max(0, offset))
-    }
-    update()
-    vv.addEventListener('resize', update)
-    vv.addEventListener('scroll', update)
-    return () => {
-      vv.removeEventListener('resize', update)
-      vv.removeEventListener('scroll', update)
-      setPanelBottom(0)
-    }
   }, [editingId, isMobileView])
 
   // ── Edit helpers ───────────────────────────────────────────────────────────
@@ -748,14 +687,11 @@ export function TaskList({ initialTasks, currentUserId, managementUsers }: TaskL
       {editingId && isMobileView && editingTask && (
         <MobileEditPanel
           task={editingTask}
-          managementUsers={managementUsers}
           draft={editDraft}
           onDraftChange={setEditDraft}
           onSave={handleSaveEdit}
           onClose={closeEdit}
           pending={updatePending}
-          panelRef={panelRef}
-          panelBottom={panelBottom}
         />
       )}
 
