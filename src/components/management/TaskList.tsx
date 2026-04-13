@@ -117,7 +117,7 @@ function AddTaskModal({
   return (
     // Backdrop — click outside closes
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-12 px-4 pb-4 overflow-hidden"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-12 px-3 pb-4 overflow-hidden"
       onClick={handleClose}
     >
       {/* Dim overlay */}
@@ -147,7 +147,7 @@ function AddTaskModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
+        <form onSubmit={handleSubmit} className="px-4 py-4 space-y-4">
           {/* Title */}
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-1.5">
@@ -164,9 +164,9 @@ function AddTaskModal({
             />
           </div>
 
-          <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
             {/* Location */}
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs font-medium text-gray-400 mb-1.5">
                 Location / Store
               </label>
@@ -181,7 +181,7 @@ function AddTaskModal({
             </div>
 
             {/* Due date */}
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs font-medium text-gray-400 mb-1.5">
                 Due Date
               </label>
