@@ -534,7 +534,7 @@ function TaskRow({
           )}
           {task.dueDate && (
             <span className="text-xs text-gray-500">
-              📅 {new Date(task.dueDate + 'T12:00:00').toLocaleDateString([], { month: 'short', day: 'numeric' })}
+              🗓️ {new Date(task.dueDate + 'T12:00:00').toLocaleDateString([], { month: 'short', day: 'numeric' })}
             </span>
           )}
           {task.assignedToName && (
