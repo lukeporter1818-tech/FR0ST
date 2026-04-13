@@ -164,9 +164,9 @@ function AddTaskModal({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2 w-full min-w-0">
             {/* Location */}
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs font-medium text-gray-400 mb-1.5">
                 Location / Store
               </label>
@@ -181,7 +181,7 @@ function AddTaskModal({
             </div>
 
             {/* Due date */}
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs font-medium text-gray-400 mb-1.5">
                 Due Date
               </label>
