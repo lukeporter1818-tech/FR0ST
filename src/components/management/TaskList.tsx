@@ -190,7 +190,7 @@ function AddTaskModal({
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
                 disabled={pending}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 disabled:opacity-50"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 disabled:opacity-50 appearance-none"
               />
             </div>
           </div>
