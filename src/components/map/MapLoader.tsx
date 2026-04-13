@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import type { JobPin, StorePin, TechAssignment } from './ServiceMap'
+import type { StorePin, TechAssignment } from './ServiceMap'
 
 function MapSkeleton() {
   return (
@@ -23,15 +23,11 @@ const ServiceMap = dynamic(() => import('./ServiceMap'), {
 })
 
 export function MapLoader({
-  jobs,
-  unmappedCount,
   stores,
   techAssignments,
 }: {
-  jobs: JobPin[]
-  unmappedCount: number
   stores: StorePin[]
   techAssignments: TechAssignment[]
 }) {
-  return <ServiceMap jobs={jobs} unmappedCount={unmappedCount} stores={stores} techAssignments={techAssignments} />
+  return <ServiceMap stores={stores} techAssignments={techAssignments} />
 }
