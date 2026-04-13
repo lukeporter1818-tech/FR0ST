@@ -38,7 +38,7 @@ const STORE_ICON = L.divIcon({
 
 function buildWholeFoodsIcon(code: string): L.DivIcon {
   return L.divIcon({
-    html: `<div style="background:#16a34a;color:#fff;font-size:9px;font-weight:800;letter-spacing:0.05em;padding:2px 5px;border-radius:6px;border:2px solid rgba(255,255,255,0.9);box-shadow:0 1px 6px rgba(0,0,0,.6);white-space:nowrap;">${code.toUpperCase()}</div>`,
+    html: `<div style="background:#00674B;color:#fff;font-size:9px;font-weight:800;letter-spacing:0.05em;padding:2px 5px;border-radius:6px;border:2px solid rgba(255,255,255,0.9);box-shadow:0 1px 6px rgba(0,0,0,.6);white-space:nowrap;">${code.toUpperCase()}</div>`,
     className: '',
     iconSize: undefined,
     iconAnchor: [20, 10],
