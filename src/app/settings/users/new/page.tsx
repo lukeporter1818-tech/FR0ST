@@ -118,7 +118,7 @@ export default function NewUserPage() {
               >
                 <option value="TECHNICIAN">Field Technician — Schedule, FR0ST AI, Team Chat</option>
                 <option value="DISPATCHER">Office Staff — Schedule, FR0ST AI, Team Chat + Warehouse</option>
-                <option value="ADMIN">Admin — Full access including User Management</option>
+                <option value="ADMIN">Admin — Full access including full access</option>
               </select>
             </div>
 
