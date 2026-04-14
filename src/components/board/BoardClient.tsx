@@ -705,7 +705,7 @@ export function BoardClient({
               ) : (
                 // Read-only display — shown always on mobile, on desktop when not editing
                 <>
-                  <span className={cn('min-w-0 truncate text-[15px] font-bold leading-none tracking-tight', row.assignment ? 'text-gray-100' : 'text-gray-600')}>
+                  <span className={cn('w-16 shrink-0 truncate text-[15px] font-bold leading-none tracking-tight', row.assignment ? 'text-gray-100' : 'text-gray-600')}>
                     {row.assignment || '—'}
                   </span>
                   {row.note && (
