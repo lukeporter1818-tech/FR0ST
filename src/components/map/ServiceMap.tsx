@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 
 // Today's schedule assignment: a store code → tech initials pair.
@@ -120,14 +120,6 @@ export default function ServiceMap({
                     ? buildWholeFoodsIcon(store.code)
                     : STORE_ICON}
                 >
-                  {/* Permanent initials label — only shown when a tech is assigned today */}
-                  {initialsLabel && (
-                    <Tooltip permanent direction="top" offset={[0, -10]} opacity={1}>
-                      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.04em', color: '#0e7490' }}>
-                        {initialsLabel}
-                      </span>
-                    </Tooltip>
-                  )}
                   <Popup>
                     <div style={{ minWidth: 160 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
