@@ -8,7 +8,9 @@ export const metadata = { title: 'Service Map — Frost' }
 
 /** Derive up-to-2-letter initials from a full name. */
 function getInitials(name: string): string {
-  return name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('')
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 1) return parts[0][0].toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
 export default async function MapPage() {
