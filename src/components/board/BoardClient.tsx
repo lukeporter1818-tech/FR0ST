@@ -647,7 +647,7 @@ export function BoardClient({
             >
               {/* Name */}
               <span className={cn(
-                'w-[64px] shrink-0 text-sm leading-none',
+                'w-[68px] shrink-0 text-sm leading-none',
                 isOwnRow ? 'font-bold text-white' : 'font-normal text-gray-400'
               )}>
                 {row.name.split(' ')[0]}
@@ -705,7 +705,7 @@ export function BoardClient({
               ) : (
                 // Read-only display — shown always on mobile, on desktop when not editing
                 <>
-                  <span className={cn('w-20 shrink-0 truncate text-[15px] font-bold leading-none tracking-tight', row.assignment ? 'text-gray-100' : 'text-gray-600')}>
+                  <span className={cn('w-[72px] shrink-0 truncate text-[15px] font-bold leading-none tracking-tight', row.assignment ? 'text-gray-100' : 'text-gray-600')}>
                     {row.assignment || '—'}
                   </span>
                   {row.note && (
