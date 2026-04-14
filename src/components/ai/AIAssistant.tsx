@@ -4,7 +4,7 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { Bot, Camera, Send, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { addWorkOrderToBoard } from '@/lib/actions/board'
-import { logStoreIssue, resolveStoreIssueByDescription } from '@/lib/actions/storeIssues'
+import { logStoreIssue, resolveStoreIssueByDescription, updateStoreEquipment } from '@/lib/actions/storeIssues'
 import type { WorkOrderExtraction } from '@/types/work-order'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -748,6 +748,19 @@ export function AIAssistant() {
           console.log('[FR0ST] resolve result:', result)
         } catch (err) {
           console.error('[FR0ST] resolve error:', err)
+        }
+      }
+
+      // Parse and execute any equipment update blocks
+      const equipmentMatch = responseText.match(/<update_equipment>([\s\S]*?)<\/update_equipment>/)
+      if (equipmentMatch) {
+        responseText = responseText.replace(/<update_equipment>[\s\S]*?<\/update_equipment>/, '').trim()
+        try {
+          const equipData = JSON.parse(equipmentMatch[1].trim())
+          const result = await updateStoreEquipment(equipData.storeCode, equipData.equipment)
+          console.log('[FR0ST] equipment update result:', result)
+        } catch (err) {
+          console.error('[FR0ST] equipment update error:', err)
         }
       }
 

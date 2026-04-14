@@ -90,3 +90,18 @@ export async function resolveStoreIssueByDescription(storeCode: string, _descrip
 
   return { ok: true, storeName: store.name }
 }
+
+export async function updateStoreEquipment(storeCode: string, equipment: string) {
+  const session = await auth()
+  if (!session?.user?.id) return { ok: false, error: 'Not authenticated' }
+
+  const store = await prisma.store.findUnique({ where: { code: storeCode.toUpperCase() } })
+  if (!store) return { ok: false, error: `Store ${storeCode} not found` }
+
+  await prisma.store.update({
+    where: { id: store.id },
+    data: { equipment },
+  })
+
+  return { ok: true, storeName: store.name }
+}
