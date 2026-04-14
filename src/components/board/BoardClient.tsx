@@ -632,7 +632,7 @@ export function BoardClient({
               onDragLeave={canDropWO ? (e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverTechId(null) } : undefined}
               onDrop={canDropWO ? (e) => handleDrop(e, { id: row.id, technicianId: row.technicianId!, name: row.name }) : undefined}
               className={cn(
-                'flex items-center gap-2 py-1.5 min-h-[44px] px-0 rounded-sm transition-all duration-150 group touch-manipulation border-l-4 border-transparent',
+                'flex items-center gap-2 py-1.5 min-h-[44px] px-0 pr-3 rounded-sm transition-all duration-150 group touch-manipulation border-l-4 border-transparent',
                 clickable
                   ? 'cursor-pointer hover:bg-white/[0.07] active:bg-white/[0.12]'
                   : 'cursor-default opacity-40',
