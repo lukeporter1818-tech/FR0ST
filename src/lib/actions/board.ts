@@ -27,6 +27,7 @@ export async function saveBoardEntries(
     note: string
     status: string | null
     isEmergency: boolean
+    isFloater: boolean
   }>
 ): Promise<void> {
   // Only dispatchers/admins can bulk-save the board
@@ -51,6 +52,7 @@ export async function saveBoardEntries(
           note: String(row.note ?? '').slice(0, 500),
           status: parseBoardStatus(row.status),
           isEmergency: !!row.isEmergency,
+          isFloater: !!row.isFloater,
           orderIndex: index,
         })),
       })

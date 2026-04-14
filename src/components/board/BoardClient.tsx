@@ -39,6 +39,7 @@ export interface BoardRow {
   status: string | null
   orderIndex: number
   isEmergency: boolean
+  isFloater: boolean
 }
 
 interface BoardClientProps {
@@ -118,8 +119,8 @@ export function BoardClient({
     initialRows.map((r) => ({ ...r, dirty: false }))
   )
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editDraft, setEditDraft] = useState<{ assignment: string; note: string; status: string | null; isEmergency: boolean }>({
-    assignment: '', note: '', status: null, isEmergency: false,
+  const [editDraft, setEditDraft] = useState<{ assignment: string; note: string; status: string | null; isEmergency: boolean; isFloater: boolean }>({
+    assignment: '', note: '', status: null, isEmergency: false, isFloater: false,
   })
   const [saving, setSaving] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
@@ -226,7 +227,7 @@ export function BoardClient({
     if (!canEditRow(row)) return
     if (editingId && editingId !== row.id) commitEdit(editingId)
     setEditingId(row.id)
-    setEditDraft({ assignment: row.assignment, note: row.note, status: row.status, isEmergency: row.isEmergency })
+    setEditDraft({ assignment: row.assignment, note: row.note, status: row.status, isEmergency: row.isEmergency, isFloater: row.isFloater })
   }
 
   // Stable commit — reads draft from ref so the outside-tap listener can be
@@ -236,8 +237,8 @@ export function BoardClient({
     setRows((prev) =>
       prev.map((r) => {
         if (r.id !== rowId) return r
-        const changed = r.assignment !== draft.assignment || r.note !== draft.note || r.status !== draft.status || r.isEmergency !== draft.isEmergency
-        return { ...r, assignment: draft.assignment, note: draft.note, status: draft.status, isEmergency: draft.isEmergency, dirty: r.dirty || changed }
+        const changed = r.assignment !== draft.assignment || r.note !== draft.note || r.status !== draft.status || r.isEmergency !== draft.isEmergency || r.isFloater !== draft.isFloater
+        return { ...r, assignment: draft.assignment, note: draft.note, status: draft.status, isEmergency: draft.isEmergency, isFloater: draft.isFloater, dirty: r.dirty || changed }
       })
     )
     setEditingId(null)
@@ -407,14 +408,14 @@ export function BoardClient({
         // dropping whatever the dispatcher was typing when they hit Save.
         const rowsToSave = rows.map((r) =>
           editingId && r.id === editingId
-            ? { ...r, assignment: editDraft.assignment, note: editDraft.note, status: editDraft.status }
+            ? { ...r, assignment: editDraft.assignment, note: editDraft.note, status: editDraft.status, isEmergency: editDraft.isEmergency, isFloater: editDraft.isFloater }
             : r
         )
         setEditingId(null)
         // Also reflect the merged edit in local state so the UI matches immediately
         setRows((prev) => prev.map((r) =>
           editingId && r.id === editingId
-            ? { ...r, assignment: editDraft.assignment, note: editDraft.note, status: editDraft.status }
+            ? { ...r, assignment: editDraft.assignment, note: editDraft.note, status: editDraft.status, isEmergency: editDraft.isEmergency, isFloater: editDraft.isFloater }
             : r
         ))
         // Exclude virtual rows that were never edited — they have no DB entry yet
@@ -430,6 +431,7 @@ export function BoardClient({
           note: r.note,
           status: r.status,
           isEmergency: r.isEmergency,
+          isFloater: r.isFloater,
         })))
       }
       setRows((prev) => prev.map((r) => ({ ...r, dirty: false })))
@@ -707,6 +709,11 @@ export function BoardClient({
                       On Call
                     </span>
                   )}
+                  {row.isFloater && (
+                    <span className="shrink-0 self-center text-[10px] font-bold uppercase tracking-wide text-blue-300 bg-blue-500/15 border border-blue-500/30 rounded px-1.5 leading-5">
+                      Floater
+                    </span>
+                  )}
                   <span className={cn('min-w-0 truncate text-[15px] font-bold leading-none tracking-tight', row.assignment ? 'text-gray-100' : 'text-gray-600')}>
                     {row.assignment || '—'}
                   </span>
@@ -866,6 +873,23 @@ export function BoardClient({
                 >
                   <span className={cn('w-2.5 h-2.5 rounded-full shrink-0', editDraft.isEmergency ? 'bg-red-500' : 'bg-gray-600')} />
                   {editDraft.isEmergency ? 'On Call' : 'Normal Priority'}
+                </button>
+              )}
+
+              {/* Floater toggle — dispatchers/admins only */}
+              {!isTechnician && (
+                <button
+                  type="button"
+                  onClick={() => setEditDraft((d) => ({ ...d, isFloater: !d.isFloater }))}
+                  className={cn(
+                    'w-full flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors',
+                    editDraft.isFloater
+                      ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
+                      : 'bg-white/5 border-white/15 text-gray-400 hover:text-gray-200'
+                  )}
+                >
+                  <span className={cn('w-2.5 h-2.5 rounded-full shrink-0', editDraft.isFloater ? 'bg-blue-400' : 'bg-gray-600')} />
+                  Floater
                 </button>
               )}
             </div>

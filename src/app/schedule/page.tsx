@@ -55,6 +55,7 @@ export default async function SchedulePage({
         status: true,
         orderIndex: true,
         isEmergency: true,
+        isFloater: true,
       },
     }),
   ])
@@ -87,6 +88,7 @@ export default async function SchedulePage({
         status: entry.status,
         orderIndex: entry.orderIndex,
         isEmergency: entry.isEmergency,
+        isFloater: entry.isFloater,
       }
     }
     return {
@@ -99,6 +101,7 @@ export default async function SchedulePage({
       status: null as null,
       orderIndex: 9999,
       isEmergency: false,
+      isFloater: false,
     }
   })
 
@@ -115,6 +118,7 @@ export default async function SchedulePage({
       status: entry.status,
       orderIndex: entry.orderIndex,
       isEmergency: entry.isEmergency,
+      isFloater: entry.isFloater,
     }))
 
   const rows = [...rosterRows, ...manualRows]
