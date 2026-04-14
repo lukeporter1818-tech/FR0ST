@@ -8,7 +8,7 @@ import { logPageView } from "@/lib/client-telemetry";
 import { OnboardingGate } from "@/components/onboarding/OnboardingFlow";
 
 const pageTitles: Record<string, string> = {
-  "/ai": "Frost",
+  "/ai": "FR0ST",
   "/chat": "Team Chat",
   "/schedule": "Schedule",
   "/management": "Warehouse",

@@ -844,9 +844,9 @@ export function AIAssistant() {
                 <Bot size={24} />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-100">FR0ST Field Helper</p>
+                <p className="text-sm font-semibold text-gray-100">FR0ST</p>
                 <p className="mt-0.5 max-w-sm text-xs text-gray-500 leading-relaxed">
-                  Ask anything about equipment, parts, or troubleshooting.
+                  Your field AI — ask anything
                 </p>
               </div>
             </div>
