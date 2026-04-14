@@ -864,7 +864,7 @@ export function BoardClient({
               {!isTechnician && (
                 <button
                   type="button"
-                  onClick={() => setEditDraft((d) => ({ ...d, isEmergency: !d.isEmergency }))}
+                  onClick={() => setEditDraft((d) => ({ ...d, isEmergency: !d.isEmergency, isFloater: false }))}
                   className={cn(
                     'w-full flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors',
                     editDraft.isEmergency
@@ -881,7 +881,7 @@ export function BoardClient({
               {!isTechnician && (
                 <button
                   type="button"
-                  onClick={() => setEditDraft((d) => ({ ...d, isFloater: !d.isFloater }))}
+                  onClick={() => setEditDraft((d) => ({ ...d, isFloater: !d.isFloater, isEmergency: false }))}
                   className={cn(
                     'w-full flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors',
                     editDraft.isFloater
