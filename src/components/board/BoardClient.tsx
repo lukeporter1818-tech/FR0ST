@@ -51,10 +51,11 @@ interface BoardClientProps {
 }
 
 const STATUS_OPTIONS = [
-  { value: '',         label: '—'   },
-  { value: 'ASSIGNED', label: 'WO'  },
-  { value: 'PM',       label: 'PM'  },
-  { value: 'OUT',      label: 'Out' },
+  { value: '',          label: '—'       },
+  { value: 'ASSIGNED',  label: 'WO'      },
+  { value: 'PM',        label: 'PM'      },
+  { value: 'OUT',       label: 'Out'     },
+  { value: 'FLOATER',   label: 'Floater' },
 ]
 
 // ─── Status badge pills ────────────────────────────────────────────────────────
@@ -67,6 +68,7 @@ const STATUS_BADGE: Record<string, string> = {
   PM:        'bg-purple-500/15 text-purple-300 ring-purple-500/30',
   DONE:      'bg-gray-500/10   text-gray-500   ring-gray-500/20',
   OUT:       'bg-red-500/15    text-red-300    ring-red-500/30',
+  FLOATER:   'bg-blue-500/15  text-blue-300   ring-blue-500/30',
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -78,6 +80,7 @@ const STATUS_LABELS: Record<string, string> = {
   PM:       'PM',
   DONE:     'Done',
   OUT:      'Out',
+  FLOATER:  'Floater',
 }
 
 function StatusText({ status }: { status: string | null }) {

@@ -6,7 +6,7 @@ import { requireRole, requireSession, hasRole } from '@/lib/auth-guard'
 import { auditLog } from '@/lib/audit'
 import { BoardStatus } from '@/generated/prisma'
 
-const VALID_STATUSES: BoardStatus[] = ['ASSIGNED', 'EN_ROUTE', 'ON_SITE', 'WAITING', 'PARTS', 'PM', 'DONE', 'OUT']
+const VALID_STATUSES: BoardStatus[] = ['ASSIGNED', 'EN_ROUTE', 'ON_SITE', 'WAITING', 'PARTS', 'PM', 'DONE', 'OUT', 'FLOATER']
 
 function parseBoardStatus(status: string | null): BoardStatus | null {
   if (!status) return null
