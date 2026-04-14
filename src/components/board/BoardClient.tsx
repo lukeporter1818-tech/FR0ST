@@ -638,8 +638,8 @@ export function BoardClient({
                   : 'cursor-default opacity-40',
                 // Highlight selected row on mobile so user knows which row is open
                 isEditing && isMobileView && 'bg-white/[0.07]',
-                row.isEmergency && 'border-l-2 border-red-500 pl-2 bg-red-500/5',
-                row.isFloater && !row.isEmergency && 'border-l-2 border-blue-500 pl-2 bg-blue-500/5',
+                row.isEmergency && 'border-l-2 border-red-500 bg-red-500/5',
+                row.isFloater && !row.isEmergency && 'border-l-2 border-blue-500 bg-blue-500/5',
                 !row.isEmergency && isOwnRow && 'border-l-2 border-amber-400 pl-2',
                 isDropZone && 'bg-amber-500/5 outline outline-1 outline-amber-500/25 outline-offset-[-1px]',
                 isDragTarget && 'bg-amber-500/15 outline outline-2 outline-amber-400 outline-offset-[-2px] scale-[1.005]',
