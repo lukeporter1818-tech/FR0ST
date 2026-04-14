@@ -812,9 +812,9 @@ export function AIAssistant() {
 
       {/* Header */}
       <div className="shrink-0 border-b border-white/10 bg-gray-950 px-4 py-3 sm:px-6">
-        <h1 className="text-base font-semibold text-gray-100">Frost Field Helper</h1>
+        <h1 className="text-base font-semibold text-gray-100">FR0ST</h1>
         <p className="text-xs text-gray-500 mt-0.5">
-          Get answers about HVAC, refrigeration, electrical, plumbing
+          Your field AI — ask anything
         </p>
       </div>
 
