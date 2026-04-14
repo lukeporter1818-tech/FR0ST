@@ -61,15 +61,15 @@ const STATUS_OPTIONS = [
 
 // ─── Status badge pills ────────────────────────────────────────────────────────
 const STATUS_BADGE: Record<string, string> = {
-  ASSIGNED:  'bg-green-500/15  text-green-300  ring-green-500/30',
-  EN_ROUTE:  'bg-amber-500/15  text-amber-300  ring-amber-500/30',
-  ON_SITE:   'bg-green-500/15  text-green-300  ring-green-500/30',
-  WAITING:   'bg-yellow-500/15 text-yellow-300 ring-yellow-500/30',
-  PARTS:     'bg-orange-500/15 text-orange-300 ring-orange-500/30',
-  PM:        'bg-purple-500/15 text-purple-300 ring-purple-500/30',
-  DONE:      'bg-gray-500/10   text-gray-500   ring-gray-500/20',
-  OUT:       'bg-red-500/15    text-red-300    ring-red-500/30',
-  FLOATER:   'bg-blue-500/15  text-blue-300   ring-blue-500/30',
+  ASSIGNED:  'bg-green-500/20  text-green-300  ring-green-500/40',
+  EN_ROUTE:  'bg-amber-500/20  text-amber-300  ring-amber-500/40',
+  ON_SITE:   'bg-green-500/20  text-green-300  ring-green-500/40',
+  WAITING:   'bg-yellow-500/20 text-yellow-300 ring-yellow-500/40',
+  PARTS:     'bg-orange-500/20 text-orange-300 ring-orange-500/40',
+  PM:        'bg-purple-500/20 text-purple-300 ring-purple-500/40',
+  DONE:      'bg-gray-500/20   text-gray-400   ring-gray-500/40',
+  OUT:       'bg-red-500/20    text-red-300    ring-red-500/40',
+  FLOATER:   'bg-blue-500/20   text-blue-300   ring-blue-500/40',
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -88,7 +88,7 @@ function StatusText({ status }: { status: string | null }) {
   if (!status) return null
   return (
     <span className={cn(
-      'inline-flex items-center justify-center rounded w-7 py-0.5 text-[10px] font-medium shrink-0 ring-1',
+      'inline-flex items-center justify-center rounded-md w-8 h-5 text-[10px] font-semibold shrink-0 ring-1',
       STATUS_BADGE[status] ?? 'bg-gray-500/10 text-gray-500'
     )}>
       {STATUS_LABELS[status]}
