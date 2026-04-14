@@ -88,7 +88,7 @@ function StatusText({ status }: { status: string | null }) {
   if (!status) return null
   return (
     <span className={cn(
-      'inline-flex items-center justify-center rounded-md min-w-[30px] px-1.5 h-5 text-[10px] font-semibold shrink-0 ring-1',
+      'inline-flex items-center justify-center rounded h-5 w-8 text-[10px] font-semibold shrink-0 ring-1 overflow-hidden',
       STATUS_BADGE[status] ?? 'bg-gray-500/10 text-gray-500'
     )}>
       {STATUS_LABELS[status]}
