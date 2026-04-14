@@ -559,7 +559,7 @@ export function BoardClient({
                     )}
                   >
                     <span className={cn('w-2.5 h-2.5 rounded-full shrink-0', confirmEmergency ? 'bg-red-500' : 'bg-gray-600')} />
-                    {confirmEmergency ? 'On Call' : 'Normal Priority'}
+                    {confirmEmergency ? 'On Call' : 'On Call'}
                   </button>
 
                   <div className="flex gap-3 pt-1">
@@ -639,6 +639,7 @@ export function BoardClient({
                 // Highlight selected row on mobile so user knows which row is open
                 isEditing && isMobileView && 'bg-white/[0.07]',
                 row.isEmergency && 'border-l-2 border-red-500 pl-2 bg-red-500/5',
+                row.isFloater && !row.isEmergency && 'border-l-2 border-blue-500 pl-2 bg-blue-500/5',
                 !row.isEmergency && isOwnRow && 'border-l-2 border-amber-400 pl-2',
                 isDropZone && 'bg-amber-500/5 outline outline-1 outline-amber-500/25 outline-offset-[-1px]',
                 isDragTarget && 'bg-amber-500/15 outline outline-2 outline-amber-400 outline-offset-[-2px] scale-[1.005]',
@@ -872,7 +873,7 @@ export function BoardClient({
                   )}
                 >
                   <span className={cn('w-2.5 h-2.5 rounded-full shrink-0', editDraft.isEmergency ? 'bg-red-500' : 'bg-gray-600')} />
-                  {editDraft.isEmergency ? 'On Call' : 'Normal Priority'}
+                  {editDraft.isEmergency ? 'On Call' : 'On Call'}
                 </button>
               )}
 
