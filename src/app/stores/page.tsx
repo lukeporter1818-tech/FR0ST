@@ -4,6 +4,8 @@ import { Plus, MapPin } from 'lucide-react'
 import { auth } from '@/lib/auth'
 import { hasRole, isStoreManager } from '@/lib/auth-guard'
 import { prisma } from '@/lib/db'
+
+export const revalidate = 60 // revalidate every 60 seconds
 import { StoreTable } from './StoreTable'
 
 export const metadata = { title: 'Service Locations — Frost' }

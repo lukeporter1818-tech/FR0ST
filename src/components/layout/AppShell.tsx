@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import { logPageView } from "@/lib/client-telemetry";
 import { OnboardingGate } from "@/components/onboarding/OnboardingFlow";
+import { startKeepWarm } from "@/lib/client-ping";
 
 const pageTitles: Record<string, string> = {
   "/ai": "FR0ST",
@@ -53,6 +54,11 @@ export function AppShell({
   const toggleSidebar = useCallback(() => setSidebarOpen((prev) => !prev), []);
 
   const title = resolveTitle(pathname);
+
+  // ── Keep-warm ping ───────────────────────────────────────────────────────
+  useEffect(() => {
+    startKeepWarm()
+  }, [])
 
   // ── Page-view telemetry ───────────────────────────────────────────────────
   // Log which core screen the user is on whenever the pathname changes.

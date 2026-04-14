@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db'
 import { auth } from '@/lib/auth'
 import { BoardClient } from '@/components/board/BoardClient'
 
+export const revalidate = 30 // revalidate every 30 seconds
+
 function getLocalTodayStr(): string {
   const now = new Date()
   const y = now.getFullYear()

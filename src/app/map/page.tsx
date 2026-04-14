@@ -4,6 +4,8 @@ import { prisma } from '@/lib/db'
 import { MapLoader } from '@/components/map/MapLoader'
 import type { StorePin, TechAssignment } from '@/components/map/ServiceMap'
 
+export const revalidate = 60
+
 export const metadata = { title: 'Service Map — Frost' }
 
 /** Derive up-to-2-letter initials from a full name. */

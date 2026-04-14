@@ -59,6 +59,7 @@ export function Sidebar({ userRole, userName, userInitials, open, onClose }: Sid
         <Link
           href={href}
           onClick={onClose}
+          prefetch={true}
           className={cn(
             "flex items-center gap-3 rounded-lg px-3 py-2 transition-colors",
             secondary ? "text-xs font-medium" : "text-sm font-medium",
@@ -99,7 +100,7 @@ export function Sidebar({ userRole, userName, userInitials, open, onClose }: Sid
     )}>
       {/* Brand */}
       <div className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-4">
-        <Link href="/schedule" className="flex items-center gap-2.5" onClick={onClose}>
+        <Link href="/schedule" className="flex items-center gap-2.5" onClick={onClose} prefetch={true}>
           <div className="flex size-7 items-center justify-center rounded-lg bg-amber-400/15">
             <Wrench className="size-4 text-amber-400" />
           </div>
