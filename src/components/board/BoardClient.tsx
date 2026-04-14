@@ -705,16 +705,6 @@ export function BoardClient({
               ) : (
                 // Read-only display — shown always on mobile, on desktop when not editing
                 <>
-                  {row.isEmergency && (
-                    <span className="shrink-0 self-center text-[10px] font-bold uppercase tracking-wide text-red-400 bg-red-500/15 border border-red-500/30 rounded px-1.5 leading-5">
-                      On Call
-                    </span>
-                  )}
-                  {row.isFloater && (
-                    <span className="shrink-0 self-center text-[10px] font-bold uppercase tracking-wide text-blue-300 bg-blue-500/15 border border-blue-500/30 rounded px-1.5 leading-5">
-                      Floater
-                    </span>
-                  )}
                   <span className={cn('min-w-0 truncate text-[15px] font-bold leading-none tracking-tight', row.assignment ? 'text-gray-100' : 'text-gray-600')}>
                     {row.assignment || '—'}
                   </span>
@@ -723,7 +713,17 @@ export function BoardClient({
                       {row.note}
                     </span>
                   )}
-                  <div className="ml-auto">
+                  <div className="ml-auto flex items-center gap-1">
+                    {row.isEmergency && (
+                      <span className="shrink-0 self-center text-[10px] font-bold uppercase tracking-wide text-red-400 bg-red-500/15 border border-red-500/30 rounded px-1.5 leading-5">
+                        On Call
+                      </span>
+                    )}
+                    {row.isFloater && (
+                      <span className="shrink-0 self-center text-[10px] font-bold uppercase tracking-wide text-blue-300 bg-blue-500/15 border border-blue-500/30 rounded px-1.5 leading-5">
+                        Floater
+                      </span>
+                    )}
                     <StatusText status={row.status} />
                   </div>
                   {row.dirty && (
