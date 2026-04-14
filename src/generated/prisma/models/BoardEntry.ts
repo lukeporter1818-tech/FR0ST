@@ -234,7 +234,7 @@ export type BoardEntryGroupByOutputType = {
   _max: BoardEntryMaxAggregateOutputType | null
 }
 
-type GetBoardEntryGroupByPayload<T extends BoardEntryGroupByArgs> = Prisma.PrismaPromise<
+export type GetBoardEntryGroupByPayload<T extends BoardEntryGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<BoardEntryGroupByOutputType, T['by']> &
       {

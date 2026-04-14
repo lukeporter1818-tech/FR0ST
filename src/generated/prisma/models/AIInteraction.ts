@@ -207,7 +207,7 @@ export type AIInteractionGroupByOutputType = {
   _max: AIInteractionMaxAggregateOutputType | null
 }
 
-type GetAIInteractionGroupByPayload<T extends AIInteractionGroupByArgs> = Prisma.PrismaPromise<
+export type GetAIInteractionGroupByPayload<T extends AIInteractionGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<AIInteractionGroupByOutputType, T['by']> &
       {

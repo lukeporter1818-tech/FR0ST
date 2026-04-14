@@ -179,7 +179,7 @@ export type StoreIssueLogGroupByOutputType = {
   _max: StoreIssueLogMaxAggregateOutputType | null
 }
 
-type GetStoreIssueLogGroupByPayload<T extends StoreIssueLogGroupByArgs> = Prisma.PrismaPromise<
+export type GetStoreIssueLogGroupByPayload<T extends StoreIssueLogGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<StoreIssueLogGroupByOutputType, T['by']> &
       {

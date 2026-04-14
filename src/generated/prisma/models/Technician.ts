@@ -203,7 +203,7 @@ export type TechnicianGroupByOutputType = {
   _max: TechnicianMaxAggregateOutputType | null
 }
 
-type GetTechnicianGroupByPayload<T extends TechnicianGroupByArgs> = Prisma.PrismaPromise<
+export type GetTechnicianGroupByPayload<T extends TechnicianGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TechnicianGroupByOutputType, T['by']> &
       {
