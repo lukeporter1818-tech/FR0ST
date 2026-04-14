@@ -26,7 +26,7 @@ export default async function MapPage() {
   const [stores, boardEntries] = await Promise.all([
     prisma.store.findMany({
       where: { active: true, lat: { not: null }, lng: { not: null } },
-      select: { id: true, code: true, name: true, address: true, city: true, state: true, lat: true, lng: true, notes: true },
+      select: { id: true, code: true, name: true, address: true, city: true, state: true, lat: true, lng: true, notes: true, equipment: true },
     }).catch(() => []),
     // Today's board entries that have a non-empty assignment (the store code).
     prisma.boardEntry.findMany({

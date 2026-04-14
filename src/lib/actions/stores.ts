@@ -49,7 +49,8 @@ export async function createStore(formData: FormData) {
   const city    = (formData.get('city')    as string)?.trim() || null
   const state   = (formData.get('state')   as string)?.trim() || null
   const zip     = (formData.get('zip')     as string)?.trim() || null
-  const notes   = (formData.get('notes')   as string)?.trim() || null
+  const notes     = (formData.get('notes')     as string)?.trim() || null
+  const equipment = (formData.get('equipment') as string)?.trim() || null
 
   if (!code || !name || !address) {
     throw new Error('Code, name, and address are required')
@@ -70,6 +71,7 @@ export async function createStore(formData: FormData) {
         state,
         zip,
         notes,
+        equipment,
         lat: coords?.lat ?? null,
         lng: coords?.lng ?? null,
       },
@@ -94,7 +96,8 @@ export async function updateStore(formData: FormData) {
   const city    = (formData.get('city')    as string)?.trim() || null
   const state   = (formData.get('state')   as string)?.trim() || null
   const zip     = (formData.get('zip')     as string)?.trim() || null
-  const notes   = (formData.get('notes')   as string)?.trim() || null
+  const notes     = (formData.get('notes')     as string)?.trim() || null
+  const equipment = (formData.get('equipment') as string)?.trim() || null
 
   if (!id || !code || !name || !address) {
     throw new Error('id, code, name, and address are required')
@@ -128,7 +131,7 @@ export async function updateStore(formData: FormData) {
   try {
     await prisma.store.update({
       where: { id },
-      data: { code, name, address, city, state, zip, notes, lat, lng },
+      data: { code, name, address, city, state, zip, notes, equipment, lat, lng },
     })
   } catch (err) {
     console.error('[updateStore] failed:', err)

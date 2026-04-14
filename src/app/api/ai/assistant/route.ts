@@ -136,6 +136,7 @@ export async function POST(req: NextRequest) {
       prisma.store.findMany({
         where: { active: true },
         orderBy: { code: 'asc' },
+        select: { id: true, code: true, name: true, city: true, state: true, equipment: true },
         take: 60,
       }),
     ])
@@ -151,7 +152,7 @@ export async function POST(req: NextRequest) {
 
     // Build store list
     const storeLines = stores.map((s) =>
-      `- ${s.code}: ${s.name}${s.city ? `, ${s.city}` : ''}${s.state ? ` ${s.state}` : ''}`
+      `- ${s.code}: ${s.name}${s.city ? `, ${s.city}` : ''}${s.state ? ` ${s.state}` : ''}${s.equipment ? ` | Equipment: ${s.equipment}` : ''}`
     )
 
     // Check if query mentions a specific store code

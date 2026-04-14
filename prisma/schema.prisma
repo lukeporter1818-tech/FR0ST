@@ -304,6 +304,7 @@ model Store {
   lng       Float?
   active    Boolean  @default(true)
   notes     String?
+  equipment String? // on-site equipment e.g. "2x scissor lifts, 1x pump table"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -23,6 +23,7 @@ export type StorePin = {
   lat: number
   lng: number
   notes: string | null
+  equipment: string | null
 }
 
 // ─── Store icon ──────────────────────────────────────────────────────────────
@@ -121,22 +122,28 @@ export default function ServiceMap({
                     : STORE_ICON}
                 >
                   <Popup>
-                    <div style={{ minWidth: 160 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                    <div style={{ minWidth: 180 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                         <span style={{ background: '#06b6d4', color: '#fff', borderRadius: 4, padding: '1px 6px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em' }}>
                           {store.code}
                         </span>
                         <p style={{ fontWeight: 600, fontSize: 13, margin: 0 }}>{store.name}</p>
                       </div>
-                      <p style={{ fontSize: 11, color: '#888', margin: 0 }}>
+                      <p style={{ fontSize: 11, color: '#888', margin: '0 0 6px' }}>
                         {store.address}
                         {store.city  ? `, ${store.city}`  : ''}
                         {store.state ? ` ${store.state}` : ''}
                       </p>
                       {initialsLabel && (
-                        <p style={{ fontSize: 11, color: '#0e7490', marginTop: 6, fontWeight: 600 }}>
+                        <p style={{ fontSize: 11, color: '#0e7490', marginBottom: 4, fontWeight: 600 }}>
                           Today: {initialsLabel}
                         </p>
+                      )}
+                      {store.equipment && (
+                        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 6, marginTop: 4 }}>
+                          <p style={{ fontSize: 10, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 3px' }}>Equipment</p>
+                          <p style={{ fontSize: 11, color: '#d1d5db', margin: 0 }}>{store.equipment}</p>
+                        </div>
                       )}
                       {store.notes && (
                         <p style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>{store.notes}</p>
