@@ -1515,6 +1515,7 @@ export const StoreScalarFieldEnum = {
   lng: 'lng',
   active: 'active',
   notes: 'notes',
+  equipment: 'equipment',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

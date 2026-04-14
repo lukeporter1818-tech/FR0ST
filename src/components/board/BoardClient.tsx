@@ -61,7 +61,7 @@ const STATUS_OPTIONS = [
 
 // ─── Status badge pills ────────────────────────────────────────────────────────
 const STATUS_BADGE: Record<string, string> = {
-  ASSIGNED:  'bg-blue-500/15   text-blue-300   ring-blue-500/30',
+  ASSIGNED:  'bg-green-500/15  text-green-300  ring-green-500/30',
   EN_ROUTE:  'bg-amber-500/15  text-amber-300  ring-amber-500/30',
   ON_SITE:   'bg-green-500/15  text-green-300  ring-green-500/30',
   WAITING:   'bg-yellow-500/15 text-yellow-300 ring-yellow-500/30',
