@@ -44,6 +44,7 @@ export type BoardEntryMinAggregateOutputType = {
   status: $Enums.BoardStatus | null
   orderIndex: number | null
   isEmergency: boolean | null
+  isFloater: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -58,6 +59,7 @@ export type BoardEntryMaxAggregateOutputType = {
   status: $Enums.BoardStatus | null
   orderIndex: number | null
   isEmergency: boolean | null
+  isFloater: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -72,6 +74,7 @@ export type BoardEntryCountAggregateOutputType = {
   status: number
   orderIndex: number
   isEmergency: number
+  isFloater: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -96,6 +99,7 @@ export type BoardEntryMinAggregateInputType = {
   status?: true
   orderIndex?: true
   isEmergency?: true
+  isFloater?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -110,6 +114,7 @@ export type BoardEntryMaxAggregateInputType = {
   status?: true
   orderIndex?: true
   isEmergency?: true
+  isFloater?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -124,6 +129,7 @@ export type BoardEntryCountAggregateInputType = {
   status?: true
   orderIndex?: true
   isEmergency?: true
+  isFloater?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -225,6 +231,7 @@ export type BoardEntryGroupByOutputType = {
   status: $Enums.BoardStatus | null
   orderIndex: number
   isEmergency: boolean
+  isFloater: boolean
   createdAt: Date
   updatedAt: Date
   _count: BoardEntryCountAggregateOutputType | null
@@ -262,6 +269,7 @@ export type BoardEntryWhereInput = {
   status?: Prisma.EnumBoardStatusNullableFilter<"BoardEntry"> | $Enums.BoardStatus | null
   orderIndex?: Prisma.IntFilter<"BoardEntry"> | number
   isEmergency?: Prisma.BoolFilter<"BoardEntry"> | boolean
+  isFloater?: Prisma.BoolFilter<"BoardEntry"> | boolean
   createdAt?: Prisma.DateTimeFilter<"BoardEntry"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BoardEntry"> | Date | string
   technician?: Prisma.XOR<Prisma.TechnicianNullableScalarRelationFilter, Prisma.TechnicianWhereInput> | null
@@ -277,6 +285,7 @@ export type BoardEntryOrderByWithRelationInput = {
   status?: Prisma.SortOrderInput | Prisma.SortOrder
   orderIndex?: Prisma.SortOrder
   isEmergency?: Prisma.SortOrder
+  isFloater?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   technician?: Prisma.TechnicianOrderByWithRelationInput
@@ -297,6 +306,7 @@ export type BoardEntryWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.EnumBoardStatusNullableFilter<"BoardEntry"> | $Enums.BoardStatus | null
   orderIndex?: Prisma.IntFilter<"BoardEntry"> | number
   isEmergency?: Prisma.BoolFilter<"BoardEntry"> | boolean
+  isFloater?: Prisma.BoolFilter<"BoardEntry"> | boolean
   createdAt?: Prisma.DateTimeFilter<"BoardEntry"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BoardEntry"> | Date | string
   technician?: Prisma.XOR<Prisma.TechnicianNullableScalarRelationFilter, Prisma.TechnicianWhereInput> | null
@@ -312,6 +322,7 @@ export type BoardEntryOrderByWithAggregationInput = {
   status?: Prisma.SortOrderInput | Prisma.SortOrder
   orderIndex?: Prisma.SortOrder
   isEmergency?: Prisma.SortOrder
+  isFloater?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.BoardEntryCountOrderByAggregateInput
@@ -334,6 +345,7 @@ export type BoardEntryScalarWhereWithAggregatesInput = {
   status?: Prisma.EnumBoardStatusNullableWithAggregatesFilter<"BoardEntry"> | $Enums.BoardStatus | null
   orderIndex?: Prisma.IntWithAggregatesFilter<"BoardEntry"> | number
   isEmergency?: Prisma.BoolWithAggregatesFilter<"BoardEntry"> | boolean
+  isFloater?: Prisma.BoolWithAggregatesFilter<"BoardEntry"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"BoardEntry"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"BoardEntry"> | Date | string
 }
@@ -347,6 +359,7 @@ export type BoardEntryCreateInput = {
   status?: $Enums.BoardStatus | null
   orderIndex?: number
   isEmergency?: boolean
+  isFloater?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   technician?: Prisma.TechnicianCreateNestedOneWithoutBoardEntriesInput
@@ -362,6 +375,7 @@ export type BoardEntryUncheckedCreateInput = {
   status?: $Enums.BoardStatus | null
   orderIndex?: number
   isEmergency?: boolean
+  isFloater?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -375,6 +389,7 @@ export type BoardEntryUpdateInput = {
   status?: Prisma.NullableEnumBoardStatusFieldUpdateOperationsInput | $Enums.BoardStatus | null
   orderIndex?: Prisma.IntFieldUpdateOperationsInput | number
   isEmergency?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFloater?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   technician?: Prisma.TechnicianUpdateOneWithoutBoardEntriesNestedInput
@@ -390,6 +405,7 @@ export type BoardEntryUncheckedUpdateInput = {
   status?: Prisma.NullableEnumBoardStatusFieldUpdateOperationsInput | $Enums.BoardStatus | null
   orderIndex?: Prisma.IntFieldUpdateOperationsInput | number
   isEmergency?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFloater?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -404,6 +420,7 @@ export type BoardEntryCreateManyInput = {
   status?: $Enums.BoardStatus | null
   orderIndex?: number
   isEmergency?: boolean
+  isFloater?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -417,6 +434,7 @@ export type BoardEntryUpdateManyMutationInput = {
   status?: Prisma.NullableEnumBoardStatusFieldUpdateOperationsInput | $Enums.BoardStatus | null
   orderIndex?: Prisma.IntFieldUpdateOperationsInput | number
   isEmergency?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFloater?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -431,6 +449,7 @@ export type BoardEntryUncheckedUpdateManyInput = {
   status?: Prisma.NullableEnumBoardStatusFieldUpdateOperationsInput | $Enums.BoardStatus | null
   orderIndex?: Prisma.IntFieldUpdateOperationsInput | number
   isEmergency?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFloater?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -465,6 +484,7 @@ export type BoardEntryCountOrderByAggregateInput = {
   status?: Prisma.SortOrder
   orderIndex?: Prisma.SortOrder
   isEmergency?: Prisma.SortOrder
+  isFloater?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -483,6 +503,7 @@ export type BoardEntryMaxOrderByAggregateInput = {
   status?: Prisma.SortOrder
   orderIndex?: Prisma.SortOrder
   isEmergency?: Prisma.SortOrder
+  isFloater?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -497,6 +518,7 @@ export type BoardEntryMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   orderIndex?: Prisma.SortOrder
   isEmergency?: Prisma.SortOrder
+  isFloater?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -560,6 +582,7 @@ export type BoardEntryCreateWithoutTechnicianInput = {
   status?: $Enums.BoardStatus | null
   orderIndex?: number
   isEmergency?: boolean
+  isFloater?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -573,6 +596,7 @@ export type BoardEntryUncheckedCreateWithoutTechnicianInput = {
   status?: $Enums.BoardStatus | null
   orderIndex?: number
   isEmergency?: boolean
+  isFloater?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -616,6 +640,7 @@ export type BoardEntryScalarWhereInput = {
   status?: Prisma.EnumBoardStatusNullableFilter<"BoardEntry"> | $Enums.BoardStatus | null
   orderIndex?: Prisma.IntFilter<"BoardEntry"> | number
   isEmergency?: Prisma.BoolFilter<"BoardEntry"> | boolean
+  isFloater?: Prisma.BoolFilter<"BoardEntry"> | boolean
   createdAt?: Prisma.DateTimeFilter<"BoardEntry"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BoardEntry"> | Date | string
 }
@@ -629,6 +654,7 @@ export type BoardEntryCreateManyTechnicianInput = {
   status?: $Enums.BoardStatus | null
   orderIndex?: number
   isEmergency?: boolean
+  isFloater?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -642,6 +668,7 @@ export type BoardEntryUpdateWithoutTechnicianInput = {
   status?: Prisma.NullableEnumBoardStatusFieldUpdateOperationsInput | $Enums.BoardStatus | null
   orderIndex?: Prisma.IntFieldUpdateOperationsInput | number
   isEmergency?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFloater?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -655,6 +682,7 @@ export type BoardEntryUncheckedUpdateWithoutTechnicianInput = {
   status?: Prisma.NullableEnumBoardStatusFieldUpdateOperationsInput | $Enums.BoardStatus | null
   orderIndex?: Prisma.IntFieldUpdateOperationsInput | number
   isEmergency?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFloater?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -668,6 +696,7 @@ export type BoardEntryUncheckedUpdateManyWithoutTechnicianInput = {
   status?: Prisma.NullableEnumBoardStatusFieldUpdateOperationsInput | $Enums.BoardStatus | null
   orderIndex?: Prisma.IntFieldUpdateOperationsInput | number
   isEmergency?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFloater?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -684,6 +713,7 @@ export type BoardEntrySelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   status?: boolean
   orderIndex?: boolean
   isEmergency?: boolean
+  isFloater?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   technician?: boolean | Prisma.BoardEntry$technicianArgs<ExtArgs>
@@ -699,6 +729,7 @@ export type BoardEntrySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   status?: boolean
   orderIndex?: boolean
   isEmergency?: boolean
+  isFloater?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   technician?: boolean | Prisma.BoardEntry$technicianArgs<ExtArgs>
@@ -714,6 +745,7 @@ export type BoardEntrySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   status?: boolean
   orderIndex?: boolean
   isEmergency?: boolean
+  isFloater?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   technician?: boolean | Prisma.BoardEntry$technicianArgs<ExtArgs>
@@ -729,11 +761,12 @@ export type BoardEntrySelectScalar = {
   status?: boolean
   orderIndex?: boolean
   isEmergency?: boolean
+  isFloater?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type BoardEntryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "technicianId" | "manualName" | "date" | "assignment" | "note" | "status" | "orderIndex" | "isEmergency" | "createdAt" | "updatedAt", ExtArgs["result"]["boardEntry"]>
+export type BoardEntryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "technicianId" | "manualName" | "date" | "assignment" | "note" | "status" | "orderIndex" | "isEmergency" | "isFloater" | "createdAt" | "updatedAt", ExtArgs["result"]["boardEntry"]>
 export type BoardEntryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   technician?: boolean | Prisma.BoardEntry$technicianArgs<ExtArgs>
 }
@@ -759,6 +792,7 @@ export type $BoardEntryPayload<ExtArgs extends runtime.Types.Extensions.Internal
     status: $Enums.BoardStatus | null
     orderIndex: number
     isEmergency: boolean
+    isFloater: boolean
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["boardEntry"]>
@@ -1194,6 +1228,7 @@ export interface BoardEntryFieldRefs {
   readonly status: Prisma.FieldRef<"BoardEntry", 'BoardStatus'>
   readonly orderIndex: Prisma.FieldRef<"BoardEntry", 'Int'>
   readonly isEmergency: Prisma.FieldRef<"BoardEntry", 'Boolean'>
+  readonly isFloater: Prisma.FieldRef<"BoardEntry", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"BoardEntry", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"BoardEntry", 'DateTime'>
 }
