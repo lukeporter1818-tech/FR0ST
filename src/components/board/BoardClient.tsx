@@ -833,19 +833,6 @@ export function BoardClient({
                 </div>
               )}
 
-              {/* Note */}
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Note</label>
-                <input
-                  ref={(isTechnician && !editingRow.manualName) ? assignmentRef : undefined}
-                  type="text"
-                  value={editDraft.note}
-                  onChange={(e) => setEditDraft((d) => ({ ...d, note: e.target.value }))}
-                  placeholder="Note"
-                  className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-base text-gray-100 placeholder:text-gray-600 outline-none focus:ring-2 focus:ring-amber-500/40"
-                />
-              </div>
-
               {/* Status */}
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
@@ -860,37 +847,29 @@ export function BoardClient({
                 </select>
               </div>
 
-              {/* Emergency toggle — dispatchers/admins only */}
+              {/* On Call / Floater cycle — dispatchers/admins only */}
               {!isTechnician && (
                 <button
                   type="button"
-                  onClick={() => setEditDraft((d) => ({ ...d, isEmergency: !d.isEmergency, isFloater: false }))}
+                  onClick={() => setEditDraft((d) => {
+                    if (!d.isEmergency && !d.isFloater) return { ...d, isEmergency: true, isFloater: false }
+                    if (d.isEmergency) return { ...d, isEmergency: false, isFloater: true }
+                    return { ...d, isEmergency: false, isFloater: false }
+                  })}
                   className={cn(
                     'w-full flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors',
                     editDraft.isEmergency
                       ? 'bg-red-500/15 border-red-500/30 text-red-400'
-                      : 'bg-white/5 border-white/15 text-gray-400 hover:text-gray-200'
+                      : editDraft.isFloater
+                        ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
+                        : 'bg-white/5 border-white/15 text-gray-400 hover:text-gray-200'
                   )}
                 >
-                  <span className={cn('w-2.5 h-2.5 rounded-full shrink-0', editDraft.isEmergency ? 'bg-red-500' : 'bg-gray-600')} />
-                  {editDraft.isEmergency ? 'On Call' : 'On Call'}
-                </button>
-              )}
-
-              {/* Floater toggle — dispatchers/admins only */}
-              {!isTechnician && (
-                <button
-                  type="button"
-                  onClick={() => setEditDraft((d) => ({ ...d, isFloater: !d.isFloater, isEmergency: false }))}
-                  className={cn(
-                    'w-full flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors',
-                    editDraft.isFloater
-                      ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
-                      : 'bg-white/5 border-white/15 text-gray-400 hover:text-gray-200'
-                  )}
-                >
-                  <span className={cn('w-2.5 h-2.5 rounded-full shrink-0', editDraft.isFloater ? 'bg-blue-400' : 'bg-gray-600')} />
-                  Floater
+                  <span className={cn(
+                    'w-2.5 h-2.5 rounded-full shrink-0',
+                    editDraft.isEmergency ? 'bg-red-500' : editDraft.isFloater ? 'bg-blue-400' : 'bg-gray-600'
+                  )} />
+                  {editDraft.isEmergency ? 'On Call' : editDraft.isFloater ? 'Floater' : 'On Call / Floater'}
                 </button>
               )}
             </div>
