@@ -647,7 +647,7 @@ export function BoardClient({
             >
               {/* Name */}
               <span className={cn(
-                'w-[72px] shrink-0 text-sm leading-none',
+                'w-[64px] shrink-0 text-sm leading-none',
                 isOwnRow ? 'font-bold text-white' : 'font-normal text-gray-400'
               )}>
                 {row.name.split(' ')[0]}
