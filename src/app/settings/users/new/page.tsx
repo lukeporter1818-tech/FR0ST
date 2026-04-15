@@ -13,7 +13,7 @@ interface UnlinkedTech {
 }
 
 async function fetchUnlinkedTechs(): Promise<UnlinkedTech[]> {
-  const res = await fetch('/api/unlinked-techs')
+  const res = await fetch('/api/technicians/unlinked')
   if (!res.ok) return []
   return res.json()
 }
