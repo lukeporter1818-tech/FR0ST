@@ -638,9 +638,9 @@ export function BoardClient({
                   : 'cursor-default opacity-40',
                 // Highlight selected row on mobile so user knows which row is open
                 isEditing && isMobileView && 'bg-white/[0.07]',
-                row.isEmergency && 'border-transparent bg-red-500/5',
-                row.isFloater && !row.isEmergency && 'border-transparent bg-blue-500/5',
-                !row.isEmergency && isOwnRow && '!border-amber-400',
+                row.isEmergency && 'border border-red-500 bg-red-500/5 shadow-[0_0_8px_rgba(239,68,68,0.4)]',
+                row.isFloater && !row.isEmergency && 'border border-blue-500 bg-blue-500/5 shadow-[0_0_8px_rgba(59,130,246,0.4)]',
+                !row.isEmergency && !row.isFloater && isOwnRow && 'border border-amber-400',
                 isDropZone && 'bg-amber-500/5 outline outline-1 outline-amber-500/25 outline-offset-[-1px]',
                 isDragTarget && 'bg-amber-500/15 outline outline-2 outline-amber-400 outline-offset-[-2px] scale-[1.005]',
               )}
