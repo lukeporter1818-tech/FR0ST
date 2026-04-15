@@ -443,6 +443,37 @@ export function BoardClient({
     }
   }
 
+  // Auto-save: commits the draft to local state instantly, then saves in background.
+  // Used by the mobile Done button and backdrop tap so dispatchers don't need to hit Save.
+  async function commitAndSave(rowId: string) {
+    commitEdit(rowId)
+    try {
+      setSaving(true)
+      const draft = editDraftRef.current
+      const rowsToSave = rows.map((r) =>
+        r.id === rowId
+          ? { ...r, assignment: draft.assignment, note: draft.note, status: draft.status, isEmergency: draft.isEmergency, isFloater: draft.isFloater }
+          : r
+      )
+      const rowsToSend = rowsToSave.filter((r) => !r.id.startsWith('virtual:') || r.dirty)
+      await saveBoardEntries(date, rowsToSend.map((r) => ({
+        technicianId: r.technicianId,
+        manualName: r.manualName,
+        assignment: r.assignment,
+        note: r.note,
+        status: r.status,
+        isEmergency: r.isEmergency,
+        isFloater: r.isFloater,
+      })))
+      setRows((prev) => prev.map((r) => ({ ...r, dirty: false })))
+      setLastSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+    } catch {
+      toast.error('Auto-save failed — tap Save to retry.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   // The row currently open in the mobile panel
   const editingRow = editingId ? rows.find((r) => r.id === editingId) ?? null : null
 
@@ -790,7 +821,7 @@ export function BoardClient({
           {/* Backdrop — commits draft when tapped (same as desktop outside-tap) */}
           <div
             className="fixed inset-0 z-40 bg-black/50"
-            onPointerDown={() => commitEdit(editingId)}
+            onPointerDown={() => commitAndSave(editingId!)}
           />
 
           {/* Panel */}
@@ -878,7 +909,7 @@ export function BoardClient({
             <div className="px-4 pt-4 pb-2">
               <button
                 type="button"
-                onClick={() => commitEdit(editingId)}
+                onClick={() => commitAndSave(editingId!)}
                 className="w-full rounded-lg bg-amber-500 py-3 text-sm font-semibold text-gray-950 hover:bg-amber-400 active:bg-amber-600 transition-colors"
               >
                 Done
