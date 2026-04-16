@@ -796,7 +796,7 @@ export function BoardClient({
           {/* Panel */}
           <div
             ref={panelRef}
-            className="fixed inset-x-0 bottom-0 z-50 bg-gray-900 border-t border-white/10 rounded-t-2xl shadow-2xl"
+            className="fixed inset-x-0 bottom-0 z-50 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[480px] md:rounded-2xl md:bottom-8 bg-gray-900 border border-white/10 rounded-t-2xl shadow-2xl"
             style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
           >
             {/* Drag handle */}
@@ -828,7 +828,7 @@ export function BoardClient({
                     value={editDraft.assignment}
                     onChange={(e) => setEditDraft((d) => ({ ...d, assignment: e.target.value }))}
                     placeholder="Store"
-                    className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-base font-semibold text-gray-100 placeholder:text-gray-600 placeholder:font-normal outline-none focus:ring-2 focus:ring-amber-500/40"
+                    className="w-full bg-gray-800 border border-white/15 rounded-lg px-3 py-2.5 text-base font-semibold text-gray-100 placeholder:text-gray-600 placeholder:font-normal outline-none focus:ring-2 focus:ring-amber-500/40"
                   />
                 </div>
               )}
