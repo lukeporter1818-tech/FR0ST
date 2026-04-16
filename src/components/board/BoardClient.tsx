@@ -174,8 +174,8 @@ export function BoardClient({
   // On mobile, the panel renders and the user taps the field they want — no
   // programmatic focus to avoid opening the keyboard before the panel settles.
   useEffect(() => {
-    if (editingId && !isMobileView) {
-      assignmentRef.current?.focus()
+    if (editingId) {
+      // Focus handled by panel
     }
   }, [editingId, isMobileView])
 
@@ -195,7 +195,7 @@ export function BoardClient({
   // not to the row. It doesn't matter where the row is in the list — the panel
   // always sits directly above the keyboard.
   useEffect(() => {
-    if (!editingId || !isMobileView) return
+    if (!editingId) return
     const vv = window.visualViewport
     const panel = panelRef.current
     if (!vv || !panel) return
@@ -443,39 +443,7 @@ export function BoardClient({
     }
   }
 
-  // Auto-save: commits the draft to local state instantly, then saves in background.
-  // Used by the mobile Done button and backdrop tap so dispatchers don't need to hit Save.
-  async function commitAndSave(rowId: string) {
-    const savedDraft = { ...editDraftRef.current }
-    commitEdit(rowId)
-    try {
-      setSaving(true)
-      const draft = savedDraft
-      const rowsToSave = rows.map((r) =>
-        r.id === rowId
-          ? { ...r, assignment: draft.assignment, note: draft.note, status: draft.status, isEmergency: draft.isEmergency, isFloater: draft.isFloater }
-          : r
-      )
-      const rowsToSend = rowsToSave.filter((r) => !r.id.startsWith('virtual:') || r.dirty)
-      await saveBoardEntries(date, rowsToSend.map((r) => ({
-        technicianId: r.technicianId,
-        manualName: r.manualName,
-        assignment: r.assignment,
-        note: r.note,
-        status: r.status,
-        isEmergency: r.isEmergency,
-        isFloater: r.isFloater,
-      })))
-      setRows((prev) => prev.map((r) => ({ ...r, dirty: false })))
-      setLastSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
-    } catch {
-      toast.error('Auto-save failed — tap Save to retry.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  // The row currently open in the mobile panel
+  // The row currently open in the panel
   const editingRow = editingId ? rows.find((r) => r.id === editingId) ?? null : null
 
   return (
@@ -686,7 +654,7 @@ export function BoardClient({
               </span>
 
               {/* Desktop inline editing — hidden on mobile (panel used instead) */}
-              {isEditing && !isMobileView ? (
+              {false ? (
                 <>
                   {/* Technicians editing their own row: no assignment field */}
                   {!isTechnician && (
@@ -817,12 +785,12 @@ export function BoardClient({
           regardless of which row was tapped or where it sits in the list.
           All inputs use text-base (16px) to prevent Safari auto-zoom.
       */}
-      {editingId && isMobileView && editingRow && (
+      {editingId && editingRow && (
         <>
           {/* Backdrop — commits draft when tapped (same as desktop outside-tap) */}
           <div
             className="fixed inset-0 z-40 bg-black/50"
-            onPointerDown={() => commitAndSave(editingId!)}
+            onPointerDown={() => commitEdit(editingId!)}
           />
 
           {/* Panel */}
@@ -910,7 +878,7 @@ export function BoardClient({
             <div className="px-4 pt-4 pb-2">
               <button
                 type="button"
-                onClick={() => commitAndSave(editingId!)}
+                onClick={() => commitEdit(editingId!)}
                 className="w-full rounded-lg bg-amber-500 py-3 text-sm font-semibold text-gray-950 hover:bg-amber-400 active:bg-amber-600 transition-colors"
               >
                 Done
