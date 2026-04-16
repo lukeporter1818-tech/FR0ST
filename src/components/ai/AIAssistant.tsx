@@ -692,6 +692,21 @@ export function AIAssistant() {
       ])
       setLoading(false) // hide loading dots — streaming has started
 
+      let rafPending = false
+      let lastRenderedText = ''
+
+      const flushToUI = () => {
+        rafPending = false
+        if (streamedText !== lastRenderedText) {
+          lastRenderedText = streamedText
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === streamingId ? { ...m, content: streamedText } : m
+            )
+          )
+        }
+      }
+
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
@@ -704,11 +719,10 @@ export function AIAssistant() {
             const json = JSON.parse(line.slice(6))
             if (json.text) {
               streamedText += json.text
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === streamingId ? { ...m, content: streamedText } : m
-                )
-              )
+              if (!rafPending) {
+                rafPending = true
+                requestAnimationFrame(flushToUI)
+              }
             }
             if (json.done) {
               interactionId = json.interactionId
@@ -721,6 +735,8 @@ export function AIAssistant() {
           }
         }
       }
+      // Final flush to ensure last tokens render
+      flushToUI()
 
       // Process completed response
       let responseText = streamedText
