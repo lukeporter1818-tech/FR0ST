@@ -56,7 +56,7 @@ const STATUS_OPTIONS = [
   { value: 'ASSIGNED',  label: 'WO'      },
   { value: 'PM',        label: 'PM'      },
   { value: 'OUT',       label: 'Out'     },
-  { value: 'FLOATER',   label: 'Floater' },
+  
 ]
 
 // ─── Status badge pills ────────────────────────────────────────────────────────
