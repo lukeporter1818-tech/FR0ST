@@ -699,9 +699,19 @@ export function AIAssistant() {
         rafPending = false
         if (streamedText !== lastRenderedText) {
           lastRenderedText = streamedText
+          // Strip any XML action blocks from display during streaming
+          const displayText = streamedText
+            .replace(/<log_issue>[\s\S]*?<\/log_issue>/g, '')
+            .replace(/<resolve_issue>[\s\S]*?<\/resolve_issue>/g, '')
+            .replace(/<update_equipment>[\s\S]*?<\/update_equipment>/g, '')
+            // Also hide partial opening tags that haven't closed yet
+            .replace(/<log_issue>[\s\S]*/g, '')
+            .replace(/<resolve_issue>[\s\S]*/g, '')
+            .replace(/<update_equipment>[\s\S]*/g, '')
+            .trim()
           setMessages((prev) =>
             prev.map((m) =>
-              m.id === streamingId ? { ...m, content: streamedText } : m
+              m.id === streamingId ? { ...m, content: displayText } : m
             )
           )
         }
