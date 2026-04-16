@@ -446,10 +446,12 @@ export function BoardClient({
   // Auto-save: commits the draft to local state instantly, then saves in background.
   // Used by the mobile Done button and backdrop tap so dispatchers don't need to hit Save.
   async function commitAndSave(rowId: string) {
+    // Capture draft BEFORE commitEdit resets the ref
+    const draft = { ...editDraftRef.current }
+
     commitEdit(rowId)
     try {
       setSaving(true)
-      const draft = editDraftRef.current
       const rowsToSave = rows.map((r) =>
         r.id === rowId
           ? { ...r, assignment: draft.assignment, note: draft.note, status: draft.status, isEmergency: draft.isEmergency, isFloater: draft.isFloater }
