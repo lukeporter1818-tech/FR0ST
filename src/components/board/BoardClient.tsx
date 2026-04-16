@@ -445,15 +445,16 @@ export function BoardClient({
 
   async function commitAndSave(rowId: string) {
     const savedDraft = { ...editDraftRef.current }
+    // Build merged rows synchronously BEFORE commitEdit mutates state
+    const mergedRows = rows.map((r) =>
+      r.id === rowId
+        ? { ...r, assignment: savedDraft.assignment, note: savedDraft.note, status: savedDraft.status, isEmergency: savedDraft.isEmergency, isFloater: savedDraft.isFloater, dirty: true }
+        : r
+    )
     commitEdit(rowId)
     try {
       setSaving(true)
-      const rowsToSave = rows.map((r) =>
-        r.id === rowId
-          ? { ...r, assignment: savedDraft.assignment, note: savedDraft.note, status: savedDraft.status, isEmergency: savedDraft.isEmergency, isFloater: savedDraft.isFloater }
-          : r
-      )
-      const rowsToSend = rowsToSave.filter((r) => !r.id.startsWith('virtual:') || r.dirty)
+      const rowsToSend = mergedRows.filter((r) => !r.id.startsWith('virtual:') || r.dirty)
       await saveBoardEntries(date, rowsToSend.map((r) => ({
         technicianId: r.technicianId,
         manualName: r.manualName,
