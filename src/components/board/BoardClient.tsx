@@ -443,6 +443,35 @@ export function BoardClient({
     }
   }
 
+  async function commitAndSave(rowId: string) {
+    const savedDraft = { ...editDraftRef.current }
+    commitEdit(rowId)
+    try {
+      setSaving(true)
+      const rowsToSave = rows.map((r) =>
+        r.id === rowId
+          ? { ...r, assignment: savedDraft.assignment, note: savedDraft.note, status: savedDraft.status, isEmergency: savedDraft.isEmergency, isFloater: savedDraft.isFloater }
+          : r
+      )
+      const rowsToSend = rowsToSave.filter((r) => !r.id.startsWith('virtual:') || r.dirty)
+      await saveBoardEntries(date, rowsToSend.map((r) => ({
+        technicianId: r.technicianId,
+        manualName: r.manualName,
+        assignment: r.assignment,
+        note: r.note,
+        status: r.status,
+        isEmergency: r.isEmergency,
+        isFloater: r.isFloater,
+      })))
+      setRows((prev) => prev.map((r) => ({ ...r, dirty: false })))
+      setLastSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+    } catch {
+      toast.error('Auto-save failed — tap Save to retry.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   // The row currently open in the panel
   const editingRow = editingId ? rows.find((r) => r.id === editingId) ?? null : null
 
@@ -790,7 +819,7 @@ export function BoardClient({
           {/* Backdrop — commits draft when tapped (same as desktop outside-tap) */}
           <div
             className="fixed inset-0 z-40 bg-black/50"
-            onPointerDown={() => commitEdit(editingId!)}
+            onPointerDown={() => commitAndSave(editingId!)}
           />
 
           {/* Panel */}
@@ -878,7 +907,7 @@ export function BoardClient({
             <div className="px-4 pt-4 pb-2">
               <button
                 type="button"
-                onClick={() => commitEdit(editingId!)}
+                onClick={() => commitAndSave(editingId!)}
                 className="w-full rounded-lg bg-amber-500 py-3 text-sm font-semibold text-gray-950 hover:bg-amber-400 active:bg-amber-600 transition-colors"
               >
                 Done
