@@ -399,8 +399,11 @@ export function BoardClient({
         if (!myRow) return
         const note = editingId === myRow.id ? editDraft.note : myRow.note
         const status = editingId === myRow.id ? editDraft.status : myRow.status
+        const assignment = editingId === myRow.id ? editDraft.assignment : myRow.assignment
+        const isEmergency = editingId === myRow.id ? editDraft.isEmergency : myRow.isEmergency
+        const isFloater = editingId === myRow.id ? editDraft.isFloater : myRow.isFloater
         if (editingId) setEditingId(null)
-        await updateMyRow(currentTechnicianId, date, status, note)
+        await updateMyRow(currentTechnicianId, date, status, note, assignment, isEmergency, isFloater)
       } else {
         // Compute rows to save synchronously, merging any open edit draft inline.
         // We cannot call commitEdit() then read `rows` because setRows is async —
@@ -475,6 +478,7 @@ export function BoardClient({
 
   // The row currently open in the panel
   const editingRow = editingId ? rows.find((r) => r.id === editingId) ?? null : null
+  const isEditingOwnRow = isTechnician && editingRow?.technicianId === currentTechnicianId
 
   return (
     <div className="overflow-x-hidden">
@@ -848,8 +852,8 @@ export function BoardClient({
 
             {/* Fields */}
             <div className="px-4 space-y-3">
-              {/* Assignment — dispatchers/admins only */}
-              {!isTechnician && (
+              {/* Assignment — dispatchers/admins, or tech editing own row */}
+              {(!isTechnician || isEditingOwnRow) && (
                 <div>
                   <label className="block text-xs font-medium text-gray-500 mb-1">Store</label>
                   <input
@@ -877,8 +881,8 @@ export function BoardClient({
                 </select>
               </div>
 
-              {/* On Call / Floater cycle — dispatchers/admins only */}
-              {!isTechnician && (
+              {/* On Call / Floater cycle — dispatchers/admins, or tech editing own row */}
+              {(!isTechnician || isEditingOwnRow) && (
                 <button
                   type="button"
                   onClick={() => setEditDraft((d) => {

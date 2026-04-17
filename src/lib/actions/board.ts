@@ -337,7 +337,10 @@ export async function updateMyRow(
   technicianId: string,
   date: string,
   status: string | null,
-  note: string
+  note: string,
+  assignment: string,
+  isEmergency: boolean,
+  isFloater: boolean,
 ): Promise<void> {
   const session = await requireSession()
 
@@ -352,19 +355,25 @@ export async function updateMyRow(
   }
 
   const sanitizedNote = String(note ?? '').slice(0, 500)
+  const sanitizedAssignment = String(assignment ?? '').slice(0, 200)
 
   await prisma.boardEntry.upsert({
     where: { technicianId_date: { technicianId, date: parsedDate } },
     update: {
       status: parseBoardStatus(status),
       note: sanitizedNote,
+      assignment: sanitizedAssignment,
+      isEmergency: !!isEmergency,
+      isFloater: !!isFloater,
     },
     create: {
       technicianId,
       date: parsedDate,
-      assignment: '',
+      assignment: sanitizedAssignment,
       status: parseBoardStatus(status),
       note: sanitizedNote,
+      isEmergency: !!isEmergency,
+      isFloater: !!isFloater,
       orderIndex: 0,
     },
   })
