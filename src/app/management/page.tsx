@@ -10,7 +10,7 @@ export default async function ManagementPage() {
   const session = await auth()
 
   if (!session?.user?.id) redirect('/login')
-  if (!hasRole(session.user.role, 'DISPATCHER')) redirect('/')
+  // All authenticated users can access Warehouse
 
   // Run all three queries in parallel — tasks previously ran serially after
   // messages + users, adding its full round-trip to page load.
