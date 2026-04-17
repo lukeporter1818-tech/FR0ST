@@ -457,16 +457,29 @@ export function BoardClient({
     commitEdit(rowId)
     try {
       setSaving(true)
-      const rowsToSend = mergedRows.filter((r) => !r.id.startsWith('virtual:') || r.dirty)
-      await saveBoardEntries(date, rowsToSend.map((r) => ({
-        technicianId: r.technicianId,
-        manualName: r.manualName,
-        assignment: r.assignment,
-        note: r.note,
-        status: r.status,
-        isEmergency: r.isEmergency,
-        isFloater: r.isFloater,
-      })))
+      if (isTechnician && currentTechnicianId) {
+        // Techs use updateMyRow — saveBoardEntries requires DISPATCHER
+        await updateMyRow(
+          currentTechnicianId,
+          date,
+          savedDraft.status,
+          savedDraft.note,
+          savedDraft.assignment,
+          savedDraft.isEmergency,
+          savedDraft.isFloater,
+        )
+      } else {
+        const rowsToSend = mergedRows.filter((r) => !r.id.startsWith('virtual:') || r.dirty)
+        await saveBoardEntries(date, rowsToSend.map((r) => ({
+          technicianId: r.technicianId,
+          manualName: r.manualName,
+          assignment: r.assignment,
+          note: r.note,
+          status: r.status,
+          isEmergency: r.isEmergency,
+          isFloater: r.isFloater,
+        })))
+      }
       setRows((prev) => prev.map((r) => ({ ...r, dirty: false })))
       setLastSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
     } catch {
