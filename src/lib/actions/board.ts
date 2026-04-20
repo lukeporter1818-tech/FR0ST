@@ -39,25 +39,37 @@ export async function saveBoardEntries(
     throw new Error('Invalid rows array')
   }
 
-  // Atomic: if createMany fails the delete is rolled back — no data loss
-  await prisma.$transaction(async (tx) => {
-    await tx.boardEntry.deleteMany({ where: { date: parsedDate } })
-    if (rows.length > 0) {
-      await tx.boardEntry.createMany({
-        data: rows.map((row, index) => ({
-          technicianId: row.technicianId ? String(row.technicianId).slice(0, 100) : null,
-          manualName: row.manualName ? String(row.manualName).trim().slice(0, 100) : null,
-          date: parsedDate,
-          assignment: String(row.assignment ?? '').slice(0, 200),
-          note: String(row.note ?? '').slice(0, 500),
-          status: parseBoardStatus(row.status),
-          isEmergency: !!row.isEmergency,
-          isFloater: !!row.isFloater,
-          orderIndex: index,
-        })),
-      })
-    }
-  })
+  // Upsert each row individually — only touches changed rows, scales better than delete+createMany
+  await prisma.$transaction(
+    rows.map((row, index) => {
+      const data = {
+        technicianId: row.technicianId ? String(row.technicianId).slice(0, 100) : null,
+        manualName: row.manualName ? String(row.manualName).trim().slice(0, 100) : null,
+        date: parsedDate,
+        assignment: String(row.assignment ?? '').slice(0, 200),
+        note: String(row.note ?? '').slice(0, 500),
+        status: parseBoardStatus(row.status),
+        isEmergency: !!row.isEmergency,
+        isFloater: !!row.isFloater,
+        orderIndex: index,
+      }
+
+      if (row.technicianId) {
+        return prisma.boardEntry.upsert({
+          where: { technicianId_date: { technicianId: String(row.technicianId).slice(0, 100), date: parsedDate } },
+          update: data,
+          create: data,
+        })
+      } else {
+        // Manual rows — upsert by manualName+date
+        return prisma.boardEntry.upsert({
+          where: { manualName_date: { manualName: String(row.manualName ?? '').trim().slice(0, 100), date: parsedDate } },
+          update: data,
+          create: data,
+        })
+      }
+    })
+  )
 
   auditLog({
     action: 'board.save',
