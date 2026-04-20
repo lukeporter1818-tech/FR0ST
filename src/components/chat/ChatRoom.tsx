@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Loader2, Send, MessageSquare } from 'lucide-react'
+import { Loader2, Send, MessageSquare, Trash2 } from 'lucide-react'
 import { ChatMessage, type ChatMessageData } from '@/components/chat/ChatMessage'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
@@ -11,10 +11,12 @@ type ChatRoomProps = {
   initialMessages: ChatMessageData[]
   userId: string
   userName: string
+  userRole?: string
   channel?: string
 }
 
-export function ChatRoom({ initialMessages, userId, userName, channel = 'general' }: ChatRoomProps) {
+export function ChatRoom({ initialMessages, userId, userName, userRole, channel = 'general' }: ChatRoomProps) {
+  const isAdmin = userRole === 'ADMIN'
   const [messages, setMessages] = useState<ChatMessageData[]>(initialMessages)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -158,6 +160,14 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
     return () => clearInterval(interval)
   }, []) // stable – uses ref, no messages dep
 
+  async function handleDeleteMessage(id: string) {
+    if (!confirm('Delete this message?')) return
+    const res = await fetch(`/api/chat?id=${id}`, { method: 'DELETE' })
+    if (res.ok) {
+      setMessages((prev) => prev.filter((m) => m.id !== id))
+    }
+  }
+
   async function handleSend() {
     const body = input.trim()
     if (!body || sendingRef.current) return
@@ -249,7 +259,7 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
             return (
               <div
                 key={msg.id}
-                className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}
+                className={`group flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}
               >
                 {!isOwn && (
                   <span className="text-xs text-gray-500 font-medium mb-1 px-1">
@@ -265,12 +275,22 @@ export function ChatRoom({ initialMessages, userId, userName, channel = 'general
                 >
                   <p className="text-sm leading-relaxed break-words">{msg.body}</p>
                 </div>
-                <span className={`text-[10px] text-gray-600 mt-1 px-1 ${isOwn ? 'text-right' : 'text-left'}`}>
-                  {new Date(msg.createdAt).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </span>
+                <div className={`flex items-center gap-1.5 mt-1 px-1 ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
+                  <span className={`text-[10px] text-gray-600 ${isOwn ? 'text-right' : 'text-left'}`}>
+                    {new Date(msg.createdAt).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                  {isAdmin && (
+                    <button
+                      onClick={() => handleDeleteMessage(msg.id)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-600 hover:text-red-400"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
               </div>
             )
           })

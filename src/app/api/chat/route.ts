@@ -115,3 +115,31 @@ export async function POST(request: NextRequest) {
     { status: 201 }
   )
 }
+
+export async function DELETE(request: NextRequest) {
+  const session = await requireApiSession()
+  if (!session) return unauthorized()
+
+  // Only ADMIN can delete messages
+  if (session.user.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  const { searchParams } = request.nextUrl
+  const messageId = searchParams.get('id')
+
+  if (!messageId || typeof messageId !== 'string' || messageId.length > 100) {
+    return NextResponse.json({ error: 'Invalid message ID' }, { status: 400 })
+  }
+
+  const message = await prisma.chatMessage.findUnique({ where: { id: messageId } })
+  if (!message) {
+    return NextResponse.json({ error: 'Message not found' }, { status: 404 })
+  }
+
+  await prisma.chatMessage.delete({ where: { id: messageId } })
+
+  auditLog({ action: 'chat.delete', userId: session.user.id, meta: { messageId } })
+
+  return NextResponse.json({ ok: true })
+}

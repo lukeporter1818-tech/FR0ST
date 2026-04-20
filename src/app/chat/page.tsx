@@ -34,6 +34,7 @@ export default async function TeamChatPage() {
       initialMessages={messages}
       userId={session?.user?.id ?? ''}
       userName={session?.user?.name ?? 'Unknown'}
+      userRole={session?.user?.role ?? undefined}
     />
   )
 }
