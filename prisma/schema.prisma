@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-}
+
 
 enum Role {
   DISPATCHER
@@ -86,6 +86,8 @@ model User {
   canManageStores  Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  resetToken        String?
+  resetTokenExpiry  DateTime?
 
   technician     Technician?
   chatMessages   ChatMessage[]
