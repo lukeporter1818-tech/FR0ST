@@ -16,6 +16,7 @@ interface ManagementLayoutProps {
   tasksReady?: boolean
   userId: string
   userName: string
+  userRole?: string
   managementUsers: { id: string; name: string }[]
 }
 
@@ -25,6 +26,7 @@ export function ManagementLayout({
   tasksReady = true,
   userId,
   userName,
+  userRole,
   managementUsers,
 }: ManagementLayoutProps) {
   const [tab, setTab] = useState<Tab>('chat')
@@ -62,6 +64,7 @@ export function ManagementLayout({
             userId={userId}
             userName={userName}
             channel="management"
+            userRole={userRole}
           />
         </div>
 
