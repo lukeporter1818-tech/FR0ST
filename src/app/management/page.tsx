@@ -71,6 +71,7 @@ export default async function ManagementPage() {
       tasksReady={rawTasks !== null}
       userId={session.user.id}
       userName={session.user.name ?? 'Unknown'}
+      userRole={session.user.role ?? undefined}
       managementUsers={managementUsers}
     />
   )

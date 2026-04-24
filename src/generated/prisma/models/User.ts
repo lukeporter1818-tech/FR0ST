@@ -40,6 +40,8 @@ export type UserMinAggregateOutputType = {
   canManageStores: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
+  resetToken: string | null
+  resetTokenExpiry: Date | null
 }
 
 export type UserMaxAggregateOutputType = {
@@ -58,6 +60,8 @@ export type UserMaxAggregateOutputType = {
   canManageStores: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
+  resetToken: string | null
+  resetTokenExpiry: Date | null
 }
 
 export type UserCountAggregateOutputType = {
@@ -76,6 +80,8 @@ export type UserCountAggregateOutputType = {
   canManageStores: number
   createdAt: number
   updatedAt: number
+  resetToken: number
+  resetTokenExpiry: number
   _all: number
 }
 
@@ -96,6 +102,8 @@ export type UserMinAggregateInputType = {
   canManageStores?: true
   createdAt?: true
   updatedAt?: true
+  resetToken?: true
+  resetTokenExpiry?: true
 }
 
 export type UserMaxAggregateInputType = {
@@ -114,6 +122,8 @@ export type UserMaxAggregateInputType = {
   canManageStores?: true
   createdAt?: true
   updatedAt?: true
+  resetToken?: true
+  resetTokenExpiry?: true
 }
 
 export type UserCountAggregateInputType = {
@@ -132,6 +142,8 @@ export type UserCountAggregateInputType = {
   canManageStores?: true
   createdAt?: true
   updatedAt?: true
+  resetToken?: true
+  resetTokenExpiry?: true
   _all?: true
 }
 
@@ -223,6 +235,8 @@ export type UserGroupByOutputType = {
   canManageStores: boolean
   createdAt: Date
   updatedAt: Date
+  resetToken: string | null
+  resetTokenExpiry: Date | null
   _count: UserCountAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
   _max: UserMaxAggregateOutputType | null
@@ -262,6 +276,8 @@ export type UserWhereInput = {
   canManageStores?: Prisma.BoolFilter<"User"> | boolean
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
+  resetToken?: Prisma.StringNullableFilter<"User"> | string | null
+  resetTokenExpiry?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   technician?: Prisma.XOR<Prisma.TechnicianNullableScalarRelationFilter, Prisma.TechnicianWhereInput> | null
   chatMessages?: Prisma.ChatMessageListRelationFilter
   notes?: Prisma.NoteListRelationFilter
@@ -287,6 +303,8 @@ export type UserOrderByWithRelationInput = {
   canManageStores?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  resetToken?: Prisma.SortOrderInput | Prisma.SortOrder
+  resetTokenExpiry?: Prisma.SortOrderInput | Prisma.SortOrder
   technician?: Prisma.TechnicianOrderByWithRelationInput
   chatMessages?: Prisma.ChatMessageOrderByRelationAggregateInput
   notes?: Prisma.NoteOrderByRelationAggregateInput
@@ -315,6 +333,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   canManageStores?: Prisma.BoolFilter<"User"> | boolean
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
+  resetToken?: Prisma.StringNullableFilter<"User"> | string | null
+  resetTokenExpiry?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   technician?: Prisma.XOR<Prisma.TechnicianNullableScalarRelationFilter, Prisma.TechnicianWhereInput> | null
   chatMessages?: Prisma.ChatMessageListRelationFilter
   notes?: Prisma.NoteListRelationFilter
@@ -340,6 +360,8 @@ export type UserOrderByWithAggregationInput = {
   canManageStores?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  resetToken?: Prisma.SortOrderInput | Prisma.SortOrder
+  resetTokenExpiry?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
   _min?: Prisma.UserMinOrderByAggregateInput
@@ -364,6 +386,8 @@ export type UserScalarWhereWithAggregatesInput = {
   canManageStores?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
+  resetToken?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  resetTokenExpiry?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
 }
 
 export type UserCreateInput = {
@@ -382,6 +406,8 @@ export type UserCreateInput = {
   canManageStores?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   technician?: Prisma.TechnicianCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
   notes?: Prisma.NoteCreateNestedManyWithoutCreatedByInput
@@ -407,6 +433,8 @@ export type UserUncheckedCreateInput = {
   canManageStores?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   technician?: Prisma.TechnicianUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
   notes?: Prisma.NoteUncheckedCreateNestedManyWithoutCreatedByInput
@@ -432,6 +460,8 @@ export type UserUpdateInput = {
   canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   technician?: Prisma.TechnicianUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
   notes?: Prisma.NoteUpdateManyWithoutCreatedByNestedInput
@@ -457,6 +487,8 @@ export type UserUncheckedUpdateInput = {
   canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   technician?: Prisma.TechnicianUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
   notes?: Prisma.NoteUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -482,6 +514,8 @@ export type UserCreateManyInput = {
   canManageStores?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
 }
 
 export type UserUpdateManyMutationInput = {
@@ -500,6 +534,8 @@ export type UserUpdateManyMutationInput = {
   canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type UserUncheckedUpdateManyInput = {
@@ -518,6 +554,8 @@ export type UserUncheckedUpdateManyInput = {
   canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type UserCountOrderByAggregateInput = {
@@ -536,6 +574,8 @@ export type UserCountOrderByAggregateInput = {
   canManageStores?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  resetToken?: Prisma.SortOrder
+  resetTokenExpiry?: Prisma.SortOrder
 }
 
 export type UserMaxOrderByAggregateInput = {
@@ -554,6 +594,8 @@ export type UserMaxOrderByAggregateInput = {
   canManageStores?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  resetToken?: Prisma.SortOrder
+  resetTokenExpiry?: Prisma.SortOrder
 }
 
 export type UserMinOrderByAggregateInput = {
@@ -572,6 +614,8 @@ export type UserMinOrderByAggregateInput = {
   canManageStores?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  resetToken?: Prisma.SortOrder
+  resetTokenExpiry?: Prisma.SortOrder
 }
 
 export type UserNullableScalarRelationFilter = {
@@ -726,6 +770,8 @@ export type UserCreateWithoutTechnicianInput = {
   canManageStores?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
   notes?: Prisma.NoteCreateNestedManyWithoutCreatedByInput
   aiInteractions?: Prisma.AIInteractionCreateNestedManyWithoutUserInput
@@ -750,6 +796,8 @@ export type UserUncheckedCreateWithoutTechnicianInput = {
   canManageStores?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
   notes?: Prisma.NoteUncheckedCreateNestedManyWithoutCreatedByInput
   aiInteractions?: Prisma.AIInteractionUncheckedCreateNestedManyWithoutUserInput
@@ -790,6 +838,8 @@ export type UserUpdateWithoutTechnicianInput = {
   canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
   notes?: Prisma.NoteUpdateManyWithoutCreatedByNestedInput
   aiInteractions?: Prisma.AIInteractionUpdateManyWithoutUserNestedInput
@@ -814,6 +864,8 @@ export type UserUncheckedUpdateWithoutTechnicianInput = {
   canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
   notes?: Prisma.NoteUncheckedUpdateManyWithoutCreatedByNestedInput
   aiInteractions?: Prisma.AIInteractionUncheckedUpdateManyWithoutUserNestedInput
@@ -838,6 +890,8 @@ export type UserCreateWithoutChatMessagesInput = {
   canManageStores?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   technician?: Prisma.TechnicianCreateNestedOneWithoutUserInput
   notes?: Prisma.NoteCreateNestedManyWithoutCreatedByInput
   aiInteractions?: Prisma.AIInteractionCreateNestedManyWithoutUserInput
@@ -862,6 +916,8 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
   canManageStores?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   technician?: Prisma.TechnicianUncheckedCreateNestedOneWithoutUserInput
   notes?: Prisma.NoteUncheckedCreateNestedManyWithoutCreatedByInput
   aiInteractions?: Prisma.AIInteractionUncheckedCreateNestedManyWithoutUserInput
@@ -902,6 +958,8 @@ export type UserUpdateWithoutChatMessagesInput = {
   canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   technician?: Prisma.TechnicianUpdateOneWithoutUserNestedInput
   notes?: Prisma.NoteUpdateManyWithoutCreatedByNestedInput
   aiInteractions?: Prisma.AIInteractionUpdateManyWithoutUserNestedInput
@@ -926,6 +984,8 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
   canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   technician?: Prisma.TechnicianUncheckedUpdateOneWithoutUserNestedInput
   notes?: Prisma.NoteUncheckedUpdateManyWithoutCreatedByNestedInput
   aiInteractions?: Prisma.AIInteractionUncheckedUpdateManyWithoutUserNestedInput
@@ -950,6 +1010,8 @@ export type UserCreateWithoutNotesInput = {
   canManageStores?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   technician?: Prisma.TechnicianCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
   aiInteractions?: Prisma.AIInteractionCreateNestedManyWithoutUserInput
@@ -974,6 +1036,8 @@ export type UserUncheckedCreateWithoutNotesInput = {
   canManageStores?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   technician?: Prisma.TechnicianUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
   aiInteractions?: Prisma.AIInteractionUncheckedCreateNestedManyWithoutUserInput
@@ -1014,6 +1078,8 @@ export type UserUpdateWithoutNotesInput = {
   canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   technician?: Prisma.TechnicianUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
   aiInteractions?: Prisma.AIInteractionUpdateManyWithoutUserNestedInput
@@ -1038,6 +1104,8 @@ export type UserUncheckedUpdateWithoutNotesInput = {
   canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   technician?: Prisma.TechnicianUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
   aiInteractions?: Prisma.AIInteractionUncheckedUpdateManyWithoutUserNestedInput
@@ -1062,6 +1130,8 @@ export type UserCreateWithoutMgmtTasksCreatedInput = {
   canManageStores?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   technician?: Prisma.TechnicianCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
   notes?: Prisma.NoteCreateNestedManyWithoutCreatedByInput
@@ -1086,6 +1156,8 @@ export type UserUncheckedCreateWithoutMgmtTasksCreatedInput = {
   canManageStores?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   technician?: Prisma.TechnicianUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
   notes?: Prisma.NoteUncheckedCreateNestedManyWithoutCreatedByInput
@@ -1115,6 +1187,8 @@ export type UserCreateWithoutMgmtTasksAssignedInput = {
   canManageStores?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   technician?: Prisma.TechnicianCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
   notes?: Prisma.NoteCreateNestedManyWithoutCreatedByInput
@@ -1139,6 +1213,8 @@ export type UserUncheckedCreateWithoutMgmtTasksAssignedInput = {
   canManageStores?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   technician?: Prisma.TechnicianUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
   notes?: Prisma.NoteUncheckedCreateNestedManyWithoutCreatedByInput
@@ -1179,6 +1255,8 @@ export type UserUpdateWithoutMgmtTasksCreatedInput = {
   canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   technician?: Prisma.TechnicianUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
   notes?: Prisma.NoteUpdateManyWithoutCreatedByNestedInput
@@ -1203,6 +1281,8 @@ export type UserUncheckedUpdateWithoutMgmtTasksCreatedInput = {
   canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   technician?: Prisma.TechnicianUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
   notes?: Prisma.NoteUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -1238,6 +1318,8 @@ export type UserUpdateWithoutMgmtTasksAssignedInput = {
   canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   technician?: Prisma.TechnicianUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
   notes?: Prisma.NoteUpdateManyWithoutCreatedByNestedInput
@@ -1262,6 +1344,8 @@ export type UserUncheckedUpdateWithoutMgmtTasksAssignedInput = {
   canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   technician?: Prisma.TechnicianUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
   notes?: Prisma.NoteUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -1286,6 +1370,8 @@ export type UserCreateWithoutStoreIssueLogsInput = {
   canManageStores?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   technician?: Prisma.TechnicianCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
   notes?: Prisma.NoteCreateNestedManyWithoutCreatedByInput
@@ -1310,6 +1396,8 @@ export type UserUncheckedCreateWithoutStoreIssueLogsInput = {
   canManageStores?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   technician?: Prisma.TechnicianUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
   notes?: Prisma.NoteUncheckedCreateNestedManyWithoutCreatedByInput
@@ -1350,6 +1438,8 @@ export type UserUpdateWithoutStoreIssueLogsInput = {
   canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   technician?: Prisma.TechnicianUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
   notes?: Prisma.NoteUpdateManyWithoutCreatedByNestedInput
@@ -1374,6 +1464,8 @@ export type UserUncheckedUpdateWithoutStoreIssueLogsInput = {
   canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   technician?: Prisma.TechnicianUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
   notes?: Prisma.NoteUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -1398,6 +1490,8 @@ export type UserCreateWithoutAiInteractionsInput = {
   canManageStores?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   technician?: Prisma.TechnicianCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
   notes?: Prisma.NoteCreateNestedManyWithoutCreatedByInput
@@ -1422,6 +1516,8 @@ export type UserUncheckedCreateWithoutAiInteractionsInput = {
   canManageStores?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   technician?: Prisma.TechnicianUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
   notes?: Prisma.NoteUncheckedCreateNestedManyWithoutCreatedByInput
@@ -1462,6 +1558,8 @@ export type UserUpdateWithoutAiInteractionsInput = {
   canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   technician?: Prisma.TechnicianUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
   notes?: Prisma.NoteUpdateManyWithoutCreatedByNestedInput
@@ -1486,6 +1584,8 @@ export type UserUncheckedUpdateWithoutAiInteractionsInput = {
   canManageStores?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   technician?: Prisma.TechnicianUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
   notes?: Prisma.NoteUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -1586,6 +1686,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   canManageStores?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  resetToken?: boolean
+  resetTokenExpiry?: boolean
   technician?: boolean | Prisma.User$technicianArgs<ExtArgs>
   chatMessages?: boolean | Prisma.User$chatMessagesArgs<ExtArgs>
   notes?: boolean | Prisma.User$notesArgs<ExtArgs>
@@ -1612,6 +1714,8 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   canManageStores?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  resetToken?: boolean
+  resetTokenExpiry?: boolean
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1630,6 +1734,8 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   canManageStores?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  resetToken?: boolean
+  resetTokenExpiry?: boolean
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectScalar = {
@@ -1648,9 +1754,11 @@ export type UserSelectScalar = {
   canManageStores?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  resetToken?: boolean
+  resetTokenExpiry?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "passwordHash" | "role" | "phone" | "active" | "passwordResetToken" | "passwordResetExpiry" | "inviteTokenHash" | "inviteExpiresAt" | "isActivated" | "canManageStores" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "passwordHash" | "role" | "phone" | "active" | "passwordResetToken" | "passwordResetExpiry" | "inviteTokenHash" | "inviteExpiresAt" | "isActivated" | "canManageStores" | "createdAt" | "updatedAt" | "resetToken" | "resetTokenExpiry", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   technician?: boolean | Prisma.User$technicianArgs<ExtArgs>
   chatMessages?: boolean | Prisma.User$chatMessagesArgs<ExtArgs>
@@ -1691,6 +1799,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     canManageStores: boolean
     createdAt: Date
     updatedAt: Date
+    resetToken: string | null
+    resetTokenExpiry: Date | null
   }, ExtArgs["result"]["user"]>
   composites: {}
 }
@@ -2136,6 +2246,8 @@ export interface UserFieldRefs {
   readonly canManageStores: Prisma.FieldRef<"User", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
+  readonly resetToken: Prisma.FieldRef<"User", 'String'>
+  readonly resetTokenExpiry: Prisma.FieldRef<"User", 'DateTime'>
 }
     
 
