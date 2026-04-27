@@ -56,7 +56,7 @@ const STATUS_OPTIONS = [
   { value: 'ASSIGNED',  label: 'WO'      },
   { value: 'PM',        label: 'PM'      },
   { value: 'OUT',       label: 'Out'     },
-  
+  { value: 'CM',        label: 'CM'      },
 ]
 
 // ─── Status badge pills ────────────────────────────────────────────────────────
@@ -70,6 +70,7 @@ const STATUS_BADGE: Record<string, string> = {
   DONE:      'bg-gray-500/20   text-gray-400   ring-gray-500/40',
   OUT:       'bg-red-500/20    text-red-300    ring-red-500/40',
   FLOATER:   'bg-blue-500/20   text-blue-300   ring-blue-500/40',
+  CM:        'bg-yellow-500/20 text-yellow-300 ring-yellow-500/40',
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -82,6 +83,7 @@ const STATUS_LABELS: Record<string, string> = {
   DONE:     'Done',
   OUT:      'Out',
   FLOATER:  'Floater',
+  CM:       'CM',
 }
 
 function StatusText({ status }: { status: string | null }) {

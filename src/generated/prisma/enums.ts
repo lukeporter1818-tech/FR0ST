@@ -103,7 +103,8 @@ export const BoardStatus = {
   PM: 'PM',
   DONE: 'DONE',
   OUT: 'OUT',
-  FLOATER: 'FLOATER'
+  FLOATER: 'FLOATER',
+  CM: 'CM'
 } as const
 
 export type BoardStatus = (typeof BoardStatus)[keyof typeof BoardStatus]

@@ -1,0 +1,1 @@
+ALTER TYPE "BoardStatus" ADD VALUE IF NOT EXISTS 'CM';

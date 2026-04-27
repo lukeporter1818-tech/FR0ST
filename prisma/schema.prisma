@@ -243,6 +243,7 @@ enum BoardStatus {
   DONE
   OUT
   FLOATER
+  CM
 }
 
 model BoardEntry {
