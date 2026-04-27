@@ -55,7 +55,7 @@ const STATUS_OPTIONS = [
   { value: '',          label: '—'       },
   { value: 'ASSIGNED',  label: 'WO'      },
   { value: 'PM',        label: 'PM'      },
-  { value: 'OUT',       label: 'Out'     },
+  { value: 'OUT',       label: 'OT'      },
   { value: 'CM',        label: 'CM'      },
 ]
 
