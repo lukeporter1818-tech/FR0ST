@@ -81,7 +81,7 @@ const STATUS_LABELS: Record<string, string> = {
   PARTS:    'Parts',
   PM:       'PM',
   DONE:     'Done',
-  OUT:      'Out',
+  OUT:      'OT',
   FLOATER:  'Floater',
   CM:       'CM',
 }
