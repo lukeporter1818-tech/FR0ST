@@ -57,6 +57,7 @@ const STATUS_OPTIONS = [
   { value: 'PM',        label: 'PM'      },
   { value: 'OUT',       label: 'OT'      },
   { value: 'CM',        label: 'CM'      },
+  { value: 'CNV',       label: 'CNV'     },
 ]
 
 // ─── Status badge pills ────────────────────────────────────────────────────────
@@ -71,6 +72,7 @@ const STATUS_BADGE: Record<string, string> = {
   OUT:       'bg-red-500/20    text-red-300    ring-red-500/40',
   FLOATER:   'bg-blue-500/20   text-blue-300   ring-blue-500/40',
   CM:        'bg-yellow-500/20 text-yellow-300 ring-yellow-500/40',
+  CNV:       'bg-pink-500/20   text-pink-300   ring-pink-500/40',
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -84,6 +86,7 @@ const STATUS_LABELS: Record<string, string> = {
   OUT:      'OT',
   FLOATER:  'Floater',
   CM:       'CM',
+  CNV:      'CNV',
 }
 
 function StatusText({ status }: { status: string | null }) {
