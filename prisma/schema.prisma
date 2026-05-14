@@ -244,6 +244,7 @@ enum BoardStatus {
   OUT
   FLOATER
   CM
+  CNV
 }
 
 model BoardEntry {
