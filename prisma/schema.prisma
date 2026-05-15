@@ -334,6 +334,22 @@ model StoreIssueLog {
   @@index([storeId, createdAt])
 }
 
+// ── PERSONAL LOG ──
+// Private data store for admin personal dashboard (PR0JECT33).
+// One record per (userId, type, key) — e.g. ("u1", "sleep", "2026-05-15").
+
+model PersonalLog {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // "workout" | "nutrition" | "sleep" | "task" | "plan"
+  key       String   // date (YYYY-MM-DD) or "all" for tasks
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, type, key])
+}
+
 // ── AI LOG ──
 
 model AIInteraction {
