@@ -11,7 +11,6 @@ import {
   Shield,
   Map,
   MapPin,
-  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,8 +24,7 @@ const primaryNavItems = [
 ];
 
 const secondaryNavItems = [
-  { label: "Users",     href: "/settings/users", icon: Users,     roles: ["ADMIN"] },
-  { label: "PR0JECT33", href: "/personal",        icon: Activity,  roles: ["ADMIN"] },
+  { label: "Users", href: "/settings/users", icon: Users, roles: ["ADMIN"] },
 ] as const;
 
 interface SidebarProps {
