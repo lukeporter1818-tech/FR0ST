@@ -304,6 +304,7 @@ model Store {
   city      String?
   state     String?
   zip       String?
+  zone      String?
   lat       Float?
   lng       Float?
   active    Boolean  @default(true)

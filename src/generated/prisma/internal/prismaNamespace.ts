@@ -1513,6 +1513,7 @@ export const StoreScalarFieldEnum = {
   city: 'city',
   state: 'state',
   zip: 'zip',
+  zone: 'zone',
   lat: 'lat',
   lng: 'lng',
   active: 'active',

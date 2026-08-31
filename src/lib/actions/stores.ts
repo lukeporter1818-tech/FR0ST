@@ -40,6 +40,17 @@ function parseCode(raw: FormDataEntryValue | null): string {
   return (raw as string)?.trim().toUpperCase() ?? ''
 }
 
+const VALID_ZONES = ['North', 'South', 'East', 'West'] as const
+
+function parseZone(raw: FormDataEntryValue | null): string | null {
+  const value = (raw as string)?.trim() || null
+  if (value === null) return null
+  if (!VALID_ZONES.includes(value as (typeof VALID_ZONES)[number])) {
+    throw new Error(`Zone must be one of ${VALID_ZONES.join(', ')} or empty`)
+  }
+  return value
+}
+
 export async function createStore(formData: FormData) {
   await requireStoreManager()
 
@@ -49,6 +60,7 @@ export async function createStore(formData: FormData) {
   const city    = (formData.get('city')    as string)?.trim() || null
   const state   = (formData.get('state')   as string)?.trim() || null
   const zip     = (formData.get('zip')     as string)?.trim() || null
+  const zone    = parseZone(formData.get('zone'))
   const notes     = (formData.get('notes')     as string)?.trim() || null
   const equipment = (formData.get('equipment') as string)?.trim() || null
 
@@ -70,6 +82,7 @@ export async function createStore(formData: FormData) {
         city,
         state,
         zip,
+        zone,
         notes,
         equipment,
         lat: coords?.lat ?? null,
@@ -96,6 +109,7 @@ export async function updateStore(formData: FormData) {
   const city    = (formData.get('city')    as string)?.trim() || null
   const state   = (formData.get('state')   as string)?.trim() || null
   const zip     = (formData.get('zip')     as string)?.trim() || null
+  const zone    = parseZone(formData.get('zone'))
   const notes     = (formData.get('notes')     as string)?.trim() || null
   const equipment = (formData.get('equipment') as string)?.trim() || null
 
@@ -131,7 +145,7 @@ export async function updateStore(formData: FormData) {
   try {
     await prisma.store.update({
       where: { id },
-      data: { code, name, address, city, state, zip, notes, equipment, lat, lng },
+      data: { code, name, address, city, state, zip, zone, notes, equipment, lat, lng },
     })
   } catch (err) {
     console.error('[updateStore] failed:', err)

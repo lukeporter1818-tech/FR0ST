@@ -130,6 +130,25 @@ export default async function EditStorePage({
           </div>
         </div>
 
+        {/* Zone */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-gray-400" htmlFor="zone">
+            Zone <span className="text-gray-600">(optional)</span>
+          </label>
+          <select
+            id="zone"
+            name="zone"
+            defaultValue={store.zone ?? ''}
+            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-gray-100 focus:border-amber-400/50 focus:outline-none focus:ring-1 focus:ring-amber-400/50"
+          >
+            <option value="">Unassigned</option>
+            <option value="North">North</option>
+            <option value="South">South</option>
+            <option value="East">East</option>
+            <option value="West">West</option>
+          </select>
+        </div>
+
         {/* Notes */}
         <div className="space-y-1.5">
           <label className="block text-xs font-medium text-gray-400" htmlFor="notes">

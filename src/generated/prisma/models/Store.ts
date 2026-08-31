@@ -44,6 +44,7 @@ export type StoreMinAggregateOutputType = {
   city: string | null
   state: string | null
   zip: string | null
+  zone: string | null
   lat: number | null
   lng: number | null
   active: boolean | null
@@ -61,6 +62,7 @@ export type StoreMaxAggregateOutputType = {
   city: string | null
   state: string | null
   zip: string | null
+  zone: string | null
   lat: number | null
   lng: number | null
   active: boolean | null
@@ -78,6 +80,7 @@ export type StoreCountAggregateOutputType = {
   city: number
   state: number
   zip: number
+  zone: number
   lat: number
   lng: number
   active: number
@@ -107,6 +110,7 @@ export type StoreMinAggregateInputType = {
   city?: true
   state?: true
   zip?: true
+  zone?: true
   lat?: true
   lng?: true
   active?: true
@@ -124,6 +128,7 @@ export type StoreMaxAggregateInputType = {
   city?: true
   state?: true
   zip?: true
+  zone?: true
   lat?: true
   lng?: true
   active?: true
@@ -141,6 +146,7 @@ export type StoreCountAggregateInputType = {
   city?: true
   state?: true
   zip?: true
+  zone?: true
   lat?: true
   lng?: true
   active?: true
@@ -245,6 +251,7 @@ export type StoreGroupByOutputType = {
   city: string | null
   state: string | null
   zip: string | null
+  zone: string | null
   lat: number | null
   lng: number | null
   active: boolean
@@ -285,6 +292,7 @@ export type StoreWhereInput = {
   city?: Prisma.StringNullableFilter<"Store"> | string | null
   state?: Prisma.StringNullableFilter<"Store"> | string | null
   zip?: Prisma.StringNullableFilter<"Store"> | string | null
+  zone?: Prisma.StringNullableFilter<"Store"> | string | null
   lat?: Prisma.FloatNullableFilter<"Store"> | number | null
   lng?: Prisma.FloatNullableFilter<"Store"> | number | null
   active?: Prisma.BoolFilter<"Store"> | boolean
@@ -303,6 +311,7 @@ export type StoreOrderByWithRelationInput = {
   city?: Prisma.SortOrderInput | Prisma.SortOrder
   state?: Prisma.SortOrderInput | Prisma.SortOrder
   zip?: Prisma.SortOrderInput | Prisma.SortOrder
+  zone?: Prisma.SortOrderInput | Prisma.SortOrder
   lat?: Prisma.SortOrderInput | Prisma.SortOrder
   lng?: Prisma.SortOrderInput | Prisma.SortOrder
   active?: Prisma.SortOrder
@@ -324,6 +333,7 @@ export type StoreWhereUniqueInput = Prisma.AtLeast<{
   city?: Prisma.StringNullableFilter<"Store"> | string | null
   state?: Prisma.StringNullableFilter<"Store"> | string | null
   zip?: Prisma.StringNullableFilter<"Store"> | string | null
+  zone?: Prisma.StringNullableFilter<"Store"> | string | null
   lat?: Prisma.FloatNullableFilter<"Store"> | number | null
   lng?: Prisma.FloatNullableFilter<"Store"> | number | null
   active?: Prisma.BoolFilter<"Store"> | boolean
@@ -342,6 +352,7 @@ export type StoreOrderByWithAggregationInput = {
   city?: Prisma.SortOrderInput | Prisma.SortOrder
   state?: Prisma.SortOrderInput | Prisma.SortOrder
   zip?: Prisma.SortOrderInput | Prisma.SortOrder
+  zone?: Prisma.SortOrderInput | Prisma.SortOrder
   lat?: Prisma.SortOrderInput | Prisma.SortOrder
   lng?: Prisma.SortOrderInput | Prisma.SortOrder
   active?: Prisma.SortOrder
@@ -367,6 +378,7 @@ export type StoreScalarWhereWithAggregatesInput = {
   city?: Prisma.StringNullableWithAggregatesFilter<"Store"> | string | null
   state?: Prisma.StringNullableWithAggregatesFilter<"Store"> | string | null
   zip?: Prisma.StringNullableWithAggregatesFilter<"Store"> | string | null
+  zone?: Prisma.StringNullableWithAggregatesFilter<"Store"> | string | null
   lat?: Prisma.FloatNullableWithAggregatesFilter<"Store"> | number | null
   lng?: Prisma.FloatNullableWithAggregatesFilter<"Store"> | number | null
   active?: Prisma.BoolWithAggregatesFilter<"Store"> | boolean
@@ -384,6 +396,7 @@ export type StoreCreateInput = {
   city?: string | null
   state?: string | null
   zip?: string | null
+  zone?: string | null
   lat?: number | null
   lng?: number | null
   active?: boolean
@@ -402,6 +415,7 @@ export type StoreUncheckedCreateInput = {
   city?: string | null
   state?: string | null
   zip?: string | null
+  zone?: string | null
   lat?: number | null
   lng?: number | null
   active?: boolean
@@ -420,6 +434,7 @@ export type StoreUpdateInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -438,6 +453,7 @@ export type StoreUncheckedUpdateInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -456,6 +472,7 @@ export type StoreCreateManyInput = {
   city?: string | null
   state?: string | null
   zip?: string | null
+  zone?: string | null
   lat?: number | null
   lng?: number | null
   active?: boolean
@@ -473,6 +490,7 @@ export type StoreUpdateManyMutationInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -490,6 +508,7 @@ export type StoreUncheckedUpdateManyInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -507,6 +526,7 @@ export type StoreCountOrderByAggregateInput = {
   city?: Prisma.SortOrder
   state?: Prisma.SortOrder
   zip?: Prisma.SortOrder
+  zone?: Prisma.SortOrder
   lat?: Prisma.SortOrder
   lng?: Prisma.SortOrder
   active?: Prisma.SortOrder
@@ -529,6 +549,7 @@ export type StoreMaxOrderByAggregateInput = {
   city?: Prisma.SortOrder
   state?: Prisma.SortOrder
   zip?: Prisma.SortOrder
+  zone?: Prisma.SortOrder
   lat?: Prisma.SortOrder
   lng?: Prisma.SortOrder
   active?: Prisma.SortOrder
@@ -546,6 +567,7 @@ export type StoreMinOrderByAggregateInput = {
   city?: Prisma.SortOrder
   state?: Prisma.SortOrder
   zip?: Prisma.SortOrder
+  zone?: Prisma.SortOrder
   lat?: Prisma.SortOrder
   lng?: Prisma.SortOrder
   active?: Prisma.SortOrder
@@ -587,6 +609,7 @@ export type StoreCreateWithoutIssueLogInput = {
   city?: string | null
   state?: string | null
   zip?: string | null
+  zone?: string | null
   lat?: number | null
   lng?: number | null
   active?: boolean
@@ -604,6 +627,7 @@ export type StoreUncheckedCreateWithoutIssueLogInput = {
   city?: string | null
   state?: string | null
   zip?: string | null
+  zone?: string | null
   lat?: number | null
   lng?: number | null
   active?: boolean
@@ -637,6 +661,7 @@ export type StoreUpdateWithoutIssueLogInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -654,6 +679,7 @@ export type StoreUncheckedUpdateWithoutIssueLogInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -702,6 +728,7 @@ export type StoreSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   city?: boolean
   state?: boolean
   zip?: boolean
+  zone?: boolean
   lat?: boolean
   lng?: boolean
   active?: boolean
@@ -721,6 +748,7 @@ export type StoreSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   city?: boolean
   state?: boolean
   zip?: boolean
+  zone?: boolean
   lat?: boolean
   lng?: boolean
   active?: boolean
@@ -738,6 +766,7 @@ export type StoreSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   city?: boolean
   state?: boolean
   zip?: boolean
+  zone?: boolean
   lat?: boolean
   lng?: boolean
   active?: boolean
@@ -755,6 +784,7 @@ export type StoreSelectScalar = {
   city?: boolean
   state?: boolean
   zip?: boolean
+  zone?: boolean
   lat?: boolean
   lng?: boolean
   active?: boolean
@@ -764,7 +794,7 @@ export type StoreSelectScalar = {
   updatedAt?: boolean
 }
 
-export type StoreOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "code" | "name" | "address" | "city" | "state" | "zip" | "lat" | "lng" | "active" | "notes" | "equipment" | "createdAt" | "updatedAt", ExtArgs["result"]["store"]>
+export type StoreOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "code" | "name" | "address" | "city" | "state" | "zip" | "zone" | "lat" | "lng" | "active" | "notes" | "equipment" | "createdAt" | "updatedAt", ExtArgs["result"]["store"]>
 export type StoreInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   issueLog?: boolean | Prisma.Store$issueLogArgs<ExtArgs>
   _count?: boolean | Prisma.StoreCountOutputTypeDefaultArgs<ExtArgs>
@@ -785,6 +815,7 @@ export type $StorePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     city: string | null
     state: string | null
     zip: string | null
+    zone: string | null
     lat: number | null
     lng: number | null
     active: boolean
@@ -1223,6 +1254,7 @@ export interface StoreFieldRefs {
   readonly city: Prisma.FieldRef<"Store", 'String'>
   readonly state: Prisma.FieldRef<"Store", 'String'>
   readonly zip: Prisma.FieldRef<"Store", 'String'>
+  readonly zone: Prisma.FieldRef<"Store", 'String'>
   readonly lat: Prisma.FieldRef<"Store", 'Float'>
   readonly lng: Prisma.FieldRef<"Store", 'Float'>
   readonly active: Prisma.FieldRef<"Store", 'Boolean'>
