@@ -11,6 +11,7 @@ export type StoreRow = {
   address: string
   city: string | null
   state: string | null
+  zone: string | null
   active: boolean
   lat: number | null
   lng: number | null
@@ -94,6 +95,13 @@ export function StoreTable({
               {store.city ? `, ${store.city}` : ''}
               {store.state ? ` ${store.state}` : ''}
             </p>
+          </div>
+
+          {/* Zone */}
+          <div className="shrink-0 w-16 pr-4 text-right text-xs uppercase tracking-wide">
+            {store.zone
+              ? <span className="text-gray-400">{store.zone}</span>
+              : <span className="text-gray-600">—</span>}
           </div>
 
           {/* Action buttons — always visible, no permission check */}

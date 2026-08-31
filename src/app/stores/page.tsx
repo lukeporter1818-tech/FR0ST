@@ -17,9 +17,15 @@ export default async function StoresPage() {
 
   const canManage = isStoreManager(session.user.canManageStores)
 
-  const stores = await prisma.store.findMany({
-    orderBy: [{ active: 'desc' }, { code: 'asc' }],
-  }).catch(() => [])
+  let stores
+  try {
+    stores = await prisma.store.findMany({
+      orderBy: [{ active: 'desc' }, { code: 'asc' }],
+    })
+  } catch (err) {
+    console.error('[stores page] failed to fetch stores:', err)
+    throw err
+  }
 
   return (
     <div className="space-y-8 max-w-3xl">

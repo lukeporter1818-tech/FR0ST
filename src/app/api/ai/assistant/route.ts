@@ -57,7 +57,10 @@ export async function POST(req: NextRequest) {
   const { messages, imageBase64 } = result.data
 
   // Trim to last 10 messages before sending — keeps payloads small
-  const trimmedMessages = messages.slice(-10)
+  const trimmedMessages = messages.slice(-10).filter((m, index, arr) => {
+    const isLast = index === arr.length - 1
+    return m.content.trim().length > 0 || isLast
+  })
 
   // ── Mode detection (deterministic, zero extra API cost) ──────────────────────
   //
@@ -136,7 +139,7 @@ export async function POST(req: NextRequest) {
       prisma.store.findMany({
         where: { active: true },
         orderBy: { code: 'asc' },
-        select: { id: true, code: true, name: true, city: true, state: true, equipment: true },
+        select: { id: true, code: true, name: true, city: true, state: true, zone: true, equipment: true },
         take: 60,
       }),
     ])
@@ -152,7 +155,7 @@ export async function POST(req: NextRequest) {
 
     // Build store list
     const storeLines = stores.map((s) =>
-      `- ${s.code}: ${s.name}${s.city ? `, ${s.city}` : ''}${s.state ? ` ${s.state}` : ''}${s.equipment ? ` | Equipment: ${s.equipment}` : ''}`
+      `- ${s.code}: ${s.name}${s.city ? `, ${s.city}` : ''}${s.state ? ` ${s.state}` : ''}${s.zone ? ` | Zone: ${s.zone}` : ''}${s.equipment ? ` | Equipment: ${s.equipment}` : ''}`
     )
 
     // Check if query mentions a specific store code
@@ -196,8 +199,9 @@ ${scheduleLines.length > 0 ? scheduleLines.join('\n') : '- No assignments yet to
 ACTIVE STORES:
 ${storeLines.join('\n')}${issueContext}
 ---`
-  } catch {
+  } catch (err) {
     // Non-fatal — operational context unavailable
+    console.error('[assistant route] failed to load operational context:', err)
   }
 
   auditLog({
