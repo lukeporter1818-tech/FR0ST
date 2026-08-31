@@ -1,6 +1,7 @@
 'use client'
 
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { Bot, Camera, Send, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { addWorkOrderToBoard } from '@/lib/actions/board'
@@ -17,6 +18,7 @@ interface Message {
   timestamp: Date
   workOrder?: WorkOrderExtraction // present when this message displays a WO card
   interactionId?: string          // present on assistant messages with a learning log entry
+  streaming?: boolean             // true while this bubble is being written to via direct DOM
 }
 
 interface TechMatch {
@@ -201,6 +203,11 @@ export function AIAssistant() {
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  // Ref for the currently-streaming bubble's text container. Direct DOM writes
+  // during streaming avoid setMessages-per-frame reconciliation cost. Only
+  // valid while a message with streaming:true is mounted (exactly zero or one
+  // at a time — enforced by the isStreaming guard in sendMessage/autoSendImage).
+  const streamingRef = useRef<HTMLDivElement>(null)
   // Single file input — accept/capture are set dynamically before .click()
   // so there is never a `capture` input sitting in the DOM near the camera button
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -246,14 +253,33 @@ export function AIAssistant() {
 
   // ── Image handling ──────────────────────────────────────────────────────────
 
+  const compressImage = (dataUrl: string, maxWidth = 1200): Promise<string> =>
+    new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width)
+        const canvas = document.createElement('canvas')
+        canvas.width = img.width * scale
+        canvas.height = img.height * scale
+        canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
+        resolve(canvas.toDataURL('image/jpeg', 0.7))
+      }
+      img.src = dataUrl
+    })
+
   const handleImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     setImageFile(file)
     const reader = new FileReader()
-    reader.onload = (ev) => setImagePreview(ev.target?.result as string)
+    reader.onload = async (ev) => {
+      const raw = ev.target?.result as string
+      const compressed = await compressImage(raw)
+      setImagePreview(compressed)
+      setImageFile(new File([compressed], file.name, { type: 'image/jpeg' }))
+    }
     reader.readAsDataURL(file)
-    e.target.value = '' // allow re-selecting same file
+    e.target.value = ''
   }, [])
 
   const removeImage = useCallback(() => {
@@ -315,6 +341,8 @@ export function AIAssistant() {
   // Does NOT send conversation history — dropped images are standalone intake items.
   const autoSendImage = useCallback(async (dataUrl: string) => {
     if (loading) return
+    // Prevent concurrent streams — they'd fight over the shared streamingRef.
+    if (messages.some((m) => m.streaming)) return
     resetIntake()
     setInput('')
     setImageFile(null)
@@ -358,28 +386,96 @@ export function AIAssistant() {
         }
       }
 
-      // Not a work order — pass to general assistant for image analysis
-      const res = await fetch('/api/ai/assistant', {
+      // Not a work order — pass to photo assistant (streaming SSE)
+      const res = await fetch('/api/ai/photo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [{ role: 'user', content: '' }],
-          imageBase64: dataUrl,
-        }),
-        signal: AbortSignal.timeout(28_000),
+        body: JSON.stringify({ imageBase64: dataUrl }),
+        signal: AbortSignal.timeout(40_000),
       })
       if (!res.ok) throw new Error(`Request failed: ${res.status}`)
-      const data = await res.json()
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: 'assistant',
-          content: data.response,
-          timestamp: new Date(),
-          interactionId: data.interactionId as string | undefined,
-        },
-      ])
+      if (!res.body) throw new Error('No response body')
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let streamedText = ''
+
+      const streamingId = crypto.randomUUID()
+      // Same direct-DOM pattern as sendMessage: React mount once on first
+      // token, then write directly to streamingRef.current.textContent per
+      // frame. Final content is committed to React state on stream end.
+      let messageMounted = false
+      let rafPending = false
+      let lastRenderedText = ''
+
+      const flushToDOM = () => {
+        rafPending = false
+        if (streamedText === lastRenderedText) return
+        lastRenderedText = streamedText
+
+        if (!messageMounted) {
+          messageMounted = true
+          flushSync(() => {
+            setLoading(false)
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: streamingId,
+                role: 'assistant' as const,
+                content: '',
+                timestamp: new Date(),
+                streaming: true,
+              },
+            ])
+          })
+        }
+
+        if (streamingRef.current) {
+          streamingRef.current.textContent = streamedText
+          scrollToBottom()
+        }
+      }
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        const chunk = decoder.decode(value, { stream: true })
+        const lines = chunk.split('\n').filter((line) => line.startsWith('data: '))
+        for (const line of lines) {
+          try {
+            const json = JSON.parse(line.slice(6))
+            if (json.text) {
+              streamedText += json.text
+              if (!rafPending) {
+                rafPending = true
+                requestAnimationFrame(flushToDOM)
+              }
+            }
+            if (json.error) throw new Error(json.error)
+          } catch {
+            // skip malformed chunks
+          }
+        }
+      }
+      flushToDOM()
+
+      // Commit final content: swaps plain-text DOM for AssistantContent render.
+      // Edge case: stream ended with no text — mount a fallback message.
+      if (!messageMounted) {
+        setLoading(false)
+        setMessages((prev) => [
+          ...prev,
+          { id: streamingId, role: 'assistant' as const, content: 'No response received.', timestamp: new Date() },
+        ])
+      } else {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === streamingId
+              ? { ...m, content: streamedText, streaming: false }
+              : m
+          )
+        )
+      }
     } catch (err) {
       const isTimeout = err instanceof DOMException && err.name === 'TimeoutError'
       setMessages((prev) => [
@@ -396,7 +492,7 @@ export function AIAssistant() {
     } finally {
       setLoading(false)
     }
-  }, [loading, resetIntake])
+  }, [loading, messages, resetIntake])
 
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -548,6 +644,8 @@ export function AIAssistant() {
     const text = input.trim()
     if (!text && !imageFile) return
     if (loading) return
+    // Prevent concurrent streams — they'd fight over the shared streamingRef.
+    if (messages.some((m) => m.streaming)) return
 
     // ── State: awaiting technician name ────────────────────────────────────
     // Intercept text replies when we're in intake mode (no image — a new image
@@ -679,41 +777,54 @@ export function AIAssistant() {
       let streamedText = ''
       let interactionId: string | undefined
 
-      // Add a streaming message placeholder immediately
       const streamingId = crypto.randomUUID()
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: streamingId,
-          role: 'assistant' as const,
-          content: '',
-          timestamp: new Date(),
-        },
-      ])
-      setLoading(false) // hide loading dots — streaming has started
-
+      // Mount the streaming bubble via React exactly once (on first token).
+      // After that, subsequent token writes go straight to the DOM node via
+      // streamingRef — no setMessages, no reconciliation. Final content is
+      // committed to React state on stream end so AssistantContent renders
+      // markdown formatting.
+      let messageMounted = false
       let rafPending = false
       let lastRenderedText = ''
 
-      const flushToUI = () => {
+      const flushToDOM = () => {
         rafPending = false
-        if (streamedText !== lastRenderedText) {
-          lastRenderedText = streamedText
-          // Strip any XML action blocks from display during streaming
-          const displayText = streamedText
-            .replace(/<log_issue>[\s\S]*?<\/log_issue>/g, '')
-            .replace(/<resolve_issue>[\s\S]*?<\/resolve_issue>/g, '')
-            .replace(/<update_equipment>[\s\S]*?<\/update_equipment>/g, '')
-            // Also hide partial opening tags that haven't closed yet
-            .replace(/<log_issue>[\s\S]*/g, '')
-            .replace(/<resolve_issue>[\s\S]*/g, '')
-            .replace(/<update_equipment>[\s\S]*/g, '')
-            .trim()
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === streamingId ? { ...m, content: displayText } : m
-            )
-          )
+        if (streamedText === lastRenderedText) return
+        lastRenderedText = streamedText
+        // Strip any XML action blocks from display during streaming
+        const displayText = streamedText
+          .replace(/<log_issue>[\s\S]*?<\/log_issue>/g, '')
+          .replace(/<resolve_issue>[\s\S]*?<\/resolve_issue>/g, '')
+          .replace(/<update_equipment>[\s\S]*?<\/update_equipment>/g, '')
+          // Also hide partial opening tags that haven't closed yet
+          .replace(/<log_issue>[\s\S]*/g, '')
+          .replace(/<resolve_issue>[\s\S]*/g, '')
+          .replace(/<update_equipment>[\s\S]*/g, '')
+          .trim()
+
+        if (!messageMounted) {
+          messageMounted = true
+          // flushSync forces React to commit the mount synchronously so the
+          // ref callback fires before we try to write to streamingRef.current.
+          // Without this, ref is null on the first token and text is lost.
+          flushSync(() => {
+            setLoading(false)
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: streamingId,
+                role: 'assistant' as const,
+                content: '',
+                timestamp: new Date(),
+                streaming: true,
+              },
+            ])
+          })
+        }
+
+        if (streamingRef.current) {
+          streamingRef.current.textContent = displayText
+          scrollToBottom()
         }
       }
 
@@ -731,7 +842,7 @@ export function AIAssistant() {
               streamedText += json.text
               if (!rafPending) {
                 rafPending = true
-                requestAnimationFrame(flushToUI)
+                requestAnimationFrame(flushToDOM)
               }
             }
             if (json.done) {
@@ -746,7 +857,7 @@ export function AIAssistant() {
         }
       }
       // Final flush to ensure last tokens render
-      flushToUI()
+      flushToDOM()
 
       // Process completed response
       let responseText = streamedText
@@ -790,14 +901,26 @@ export function AIAssistant() {
         }
       }
 
-      // Update the streamed message with final cleaned content and interactionId
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === streamingId
-            ? { ...m, content: responseText, interactionId }
-            : m
+      // Commit final content to React state. This flips streaming:false so the
+      // bubble swaps from plain-text DOM to AssistantContent with markdown
+      // rendering. Same message id → same outer div → no fade-in re-trigger.
+      // Edge case: no text ever streamed (empty or only-XML response) — mount
+      // the message now so the interactionId and content still land.
+      if (!messageMounted) {
+        setLoading(false)
+        setMessages((prev) => [
+          ...prev,
+          { id: streamingId, role: 'assistant', content: responseText, interactionId, timestamp: new Date() },
+        ])
+      } else {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === streamingId
+              ? { ...m, content: responseText, interactionId, streaming: false }
+              : m
+          )
         )
-      )
+      }
     } catch (err) {
       const isTimeout = err instanceof DOMException && err.name === 'TimeoutError'
       setMessages((prev) => [
@@ -826,10 +949,13 @@ export function AIAssistant() {
     [sendMessage],
   )
 
-  // Disable send while confirming — the banner handles that step
+  // Disable send while confirming — the banner handles that step.
+  // Also disable while a message is streaming (shared streamingRef guards).
+  const isStreaming = messages.some((m) => m.streaming)
   const canSend =
     (input.trim().length > 0 || imageFile !== null) &&
     !loading &&
+    !isStreaming &&
     intakeStep !== 'confirming'
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -932,10 +1058,21 @@ export function AIAssistant() {
                   </div>
                 ) : (
                   <>
-                    <div className="bg-gray-800 border border-white/10 rounded-2xl rounded-bl-sm px-4 py-3 max-w-[85%]">
+                    <div className="bg-gray-800 border border-white/10 rounded-2xl rounded-bl-sm px-4 py-3 max-w-[85%] animate-in fade-in duration-150">
                       {/* Work order card appears above the text when present */}
                       {message.workOrder && <WorkOrderCard wo={message.workOrder} />}
-                      {message.content && <AssistantContent content={message.content} />}
+                      {message.streaming ? (
+                        // Direct-DOM target during streaming. React does not
+                        // manage this element's children — flushToDOM writes
+                        // textContent per frame. Swaps to AssistantContent
+                        // below once streaming:false is committed on stream end.
+                        <div
+                          ref={streamingRef}
+                          className="text-sm leading-relaxed text-gray-100 whitespace-pre-wrap"
+                        />
+                      ) : (
+                        message.content && <AssistantContent content={message.content} />
+                      )}
                     </div>
 
                     {/* Feedback + log fix — only shown when interaction was logged */}
