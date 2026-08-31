@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma *)",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(npx vercel *)",
+      "Bash(node *)",
+      "Bash(npx tsx *)",
+      "Bash(curl -sI https://fieldcommand-two.vercel.app/stores/new)",
+      "Bash(curl -sL https://fieldcommand-two.vercel.app/stores/new -o /tmp/prod-stores-new.html)"
+    ]
+  }
+}

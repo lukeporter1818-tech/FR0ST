@@ -944,8 +944,8 @@ export function AIAssistant() {
       {/* Messages area */}
       <div
         ref={scrollRef}
-        className="relative min-h-0 overflow-y-auto bg-[#0f1117] px-4 py-4 sm:px-6 will-change-contents"
-        style={{ flex: '1 1 0', contain: 'layout style' }}
+        className="relative min-h-0 overflow-y-auto bg-[#0f1117] px-4 py-4 sm:px-6"
+        style={{ flex: '1 1 0' }}
         onDragOver={(e) => { e.preventDefault(); if (!isDragOver) setIsDragOver(true) }}
         onDragLeave={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false)
