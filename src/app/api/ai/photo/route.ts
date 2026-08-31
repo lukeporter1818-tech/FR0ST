@@ -49,16 +49,32 @@ export async function POST(req: NextRequest) {
 
     const readable = new ReadableStream({
       async start(controller) {
+        // Buffer tokens and flush every 50ms — see assistant route for rationale.
+        let buffer = ''
+        const flushInterval = setInterval(() => {
+          if (buffer) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: buffer })}\n\n`))
+            buffer = ''
+          }
+        }, 50)
+
         try {
           for await (const chunk of stream) {
             if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-              const text = chunk.delta.text
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`))
+              buffer += chunk.delta.text
             }
           }
+
+          clearInterval(flushInterval)
+          if (buffer) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: buffer })}\n\n`))
+            buffer = ''
+          }
+
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`))
           controller.close()
         } catch (err) {
+          clearInterval(flushInterval)
           console.error('[photo route] stream error:', err)
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: 'Stream failed' })}\n\n`))
           controller.close()

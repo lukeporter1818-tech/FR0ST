@@ -159,16 +159,29 @@ export async function POST(req: NextRequest) {
     )
 
     // Check if query mentions a specific store code
-    const storeCodesInQuery = stores
+    const storeIdsByCode = stores
       .filter((s) => queryText.toUpperCase().includes(s.code))
       .map((s) => s.id)
 
+    // Check if query mentions a zone name (word-bounded, case-insensitive)
+    const ZONES = ['North', 'South', 'East', 'West'] as const
+    const mentionedZones = ZONES.filter((z) =>
+      new RegExp(`\\b${z}\\b`, 'i').test(queryText)
+    )
+    const storeIdsByZone = mentionedZones.length > 0
+      ? stores
+          .filter((s) => s.zone !== null && mentionedZones.some((z) => z === s.zone))
+          .map((s) => s.id)
+      : []
+
+    const relevantStoreIds = Array.from(new Set([...storeIdsByCode, ...storeIdsByZone]))
+
     let issueContext = ''
-    if (storeCodesInQuery.length > 0) {
+    if (relevantStoreIds.length > 0) {
       const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
       const issues = await prisma.storeIssueLog.findMany({
         where: {
-          storeId: { in: storeCodesInQuery },
+          storeId: { in: relevantStoreIds },
           resolvedAt: null,
           createdAt: { gte: ninetyDaysAgo },
         },
@@ -224,13 +237,32 @@ ${storeLines.join('\n')}${issueContext}
 
     const readable = new ReadableStream({
       async start(controller) {
+        // Buffer tokens and flush every 50ms — fewer larger SSE chunks reduce
+        // per-token overhead on both wire and client. Coordinates with the
+        // client's ~50ms rAF throttle so each server flush lines up with
+        // roughly one client render.
+        let buffer = ''
+        const flushInterval = setInterval(() => {
+          if (buffer) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: buffer })}\n\n`))
+            buffer = ''
+          }
+        }, 50)
+
         try {
           for await (const chunk of stream) {
             if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
               const text = chunk.delta.text
               fullText += text
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`))
+              buffer += text
             }
+          }
+
+          // Stream ended — stop the interval and flush any remaining buffered text.
+          clearInterval(flushInterval)
+          if (buffer) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: buffer })}\n\n`))
+            buffer = ''
           }
 
           // Log interaction for Frost learning system — non-fatal if DB write fails
@@ -254,6 +286,7 @@ ${storeLines.join('\n')}${issueContext}
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, interactionId })}\n\n`))
           controller.close()
         } catch (err) {
+          clearInterval(flushInterval)
           console.error('AI assistant stream error:', err)
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: 'Stream failed' })}\n\n`))
           controller.close()
