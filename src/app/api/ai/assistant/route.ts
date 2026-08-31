@@ -237,32 +237,13 @@ ${storeLines.join('\n')}${issueContext}
 
     const readable = new ReadableStream({
       async start(controller) {
-        // Buffer tokens and flush every 50ms — fewer larger SSE chunks reduce
-        // per-token overhead on both wire and client. Coordinates with the
-        // client's ~50ms rAF throttle so each server flush lines up with
-        // roughly one client render.
-        let buffer = ''
-        const flushInterval = setInterval(() => {
-          if (buffer) {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: buffer })}\n\n`))
-            buffer = ''
-          }
-        }, 50)
-
         try {
           for await (const chunk of stream) {
             if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
               const text = chunk.delta.text
               fullText += text
-              buffer += text
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`))
             }
-          }
-
-          // Stream ended — stop the interval and flush any remaining buffered text.
-          clearInterval(flushInterval)
-          if (buffer) {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: buffer })}\n\n`))
-            buffer = ''
           }
 
           // Log interaction for Frost learning system — non-fatal if DB write fails
@@ -286,7 +267,6 @@ ${storeLines.join('\n')}${issueContext}
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, interactionId })}\n\n`))
           controller.close()
         } catch (err) {
-          clearInterval(flushInterval)
           console.error('AI assistant stream error:', err)
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: 'Stream failed' })}\n\n`))
           controller.close()
