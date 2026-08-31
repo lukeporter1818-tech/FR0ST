@@ -432,7 +432,6 @@ export function AIAssistant() {
 
         if (streamingRef.current) {
           streamingRef.current.textContent = streamedText
-          scrollToBottom()
         }
       }
 
@@ -824,7 +823,6 @@ export function AIAssistant() {
 
         if (streamingRef.current) {
           streamingRef.current.textContent = displayText
-          scrollToBottom()
         }
       }
 
@@ -986,8 +984,8 @@ export function AIAssistant() {
       {/* Messages area */}
       <div
         ref={scrollRef}
-        className="relative min-h-0 overflow-y-auto bg-[#0f1117] px-4 py-4 sm:px-6"
-        style={{ flex: '1 1 0' }}
+        className="relative min-h-0 overflow-y-auto bg-[#0f1117] px-4 py-4 sm:px-6 will-change-contents"
+        style={{ flex: '1 1 0', contain: 'layout style' }}
         onDragOver={(e) => { e.preventDefault(); if (!isDragOver) setIsDragOver(true) }}
         onDragLeave={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false)
@@ -1068,7 +1066,7 @@ export function AIAssistant() {
                         // below once streaming:false is committed on stream end.
                         <div
                           ref={streamingRef}
-                          className="text-sm leading-relaxed text-gray-100 whitespace-pre-wrap"
+                          className="text-sm leading-relaxed text-gray-100 whitespace-pre-wrap min-h-[120px] overflow-hidden"
                         />
                       ) : (
                         message.content && <AssistantContent content={message.content} />
