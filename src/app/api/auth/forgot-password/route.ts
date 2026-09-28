@@ -28,7 +28,7 @@ export async function POST(req: Request) {
         const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`
 
         await resend.emails.send({
-                  from: 'FR0ST <noreply@fieldcommand-two.vercel.app>',
+                  from: 'FR0ST <onboarding@resend.dev>',
                   to: user.email,
                   subject: 'Reset your FR0ST password',
                   html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;"><h2 style="color:#f59e0b;margin-bottom:8px;">FR0ST</h2><p>Hi ${user.name},</p><p>Click the link below to reset your password. It expires in <strong>1 hour</strong>.</p><a href="${resetUrl}" style="display:inline-block;margin:16px 0;padding:12px 24px;background:#f59e0b;color:#000;text-decoration:none;border-radius:6px;font-weight:600;">Reset Password</a><p style="color:#888;font-size:13px;">If you did not request this, you can safely ignore this email.</p></div>`,
