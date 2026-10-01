@@ -98,6 +98,8 @@ model User {
   mgmtTasksAssigned ManagementTask[] @relation("MgmtTasksAssigned")
 
   storeIssueLogs StoreIssueLog[] @relation("StoreIssueLogsReported")
+
+  knowledgeDocs KnowledgeDoc[]
 }
 
 // ── TECHNICIANS ──
@@ -352,4 +354,42 @@ model AIInteraction {
   systemType   String?
   approved     Boolean  @default(false)
   createdAt    DateTime @default(now())
+}
+
+// ── KNOWLEDGE BASE (RAG) ──
+// KnowledgeDoc is an uploaded source document (e.g. an equipment manual PDF)
+// stored in Supabase Storage. Its text is split into KnowledgeChunk rows,
+// each with a Voyage embedding used for semantic retrieval by FROST.
+
+model KnowledgeDoc {
+  id           String   @id @default(cuid())
+  title        String
+  storagePath  String
+  mimeType     String
+  byteSize     Int
+  sha256       String   @unique
+  pageCount    Int?
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  chunks KnowledgeChunk[]
+
+  @@index([uploadedById])
+}
+
+model KnowledgeChunk {
+  id         String                       @id @default(cuid())
+  docId      String
+  doc        KnowledgeDoc                 @relation(fields: [docId], references: [id], onDelete: Cascade)
+  ordinal    Int
+  page       Int?
+  text       String
+  tokenCount Int
+  embedding  Unsupported("vector(1024)")
+  createdAt  DateTime                     @default(now())
+
+  @@unique([docId, ordinal])
+  @@index([docId])
 }

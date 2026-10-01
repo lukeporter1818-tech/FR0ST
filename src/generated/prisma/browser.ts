@@ -77,3 +77,13 @@ export type StoreIssueLog = Prisma.StoreIssueLogModel
  * 
  */
 export type AIInteraction = Prisma.AIInteractionModel
+/**
+ * Model KnowledgeDoc
+ * 
+ */
+export type KnowledgeDoc = Prisma.KnowledgeDocModel
+/**
+ * Model KnowledgeChunk
+ * 
+ */
+export type KnowledgeChunk = Prisma.KnowledgeChunkModel

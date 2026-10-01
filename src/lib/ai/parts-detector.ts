@@ -28,8 +28,15 @@ const REPLACE_RE = /\b(replace(ment)?|part\s*(#|num(ber)?)?|cross[\s-]?ref(erenc
 // Failure adjectives — component-death context
 const FAIL_RE = /\b(dead|failed|bad|burnt|burned|seized|shot|blown|fried|shorted|open|locked\s*out)\b/i
 
+// Words/phrases that signal a spec, value, or how-to question — not a part to order
+const SPEC_SIGNAL_RE =
+  /\b(spec(?:s|ification)?|torque|charge|setting|setpoint|parameter|procedure|adjust(?:ment)?|calibrat(?:e|ion)?|how\s+do\s+i|how\s+to)\b/i
+
 export function isPartsQuery(text: string): boolean {
   const t = text // keep original case for regex; all patterns use /i
+
+  // Spec/procedure questions are not parts queries unless they also have ordering intent
+  if (SPEC_SIGNAL_RE.test(t) && !REPLACE_RE.test(t)) return false
 
   // 1. Model number present — always a parts signal
   if (MODEL_RE.test(t)) return true

@@ -11,6 +11,7 @@ import {
   Shield,
   Map,
   MapPin,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +25,8 @@ const primaryNavItems = [
 ];
 
 const secondaryNavItems = [
-  { label: "Users", href: "/settings/users", icon: Users, roles: ["ADMIN"] },
+  { label: "Users",   href: "/settings/users",   icon: Users,    roles: ["ADMIN"] },
+  { label: "Manuals", href: "/settings/manuals", icon: BookOpen, roles: ["ADMIN"] },
 ] as const;
 
 interface SidebarProps {

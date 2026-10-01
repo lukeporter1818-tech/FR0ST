@@ -62,7 +62,9 @@ export const ModelName = {
   ManagementTask: 'ManagementTask',
   Store: 'Store',
   StoreIssueLog: 'StoreIssueLog',
-  AIInteraction: 'AIInteraction'
+  AIInteraction: 'AIInteraction',
+  KnowledgeDoc: 'KnowledgeDoc',
+  KnowledgeChunk: 'KnowledgeChunk'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -295,6 +297,35 @@ export const AIInteractionScalarFieldEnum = {
 } as const
 
 export type AIInteractionScalarFieldEnum = (typeof AIInteractionScalarFieldEnum)[keyof typeof AIInteractionScalarFieldEnum]
+
+
+export const KnowledgeDocScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  storagePath: 'storagePath',
+  mimeType: 'mimeType',
+  byteSize: 'byteSize',
+  sha256: 'sha256',
+  pageCount: 'pageCount',
+  uploadedById: 'uploadedById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type KnowledgeDocScalarFieldEnum = (typeof KnowledgeDocScalarFieldEnum)[keyof typeof KnowledgeDocScalarFieldEnum]
+
+
+export const KnowledgeChunkScalarFieldEnum = {
+  id: 'id',
+  docId: 'docId',
+  ordinal: 'ordinal',
+  page: 'page',
+  text: 'text',
+  tokenCount: 'tokenCount',
+  createdAt: 'createdAt'
+} as const
+
+export type KnowledgeChunkScalarFieldEnum = (typeof KnowledgeChunkScalarFieldEnum)[keyof typeof KnowledgeChunkScalarFieldEnum]
 
 
 export const SortOrder = {

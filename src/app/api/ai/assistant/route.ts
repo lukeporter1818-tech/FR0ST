@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { FROST_SYSTEM_PROMPT } from '@/lib/ai/system-prompt'
 import { isPartsQuery } from '@/lib/ai/parts-detector'
 import { retrieveApprovedFixes } from '@/lib/ai/retrieve-fixes'
+import { retrieveKnowledge, buildPinnedProcedureText, buildPinnedProcedureInstruction } from '@/lib/ai/retrieve-knowledge'
 import { requireApiSession, unauthorized, tooManyRequests } from '@/lib/auth-guard'
 import { rateLimitDb, LIMITS } from '@/lib/rate-limit'
 import { aiAssistantSchema } from '@/lib/validations'
@@ -121,6 +122,17 @@ export async function POST(req: NextRequest) {
     ? await retrieveApprovedFixes(queryText).catch(() => '')
     : ''
 
+  let knowledgeMatches: Awaited<ReturnType<typeof retrieveKnowledge>> = []
+  let knowledgeSearchRan = false
+  if (!photoMode && queryText.length >= 5) {
+    try {
+      knowledgeMatches = await retrieveKnowledge(queryText)
+      knowledgeSearchRan = true
+    } catch (err) {
+      console.error('[assistant route] knowledge retrieval failed:', err)
+    }
+  }
+
   // ── Operational context ───────────────────────────────────────────────────────
   // Fetch today's board + store list to inject into FR0ST's system prompt.
   // Non-fatal — if DB is unavailable, FR0ST still responds without context.
@@ -217,6 +229,21 @@ ${storeLines.join('\n')}${issueContext}
     console.error('[assistant route] failed to load operational context:', err)
   }
 
+  const excerptContext = knowledgeMatches.length > 0
+    ? '\n\nMANUAL EXCERPTS (from indexed service documents — use when relevant):\n\n' +
+      knowledgeMatches
+        .map((m, i) => `[${i + 1}] ${m.title}${m.page != null ? `, p. ${m.page}` : ''}\n${m.text}`)
+        .join('\n\n')
+    : knowledgeSearchRan
+      ? '\n\nMANUAL EXCERPTS: No relevant excerpts found.'
+      : ''
+
+  // Per-request instruction — only fires when the shared helper says pinning
+  // will happen for this request. Same guards as the pinned block below.
+  const pinnedInstructionContext = (!photoMode && !textPartsMode)
+    ? buildPinnedProcedureInstruction(queryText, knowledgeMatches)
+    : ''
+
   auditLog({
     action: 'ai.query',
     userId: session.user.id,
@@ -228,7 +255,7 @@ ${storeLines.join('\n')}${issueContext}
       model: 'claude-sonnet-4-6',
       max_tokens: 512,
       temperature: 0.3,
-      system: FROST_SYSTEM_PROMPT + operationalContext + fixContext,
+      system: FROST_SYSTEM_PROMPT + operationalContext + excerptContext + pinnedInstructionContext + fixContext,
       messages: claudeMessages,
     })
 
@@ -244,6 +271,21 @@ ${storeLines.join('\n')}${issueContext}
               fullText += text
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`))
             }
+          }
+
+          // Pinned procedure text — append verbatim manual text for safety /
+          // refrigerant-handling chunks so FR0ST cannot silently drop steps.
+          // Skipped in parts and photo modes (template answers).
+          try {
+            if (!photoMode && !textPartsMode) {
+              const pinned = buildPinnedProcedureText(queryText, knowledgeMatches)
+              if (pinned) {
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: pinned })}\n\n`))
+                fullText += pinned
+              }
+            }
+          } catch (err) {
+            console.error('[assistant route] failed to append pinned procedure text:', err)
           }
 
           // Log interaction for Frost learning system — non-fatal if DB write fails
